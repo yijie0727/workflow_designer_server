@@ -36,5 +36,53 @@
             <button class="open">Open Workflow</button>
             <button class="save">Save Workflow</button>
 		</span>
+
+        <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
+            <input type="file" name="file" id="file"/><br/><br/>
+        </form>
+
+
+
+
+        <script>
+            $(document).ready(function () {
+
+                $("#file").change(function (event) {
+
+
+                    // Get form
+                    var form = $('#fileUploadForm')[0];
+
+                    // Create an FormData object
+                    var data = new FormData(form);
+
+                    // If you want to add an extra field for the FormData
+                    //data.append("CustomField", "This is some extra data, testing");
+
+                    $.ajax({
+                        type: "POST",
+                        enctype: 'multipart/form-data',
+                        url: "rest/workflow/jar",
+                        data: data,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        timeout: 600000,
+                        success: function (data) {
+
+                            blocks.register(JSON.parse(data));
+
+                        },
+                        error: function (e) {
+
+                            alert("Error!"+e.responseText);
+
+                        }
+                    });
+
+                });
+
+            });
+        </script>
     </body>
 </html>
