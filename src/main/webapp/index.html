@@ -35,10 +35,14 @@
             <button class="loadBlocks">Load Block Configuration</button>
             <button class="open">Open Workflow</button>
             <button class="save">Save Workflow</button>
+            <button class="execute">Execute Workflow</button>
 		</span>
 
         <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
-            <input type="file" name="file" id="file"/><br/><br/>
+            Package:
+            <input type="text" name="package" id="package" value="cz.zcu"/>
+            <input type="file" name="file" id="file"/>
+            <input type="submit"></form>
         </form>
 
 
@@ -47,9 +51,9 @@
         <script>
             $(document).ready(function () {
 
-                $("#file").change(function (event) {
+                $("#fileUploadForm").submit(function (event) {
 
-
+                    event.preventDefault();
                     // Get form
                     var form = $('#fileUploadForm')[0];
 
@@ -62,7 +66,7 @@
                     $.ajax({
                         type: "POST",
                         enctype: 'multipart/form-data',
-                        url: "rest/workflow/jar",
+                        url: "rest/workflow/uploadJar",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -80,6 +84,38 @@
                         }
                     });
 
+                });
+
+                $(".execute").click(function(event){
+                    // Get form
+                    var form = $('#fileUploadForm')[0];
+
+                    // Create an FormData object
+                    var data = new FormData(form);
+
+                    // If you want to add an extra field for the FormData
+                    data.append("workflow", JSON.stringify(blocks.export()));
+
+                    $.ajax({
+                        type: "POST",
+                        enctype: 'multipart/form-data',
+                        url: "rest/workflow/executeJar",
+                        data: data,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        timeout: 600000,
+                        success: function (data) {
+
+                            blocks.register(JSON.parse(data));
+
+                        },
+                        error: function (e) {
+
+                            alert("Error!"+e.responseText);
+
+                        }
+                    });
                 });
 
             });
