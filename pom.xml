@@ -93,12 +93,19 @@
             <artifactId>nd4j-jackson</artifactId>
             <version>1.0.0-beta</version>
         </dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
 
 
 
 
 
-    </dependencies>
+
+	</dependencies>
 
 	<build>
 		<finalName>jaxrs</finalName>

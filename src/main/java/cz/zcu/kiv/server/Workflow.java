@@ -61,20 +61,20 @@ public class Workflow {
                     .build();
         }
         String uploadedFileLocation = UPLOAD_FOLDER + fileDetail.getFileName();
-        File output_file = null;
+        File outputFile;
         try {
             FileInputStream fos=new FileInputStream(file);
-            output_file = saveToFile(fos, uploadedFileLocation);
-            System.out.println(output_file.getAbsolutePath());
+            outputFile = saveToFile(fos, uploadedFileLocation);
+            System.out.println(outputFile.getAbsolutePath());
         } catch (IOException e) {
             e.printStackTrace();
             return Response.status(500).entity("Can not save file").build();
         }
         JSONArray result = null;
         try{
-            URLClassLoader child = new URLClassLoader(new URL[]{output_file.toURL()}, this.getClass().getClassLoader());
+            URLClassLoader child = new URLClassLoader(new URL[]{outputFile.toURL()}, this.getClass().getClassLoader());
 
-            JarFile jarFile = new JarFile(output_file);
+            JarFile jarFile = new JarFile(outputFile);
             Enumeration e = jarFile.entries();
 
 
@@ -108,6 +108,7 @@ public class Workflow {
         return Response.status(200)
                 .entity(result.toString(4)).build();
     }
+
     /**
      * Utility method to save InputStream data to target location/file
      *  @param inStream
@@ -129,6 +130,7 @@ public class Workflow {
         out.close();
         return file;
     }
+
     /**
      * Creates a folder to desired location if it not already exists
      *
