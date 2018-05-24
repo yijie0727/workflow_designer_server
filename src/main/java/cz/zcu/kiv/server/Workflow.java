@@ -1,6 +1,9 @@
 package cz.zcu.kiv.server;
 
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.json.JSONArray;
@@ -17,12 +20,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 @Path("/workflow")
 public class Workflow {
+    private static Log logger = LogFactory.getLog(Workflow.class);
 
     /** The path to the folder where we want to store the uploaded files */
     private static final String UPLOAD_FOLDER = "uploadedFiles/";
@@ -161,19 +166,19 @@ public class Workflow {
         String result = null;
         try{
 
-            System.out.println(outputFile.getAbsolutePath());
             Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",package_name,workflow_object.toString()});
             ps.waitFor();
             InputStream is=ps.getErrorStream();
             byte b[]=new byte[is.available()];
             is.read(b,0,b.length);
             System.out.println(new String(b));
+            logger.fatal(new String(b));
 
             is=ps.getInputStream();
             b=new byte[is.available()];
             is.read(b,0,b.length);
-            System.out.println(new String(b));
-            result ="success";
+            logger.info(new String(b));
+            result =FileUtils.readFileToString(new File("output.txt"),Charset.defaultCharset());
         }
         catch(Exception e){
             e.printStackTrace();

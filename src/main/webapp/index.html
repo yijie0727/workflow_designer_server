@@ -106,8 +106,22 @@
                         cache: false,
                         timeout: 600000,
                         success: function (data) {
+                            data = JSON.parse(data);
+                            console.log(data);
+                            for (var k in blocks.blocks) {
+                                var block = blocks.blocks[k];
 
-                            blocks.register(JSON.parse(data));
+                                for(var x in data){
+                                    if(data[x].id===block.id){
+                                        if(data[x].output){
+                                            block.setInfos('Previous Output:'+data[x].output);
+                                        }
+                                    }
+                                }
+
+                            }
+
+                            // blocks.load(data);
 
                         },
                         error: function (e) {
