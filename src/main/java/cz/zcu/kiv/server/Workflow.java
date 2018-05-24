@@ -160,36 +160,19 @@ public class Workflow {
         }
         String result = null;
         try{
-            URLClassLoader child = new URLClassLoader(new URL[]{outputFile.toURL()}, this.getClass().getClassLoader());
 
-            JarFile jarFile = new JarFile(outputFile);
-            
-            Enumeration e = jarFile.entries();
+            System.out.println(outputFile.getAbsolutePath());
+            Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",package_name,workflow_object.toString()});
+            ps.waitFor();
+            InputStream is=ps.getErrorStream();
+            byte b[]=new byte[is.available()];
+            is.read(b,0,b.length);
+            System.out.println(new String(b));
 
-
-            while (e.hasMoreElements()) {
-                JarEntry je = (JarEntry) e.nextElement();
-                if(je.isDirectory() || !je.getName().endsWith(".class")){
-                    continue;
-                }
-                String className = je.getName().substring(0,je.getName().length()-6);
-                className = className.replace('/', '.');
-                try {
-                    child.loadClass(className);
-                }
-                catch (RuntimeException e1){
-                    e1.printStackTrace();
-                }
-
-            }
-
-
-            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
-            Constructor<?> ctor=classToLoad.getConstructor(String.class,ClassLoader.class);
-
-            Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class);
-            Object instance = ctor.newInstance(package_name,child);
-            method.invoke(instance,workflow_object);
+            is=ps.getInputStream();
+            b=new byte[is.available()];
+            is.read(b,0,b.length);
+            System.out.println(new String(b));
             result ="success";
         }
         catch(Exception e){
@@ -213,15 +196,15 @@ public class Workflow {
         int read = 0;
         byte[] bytes = new byte[1024];
         File file = new File(target);
-        if(!file.exists()) {
+        file.delete();
             out = new FileOutputStream(file);
             while ((read = inStream.read(bytes)) != -1) {
                 out.write(bytes, 0, read);
             }
             out.flush();
             out.close();
-        }
-        return file;
+            return file;
+
     }
 
     /**
