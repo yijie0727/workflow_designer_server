@@ -166,7 +166,7 @@ public class Workflow {
         String result = null;
         try{
 
-            Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",package_name,workflow_object.toString()});
+            Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",package_name,workflow_object.toString(),"output.txt"});
             ps.waitFor();
             InputStream is=ps.getErrorStream();
             byte b[]=new byte[is.available()];
