@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.swing.text.html.parser.Entity;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -31,10 +32,14 @@ public class Workflow {
 
     /** The path to the folder where we want to store the uploaded files */
     private static final String UPLOAD_FOLDER = "uploadedFiles/";
+    private static final String GENERATED_FILES_FOLDER = "generatedFiles/";
+
     public Workflow() {
     }
+
     @Context
     private UriInfo context;
+
     @GET
     @Path("/test")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -42,6 +47,24 @@ public class Workflow {
     public String test() {
 
         return "works";
+    }
+
+
+    @GET
+    @Path("/file/{filename}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response test(@PathParam("filename")String filename) {
+
+        File file = new File(GENERATED_FILES_FOLDER+filename);
+        System.out.println(GENERATED_FILES_FOLDER+filename);
+        if(file.exists()){
+            return Response.status(200).entity(file).build();
+        }
+        else{
+            return Response.status(404)
+                    .entity("File not found!").build();
+        }
+
     }
     /**
      * Returns text response to caller containing Blocks representation of parsed classes
@@ -68,6 +91,8 @@ public class Workflow {
                     .entity("Can not create destination folder on server")
                     .build();
         }
+        new File(UPLOAD_FOLDER).mkdirs();
+
         String uploadedFileLocation = UPLOAD_FOLDER + fileDetail.getFileName();
         File outputFile;
         try {
@@ -149,6 +174,7 @@ public class Workflow {
         // create our destination folder, if it not exists
         try {
             createFolderIfNotExists(UPLOAD_FOLDER);
+            createFolderIfNotExists(GENERATED_FILES_FOLDER);
         } catch (SecurityException se) {
             return Response.status(500)
                     .entity("Can not create destination folder on server")
@@ -161,17 +187,16 @@ public class Workflow {
             outputFile = saveToFile(fos, uploadedFileLocation);
         } catch (IOException e) {
             e.printStackTrace();
-            return Response.status(500).entity("Can not save file").build();
+            return Response.status(500).entity("Can not find file").build();
         }
         String result = null;
         try{
 
-            Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",package_name,workflow_object.toString(),"output.txt"});
+            Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",package_name,workflow_object.toString(),"output.txt",new File(GENERATED_FILES_FOLDER).getAbsolutePath()});
             ps.waitFor();
             InputStream is=ps.getErrorStream();
             byte b[]=new byte[is.available()];
             is.read(b,0,b.length);
-            System.out.println(new String(b));
             logger.fatal(new String(b));
 
             is=ps.getInputStream();
