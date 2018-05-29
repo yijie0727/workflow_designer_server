@@ -40,8 +40,8 @@
 
         <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
             Package:
-            <input type="text" name="package" id="package" value="cz.zcu"/>
-            <input type="file" name="file" id="file"/>
+            <input type="text" name="package" id="package" value=""/>
+            <input type="file" name="file" id="file" multiple/>
             <input type="submit"></form>
         </form>
 
@@ -66,7 +66,7 @@
                     $.ajax({
                         type: "POST",
                         enctype: 'multipart/form-data',
-                        url: "rest/workflow/uploadJar",
+                        url: "rest/workflow/upload",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -99,7 +99,7 @@
                     $.ajax({
                         type: "POST",
                         enctype: 'multipart/form-data',
-                        url: "rest/workflow/executeJar",
+                        url: "rest/workflow/execute",
                         data: data,
                         processData: false,
                         contentType: false,

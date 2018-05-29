@@ -4,10 +4,7 @@ import java.net.URI;
 import java.net.URL;
 import java.security.ProtectionDomain;
 
-import javax.servlet.annotation.MultipartConfig;
 import javax.ws.rs.core.UriBuilder;
-
-import com.sun.javafx.tools.packager.Log;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -29,8 +26,12 @@ public class EmbeddedServer{
 	public EmbeddedServer() {
 	}
 
-    public static void main(String[] args) throws Exception {
-        new EmbeddedServer().startServer();
+    public static void main(String[] args){
+		try {
+			new EmbeddedServer().startServer();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
     public void onServerStarted(){

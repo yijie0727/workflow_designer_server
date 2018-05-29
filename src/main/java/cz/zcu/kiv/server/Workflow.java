@@ -4,13 +4,11 @@ package cz.zcu.kiv.server;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import javax.swing.text.html.parser.Entity;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -22,9 +20,13 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 
 @Path("/workflow")
 public class Workflow {
@@ -66,6 +68,7 @@ public class Workflow {
         }
 
     }
+
     /**
      * Returns text response to caller containing Blocks representation of parsed classes
      *
@@ -129,7 +132,7 @@ public class Workflow {
 
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             Object instance = ctor.newInstance(package_name,child);
-             result = (JSONArray)method.invoke(instance);
+            result = (JSONArray)method.invoke(instance);
         }
         catch(Exception e){
             e.printStackTrace();
@@ -215,6 +218,148 @@ public class Workflow {
     }
 
     /**
+     * Returns text response to caller containing Blocks representation of parsed classes
+     *
+     * @return error response in case of missing parameters an internal
+     *         exception or success response if file has been stored
+     *         successfully
+     */
+    @POST
+    @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response uploadJar(
+            final FormDataMultiPart body,
+            @FormDataParam("package") String package_name)  {
+        // check if all form parameters are provided
+        if (body == null || package_name == null )
+            return Response.status(400).entity("Invalid form data").build();
+        // create our destination folder, if it not exists
+        try {
+            createFolderIfNotExists(UPLOAD_FOLDER);
+        } catch (SecurityException se) {
+            se.printStackTrace();
+            return Response.status(500)
+                    .entity("Can not create destination folder on server")
+                    .build();
+        }
+
+
+        ClassLoader child;
+        try {
+            child = initializeClassLoader(body);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Response.status(500)
+                    .entity("Can not read destination folder on server")
+                    .build();
+        }
+
+
+        JSONArray result=new JSONArray();
+
+        try{
+
+
+            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
+            Constructor<?> ctor=classToLoad.getConstructor(String.class,ClassLoader.class);
+
+            Method method = classToLoad.getDeclaredMethod("initializeBlocks");
+            Object instance = ctor.newInstance(package_name,child);
+            result = (JSONArray)method.invoke(instance);
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            Response.status(200)
+                    .entity("Execution failed with " + e.getMessage()).build();
+        }
+        return Response.status(200)
+                .entity(result.toString(4)).build();
+    }
+
+
+
+
+    /**
+     * Returns text response to indicate execution success
+     *
+     * @return error response in case of missing parameters an internal
+     *         exception or success response if file has been stored
+     *         successfully
+     */
+    @POST
+    @Path("/execute")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response execute(
+            final FormDataMultiPart formData,
+            @FormDataParam("package") String package_name,
+            @FormDataParam("workflow") String workflow)  {
+
+        if (formData == null || package_name == null || workflow == null)
+            return Response.status(400).entity("Invalid form data").build();
+
+        JSONObject workflow_object = null;
+        // check if all form parameters are provided
+
+
+        try {
+            workflow_object = new JSONObject(workflow);
+
+        }
+        catch (JSONException e){
+            e.printStackTrace();
+            return Response.status(400).entity("Invalid workflow JSON").build();
+
+        }
+        // create our destination folder, if it not exists
+        try {
+            createFolderIfNotExists(UPLOAD_FOLDER);
+            createFolderIfNotExists(GENERATED_FILES_FOLDER);
+        } catch (SecurityException se) {
+            return Response.status(500)
+                    .entity("Can not create destination folder on server")
+                    .build();
+        }
+
+        ClassLoader child;
+        try {
+            child = initializeClassLoader(formData);
+        } catch (IOException e) {
+            return Response.status(500)
+                    .entity("Can not read destination folder on server")
+                    .build();
+        }
+
+        JSONArray result = null;
+
+        try{
+            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
+            for(Method m:classToLoad.getDeclaredMethods()){
+                System.out.println(m.getName());
+                for(Class c:m.getParameterTypes()){
+                    System.out.println(c.getName());
+                }
+            }
+            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class);
+            Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
+            Object instance = ctor.newInstance(child);
+            result = (JSONArray)method.invoke(instance,workflow_object,GENERATED_FILES_FOLDER);
+        }
+        catch(Exception e1){
+            e1.printStackTrace();
+            Response.status(500)
+                    .entity("Execution failed with " + e1.getMessage() ).build();
+        }
+        if(result!=null)
+        return Response.status(200)
+                .entity(result.toString(4)).build();
+        else{
+            return Response.status(400).entity("No output").build();
+        }
+    }
+
+    /**
      * Utility method to save InputStream data to target location/file
      *  @param inStream
      *            - InputStream to be saved
@@ -251,6 +396,64 @@ public class Workflow {
         if (!theDir.exists()) {
             theDir.mkdir();
         }
+    }
+
+
+    private ClassLoader initializeClassLoader(FormDataMultiPart multiPart) throws IOException {
+
+        Map<String, List<FormDataBodyPart>> map = multiPart.getFields();
+
+        ArrayList<FormDataBodyPart>fileParts =new ArrayList<>();
+        for (Map.Entry<String, List<FormDataBodyPart>> entry : map.entrySet()) {
+
+            for (FormDataBodyPart part : entry.getValue()) {
+                if(part.getName().equals("file")){
+                    fileParts.add(part);
+                    System.out.println(part.getName());
+                }
+
+            }
+        }
+
+        int files = fileParts.size();
+        URL[]urls=new URL[files];
+        File[]outputFiles=new File[files];
+
+
+        for(int i=0; i<files;i++){
+            BodyPart part=fileParts.get(i);
+            InputStream is = part.getEntityAs(InputStream.class);
+            ContentDisposition meta = part.getContentDisposition();
+
+            String uploadedFileLocation = UPLOAD_FOLDER + meta.getFileName();
+                outputFiles[i] = saveToFile(is, uploadedFileLocation);
+                urls[i]=outputFiles[i].toURL();
+        }
+        URLClassLoader child = new URLClassLoader(urls, this.getClass().getClassLoader());
+
+
+        for(int i=0;i<files;i++){
+
+            JarFile jarFile = new JarFile(outputFiles[i]);
+            Enumeration e = jarFile.entries();
+
+            while (e.hasMoreElements()) {
+                JarEntry je = (JarEntry) e.nextElement();
+                if(je.isDirectory() || !je.getName().endsWith(".class")){
+                    continue;
+                }
+                String className = je.getName().substring(0,je.getName().length()-6);
+                className = className.replace('/', '.');
+                try {
+                    child.loadClass(className);
+                }
+                catch (Exception|Error e1){
+                    //logger.error(e1.getMessage());
+                }
+            }
+
+        }
+        return child;
     }
     
 }
