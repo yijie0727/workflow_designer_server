@@ -58,7 +58,6 @@ public class Workflow {
     public Response test(@PathParam("filename")String filename) {
 
         File file = new File(GENERATED_FILES_FOLDER+filename);
-        System.out.println(GENERATED_FILES_FOLDER+filename);
         if(file.exists()){
             return Response.status(200).entity(file).build();
         }
@@ -82,9 +81,9 @@ public class Workflow {
     public Response uploadJar(
             @FormDataParam("file") File file,
             @FormDataParam("file") FormDataContentDisposition fileDetail,
-            @FormDataParam("package") String package_name) {
+            @FormDataParam("package") String packageName) {
         // check if all form parameters are provided
-        if (file == null || package_name == null )
+        if (file == null || packageName == null )
             return Response.status(400).entity("Invalid form data").build();
         // create our destination folder, if it not exists
         try {
@@ -120,18 +119,18 @@ public class Workflow {
                 }
                 String className = je.getName().substring(0,je.getName().length()-6);
                 className = className.replace('/', '.');
-                if(className.startsWith(package_name)){
+                if(className.startsWith(packageName)){
                      child.loadClass(className);
                 }
 
             }
 
-
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
             Constructor<?> ctor=classToLoad.getConstructor(String.class,ClassLoader.class);
 
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
-            Object instance = ctor.newInstance(package_name,child);
+            method.setAccessible(true);
+            Object instance = ctor.newInstance(packageName,child);
             result = (JSONArray)method.invoke(instance);
         }
         catch(Exception e){
@@ -156,13 +155,13 @@ public class Workflow {
     public Response executeJar(
             @FormDataParam("file") File file,
             @FormDataParam("file") FormDataContentDisposition fileDetail,
-            @FormDataParam("package") String package_name,
+            @FormDataParam("package") String packageName,
             @FormDataParam("workflow") String workflow) {
 
 
         JSONObject workflow_object = null;
         // check if all form parameters are provided
-        if (file == null || package_name == null || workflow == null)
+        if (file == null || packageName == null || workflow == null)
             return Response.status(400).entity("Invalid form data").build();
 
         try {
@@ -195,7 +194,7 @@ public class Workflow {
         String result = null;
         try{
 
-            Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",package_name,workflow_object.toString(),"output.txt",new File(GENERATED_FILES_FOLDER).getAbsolutePath()});
+            Process ps=Runtime.getRuntime().exec(new String[]{"java","-cp",outputFile.getAbsolutePath(),"cz.zcu.kiv.WorkflowDesigner.Workflow",packageName,workflow_object.toString(),"output.txt",new File(GENERATED_FILES_FOLDER).getAbsolutePath()});
             ps.waitFor();
             InputStream is=ps.getErrorStream();
             byte b[]=new byte[is.available()];
@@ -230,9 +229,9 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response uploadJar(
             final FormDataMultiPart body,
-            @FormDataParam("package") String package_name)  {
+            @FormDataParam("package") String packageName)  {
         // check if all form parameters are provided
-        if (body == null || package_name == null )
+        if (body == null || packageName == null )
             return Response.status(400).entity("Invalid form data").build();
         // create our destination folder, if it not exists
         try {
@@ -247,7 +246,7 @@ public class Workflow {
 
         ClassLoader child;
         try {
-            child = initializeClassLoader(body);
+            child = initializeClassLoader(packageName,body);
         } catch (IOException e) {
             e.printStackTrace();
             return Response.status(500)
@@ -265,7 +264,8 @@ public class Workflow {
             Constructor<?> ctor=classToLoad.getConstructor(String.class,ClassLoader.class);
 
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
-            Object instance = ctor.newInstance(package_name,child);
+            method.setAccessible(true);
+            Object instance = ctor.newInstance(packageName,child);
             result = (JSONArray)method.invoke(instance);
         }
         catch(Exception e){
@@ -293,18 +293,18 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response execute(
             final FormDataMultiPart formData,
-            @FormDataParam("package") String package_name,
+            @FormDataParam("package") String packageName,
             @FormDataParam("workflow") String workflow)  {
 
-        if (formData == null || package_name == null || workflow == null)
+        if (formData == null || packageName == null || workflow == null)
             return Response.status(400).entity("Invalid form data").build();
 
-        JSONObject workflow_object = null;
+        JSONObject workflowObject = null;
         // check if all form parameters are provided
 
 
         try {
-            workflow_object = new JSONObject(workflow);
+            workflowObject = new JSONObject(workflow);
 
         }
         catch (JSONException e){
@@ -324,7 +324,7 @@ public class Workflow {
 
         ClassLoader child;
         try {
-            child = initializeClassLoader(formData);
+            child = initializeClassLoader(packageName,formData);
         } catch (IOException e) {
             return Response.status(500)
                     .entity("Can not read destination folder on server")
@@ -335,16 +335,12 @@ public class Workflow {
 
         try{
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
-            for(Method m:classToLoad.getDeclaredMethods()){
-                System.out.println(m.getName());
-                for(Class c:m.getParameterTypes()){
-                    System.out.println(c.getName());
-                }
-            }
-            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class);
+            Thread.currentThread().setContextClassLoader(child);
+
+            Constructor<?> ctor=classToLoad.getConstructor( String.class, ClassLoader.class);
             Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
-            Object instance = ctor.newInstance(child);
-            result = (JSONArray)method.invoke(instance,workflow_object,GENERATED_FILES_FOLDER);
+            Object instance = ctor.newInstance(packageName,child);
+            result = (JSONArray)method.invoke(instance,workflowObject,GENERATED_FILES_FOLDER);
         }
         catch(Exception e1){
             e1.printStackTrace();
@@ -399,7 +395,7 @@ public class Workflow {
     }
 
 
-    private ClassLoader initializeClassLoader(FormDataMultiPart multiPart) throws IOException {
+    private ClassLoader initializeClassLoader(String packageName,FormDataMultiPart multiPart) throws IOException {
 
         Map<String, List<FormDataBodyPart>> map = multiPart.getFields();
 
@@ -409,7 +405,6 @@ public class Workflow {
             for (FormDataBodyPart part : entry.getValue()) {
                 if(part.getName().equals("file")){
                     fileParts.add(part);
-                    System.out.println(part.getName());
                 }
 
             }
@@ -439,7 +434,7 @@ public class Workflow {
 
             while (e.hasMoreElements()) {
                 JarEntry je = (JarEntry) e.nextElement();
-                if(je.isDirectory() || !je.getName().endsWith(".class")){
+                if(je.isDirectory() || !je.getName().endsWith(".class")||(packageName!=null&&!je.getName().startsWith(packageName))){
                     continue;
                 }
                 String className = je.getName().substring(0,je.getName().length()-6);
@@ -448,11 +443,12 @@ public class Workflow {
                     child.loadClass(className);
                 }
                 catch (Exception|Error e1){
-                    //logger.error(e1.getMessage());
+                    logger.error(e1.getMessage());
                 }
             }
 
         }
+        Thread.currentThread().setContextClassLoader(child);
         return child;
     }
     

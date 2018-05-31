@@ -59,12 +59,11 @@ public class RestClient extends Thread{
         Response response = target.path("uploadJar").request(MediaType.APPLICATION_JSON_TYPE)
                 .post(Entity.entity(multiPart, MediaType.MULTIPART_FORM_DATA));
 
-        System.out.println(response.getStatus());
 		return response.readEntity(String.class);
 
 	}
 
-    public String executeJar(File file, JSONObject workflow_object)  {
+    public String executeJar(File file, JSONObject workflowObject)  {
         Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
         WebTarget target = client.target("http://localhost:8680").path("rest").path("workflow");
@@ -73,13 +72,13 @@ public class RestClient extends Thread{
 
         FileDataBodyPart jarFile = new FileDataBodyPart("file", file,
                 MediaType.APPLICATION_OCTET_STREAM_TYPE);
-        FormDataBodyPart package_name = new FormDataBodyPart("package","data");
-        FormDataBodyPart workflow = new FormDataBodyPart("workflow",workflow_object.toString());
+        FormDataBodyPart packageName = new FormDataBodyPart("package","data");
+        FormDataBodyPart workflow = new FormDataBodyPart("workflow",workflowObject.toString());
 
 
         // Add body part
         multiPart.bodyPart(jarFile);
-        multiPart.bodyPart(package_name);
+        multiPart.bodyPart(packageName);
         multiPart.bodyPart(workflow);
 
 
