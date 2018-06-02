@@ -19,10 +19,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
@@ -80,10 +77,10 @@ public class Workflow {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
     public Response uploadJar(
-            final FormDataMultiPart body,
+            final FormDataMultiPart formData,
             @FormDataParam("package") String packageName)  {
         // check if all form parameters are provided
-        if (body == null || packageName == null )
+        if (formData == null || packageName == null )
             return Response.status(400).entity("Invalid form data").build();
         // create our destination folder, if it not exists
         try {
@@ -97,8 +94,11 @@ public class Workflow {
 
 
         ClassLoader child;
+        String module;
         try {
-            child = initializeClassLoader(packageName,body);
+            File jarFile=getSingleJarFile(formData);
+            module=jarFile.getName()+":"+packageName;
+            child = initializeJarClassLoader(packageName,jarFile);
         } catch (IOException e) {
             e.printStackTrace();
             return Response.status(500)
@@ -117,7 +117,7 @@ public class Workflow {
 
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
-            Object instance = ctor.newInstance(packageName,child);
+            Object instance = ctor.newInstance(module,child);
             result = (JSONArray)method.invoke(instance);
         }
         catch(Exception e){
@@ -144,19 +144,21 @@ public class Workflow {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
     public Response execute(
-            final FormDataMultiPart formData,
-            @FormDataParam("package") String packageName,
             @FormDataParam("workflow") String workflow)  {
 
-        if (formData == null || packageName == null || workflow == null)
+        if (workflow == null)
             return Response.status(400).entity("Invalid form data").build();
 
         JSONObject workflowObject = null;
         // check if all form parameters are provided
 
-
+        Set<String>modules=new HashSet<>();
         try {
             workflowObject = new JSONObject(workflow);
+            JSONArray blocksArray = workflowObject.getJSONArray("blocks");
+            for(int i=0;i<blocksArray.length();i++){
+                modules.add(blocksArray.getJSONObject(i).getString("module"));
+            }
 
         }
         catch (JSONException e){
@@ -166,7 +168,6 @@ public class Workflow {
         }
         // create our destination folder, if it not exists
         try {
-            createFolderIfNotExists(UPLOAD_FOLDER);
             createFolderIfNotExists(GENERATED_FILES_FOLDER);
         } catch (SecurityException se) {
             return Response.status(500)
@@ -175,8 +176,10 @@ public class Workflow {
         }
 
         ClassLoader child;
+        Map<Class,String>moduleSource = new HashMap<>();
+
         try {
-            child = initializeClassLoader(packageName,formData);
+            child = initializeClassLoader(modules,moduleSource);
         } catch (IOException e) {
             return Response.status(500)
                     .entity("Can not read destination folder on server")
@@ -189,9 +192,9 @@ public class Workflow {
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
             Thread.currentThread().setContextClassLoader(child);
 
-            Constructor<?> ctor=classToLoad.getConstructor( String.class, ClassLoader.class);
+            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class);
             Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
-            Object instance = ctor.newInstance(packageName,child);
+            Object instance = ctor.newInstance(child,moduleSource);
             result = (JSONArray)method.invoke(instance,workflowObject,GENERATED_FILES_FOLDER);
         }
         catch(Exception e1){
@@ -205,6 +208,32 @@ public class Workflow {
         else{
             return Response.status(400).entity("No output").build();
         }
+    }
+
+    private File getSingleJarFile(FormDataMultiPart multiPart) throws IOException {
+        Map<String, List<FormDataBodyPart>> map = multiPart.getFields();
+
+        FormDataBodyPart filePart = null;
+        for (Map.Entry<String, List<FormDataBodyPart>> entry : map.entrySet()) {
+
+            for (FormDataBodyPart part : entry.getValue()) {
+                if(part.getName().equals("file")){
+                    filePart = part;
+                    break;
+                }
+
+            }
+        }
+
+
+
+        BodyPart part=filePart;
+        InputStream is = part.getEntityAs(InputStream.class);
+        ContentDisposition meta = part.getContentDisposition();
+
+        String uploadedFileLocation = UPLOAD_FOLDER + meta.getFileName();
+        File outputFile = saveToFile(is, uploadedFileLocation);
+        return outputFile;
     }
 
     /**
@@ -247,52 +276,43 @@ public class Workflow {
     }
 
 
-    private ClassLoader initializeClassLoader(String packageName,FormDataMultiPart multiPart) throws IOException {
+    private ClassLoader initializeClassLoader(Set<String>modules, Map<Class,String>moduleSource) throws IOException {
 
-        Map<String, List<FormDataBodyPart>> map = multiPart.getFields();
 
-        ArrayList<FormDataBodyPart>fileParts =new ArrayList<>();
-        for (Map.Entry<String, List<FormDataBodyPart>> entry : map.entrySet()) {
-
-            for (FormDataBodyPart part : entry.getValue()) {
-                if(part.getName().equals("file")){
-                    fileParts.add(part);
-                }
-
-            }
-        }
-
-        int files = fileParts.size();
+        int files = modules.size();
         URL[]urls=new URL[files];
         File[]outputFiles=new File[files];
 
-
+        Iterator<String> iterator = modules.iterator();
         for(int i=0; i<files;i++){
-            BodyPart part=fileParts.get(i);
-            InputStream is = part.getEntityAs(InputStream.class);
-            ContentDisposition meta = part.getContentDisposition();
-
-            String uploadedFileLocation = UPLOAD_FOLDER + meta.getFileName();
-                outputFiles[i] = saveToFile(is, uploadedFileLocation);
+            String module=iterator.next();
+            String uploadedFileLocation = UPLOAD_FOLDER + module.split(":")[0];
+                outputFiles[i] = new File(uploadedFileLocation);
                 urls[i]=outputFiles[i].toURL();
         }
         URLClassLoader child = new URLClassLoader(urls, this.getClass().getClassLoader());
 
+        iterator = modules.iterator();
+
 
         for(int i=0;i<files;i++){
-
+            String module=iterator.next();
+            String packageName = module.split(":")[1];
             JarFile jarFile = new JarFile(outputFiles[i]);
             Enumeration e = jarFile.entries();
 
             while (e.hasMoreElements()) {
                 JarEntry je = (JarEntry) e.nextElement();
-                if(je.isDirectory() || !je.getName().endsWith(".class")||(packageName!=null&&!je.getName().startsWith(packageName))){
+                if(je.isDirectory() || !je.getName().endsWith(".class")){
                     continue;
                 }
+                if(packageName!=null&&!je.getName().startsWith(packageName.replace('.','/')))
+                    continue;
                 String className = je.getName().substring(0,je.getName().length()-6);
                 className = className.replace('/', '.');
                 try {
-                    child.loadClass(className);
+                    Class loadedClass = child.loadClass(className);
+                    moduleSource.put(loadedClass,module);
                 }
                 catch (Exception|Error e1){
                     logger.error(e1.getMessage());
@@ -303,5 +323,39 @@ public class Workflow {
         Thread.currentThread().setContextClassLoader(child);
         return child;
     }
-    
+
+    private ClassLoader initializeJarClassLoader(String packageName,File outputFile) throws IOException {
+
+
+
+            URL url = outputFile.toURL();
+
+            URLClassLoader child = new URLClassLoader(new URL[]{url}, this.getClass().getClassLoader());
+
+            addJarToClassLoader(outputFile,packageName,child);
+
+            Thread.currentThread().setContextClassLoader(child);
+            return child;
+
+    }
+
+    public static void addJarToClassLoader(File outputFile, String packageName, ClassLoader child) throws IOException {
+        JarFile jarFile = new JarFile(outputFile);
+        Enumeration e = jarFile.entries();
+
+        while (e.hasMoreElements()) {
+            JarEntry je = (JarEntry) e.nextElement();
+            if(je.isDirectory() || !je.getName().endsWith(".class")||(packageName!=null&&!je.getName().startsWith(packageName.replace('.','/')))){
+                continue;
+            }
+            String className = je.getName().substring(0,je.getName().length()-6);
+            className = className.replace('/', '.');
+            try {
+                child.loadClass(className);
+            }
+            catch (Exception|Error e1){
+                logger.error(e1.getMessage());
+            }
+        }
+    }
 }

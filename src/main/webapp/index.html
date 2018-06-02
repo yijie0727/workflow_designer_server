@@ -41,7 +41,7 @@
         <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
             Package:
             <input type="text" name="package" id="package" value=""/>
-            <input type="file" name="file" id="file" multiple/>
+            <input type="file" name="file" id="file" />
             <input type="submit"></form>
         </form>
 
@@ -87,11 +87,9 @@
                 });
 
                 $(".execute").click(function(event){
-                    // Get form
-                    var form = $('#fileUploadForm')[0];
 
                     // Create an FormData object
-                    var data = new FormData(form);
+                    var data = new FormData();
 
                     // If you want to add an extra field for the FormData
                     data.append("workflow", JSON.stringify(blocks.export()));
