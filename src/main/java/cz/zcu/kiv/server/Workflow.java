@@ -7,7 +7,6 @@ import org.glassfish.jersey.media.multipart.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -18,11 +17,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
 
 @Path("/workflow")
 public class Workflow {
@@ -113,11 +110,11 @@ public class Workflow {
 
 
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
-            Constructor<?> ctor=classToLoad.getConstructor(String.class,ClassLoader.class);
+            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class);
 
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
-            Object instance = ctor.newInstance(module,child);
+            Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER);
             result = (JSONArray)method.invoke(instance);
         }
         catch(Exception e){
@@ -192,9 +189,9 @@ public class Workflow {
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
             Thread.currentThread().setContextClassLoader(child);
 
-            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class);
+            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class);
             Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
-            Object instance = ctor.newInstance(child,moduleSource);
+            Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER);
             result = (JSONArray)method.invoke(instance,workflowObject,GENERATED_FILES_FOLDER);
         }
         catch(Exception e1){

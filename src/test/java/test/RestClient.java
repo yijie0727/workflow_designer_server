@@ -39,7 +39,7 @@ public class RestClient extends Thread{
      * @param file
      * @return
      */
-	public String uploadJar(File file)  {
+	public String upload(File file, String packageName)  {
 		Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
 		WebTarget target = client.target("http://localhost:8680").path("rest").path("workflow");
@@ -48,7 +48,7 @@ public class RestClient extends Thread{
 
         FileDataBodyPart jarFile = new FileDataBodyPart("file", file,
                 MediaType.APPLICATION_OCTET_STREAM_TYPE);
-        FormDataBodyPart package_name = new FormDataBodyPart("package","data");
+        FormDataBodyPart package_name = new FormDataBodyPart("package",packageName);
 
 
         // Add body part
@@ -56,33 +56,28 @@ public class RestClient extends Thread{
         multiPart.bodyPart(package_name);
 
 
-        Response response = target.path("uploadJar").request(MediaType.APPLICATION_JSON_TYPE)
+        Response response = target.path("upload").request(MediaType.TEXT_PLAIN)
                 .post(Entity.entity(multiPart, MediaType.MULTIPART_FORM_DATA));
-
 		return response.readEntity(String.class);
 
 	}
 
-    public String executeJar(File file, JSONObject workflowObject)  {
+    public String execute(JSONObject workflowObject)  {
         Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
         WebTarget target = client.target("http://localhost:8680").path("rest").path("workflow");
 
         MultiPart multiPart = new MultiPart();
 
-        FileDataBodyPart jarFile = new FileDataBodyPart("file", file,
-                MediaType.APPLICATION_OCTET_STREAM_TYPE);
-        FormDataBodyPart packageName = new FormDataBodyPart("package","data");
+
         FormDataBodyPart workflow = new FormDataBodyPart("workflow",workflowObject.toString());
 
 
         // Add body part
-        multiPart.bodyPart(jarFile);
-        multiPart.bodyPart(packageName);
         multiPart.bodyPart(workflow);
 
 
-        Response response = target.path("executeJar").request(MediaType.APPLICATION_JSON_TYPE)
+        Response response = target.path("execute").request(MediaType.TEXT_PLAIN)
                 .post(Entity.entity(multiPart, MediaType.MULTIPART_FORM_DATA));
         return response.readEntity(String.class);
 

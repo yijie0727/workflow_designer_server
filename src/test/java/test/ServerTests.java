@@ -60,9 +60,8 @@ public class ServerTests {
                     @Override
                     public void run() {
                         File file =new File("test_data"+File.separator+"test.jar");
-                        String testResponse = null;
                         try {
-                            testResponse = new RestClient().uploadJar(file);
+                            String testResponse = new RestClient().upload(file,"data");
                             JSONArray jsonArray = new JSONArray(testResponse);
                             assert jsonArray.length() > 0;
                             server.stopServer();
@@ -96,11 +95,9 @@ public class ServerTests {
                 new Runnable() {
                     @Override
                     public void run() {
-                        File file =new File("test_data"+File.separator+"test.jar");
                         File workflow = new File("test_data" + File.separator + "test.json");
-                        String testResponse = null;
                         try {
-                            testResponse = new RestClient().executeJar(file,
+                            String testResponse = new RestClient().execute(
                                     new JSONObject(FileUtils.readFileToString(workflow,Charset.defaultCharset())));
                             JSONArray jsonArray = new JSONArray(testResponse);
                             assert jsonArray.length() > 0;
