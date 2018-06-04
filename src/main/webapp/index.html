@@ -51,6 +51,23 @@
         <script>
             $(document).ready(function () {
 
+                $.ajax({
+                    type: "POST",
+                    enctype: 'multipart/form-data',
+                    url: "rest/workflow/initialize",
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+                    timeout: 600000,
+                    success: function (data) {
+                        blocks.register(JSON.parse(data));
+                    },
+                    error: function (e) {
+                        alert("Error!"+e.responseText);
+                    }
+                });
+
+
                 $("#fileUploadForm").submit(function (event) {
 
                     event.preventDefault();

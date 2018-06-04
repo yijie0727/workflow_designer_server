@@ -1,6 +1,7 @@
 package cz.zcu.kiv.server;
 
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.*;
@@ -17,6 +18,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -61,6 +63,60 @@ public class Workflow {
 
     }
 
+    /**
+     * Initializes blocks from already uploaded jars
+     *
+     * @return error response in case of failure to load a Jar
+     */
+    @POST
+    @Path("/initialize")
+    @Consumes()
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response initializeAtom()  {
+
+        ClassLoader child;
+        JSONArray result=new JSONArray();
+        try {
+            for(String module: getModules()){
+                String jarFileName=module.split(":")[0];
+                String packageName=module.split(":")[1];
+                File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);
+                child = initializeJarClassLoader(packageName,jarFile);
+
+
+                try{
+                    Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
+                    Constructor<?> ctor = classToLoad.getConstructor(ClassLoader.class,String.class,String.class);
+                    Method method = classToLoad.getDeclaredMethod("initializeBlocks");
+                    method.setAccessible(true);
+                    Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER);
+                    JSONArray blocks = (JSONArray)method.invoke(instance);
+                    for(int i=0;i<blocks.length();i++){
+                        result.put(blocks.getJSONObject(i));
+                    }
+
+                }
+                catch(Exception e){
+                    e.printStackTrace();
+                    Response.status(200)
+                            .entity("Execution failed with " + e.getMessage()).build();
+                }
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Response.status(500)
+                    .entity("Can not read destination folder on server")
+                    .build();
+        }
+
+
+
+        return Response.status(200)
+                .entity(result.toString(4)).build();
+    }
+
 
     /**
      * Returns text response to caller containing Blocks representation of parsed classes
@@ -96,6 +152,8 @@ public class Workflow {
             File jarFile=getSingleJarFile(formData);
             module=jarFile.getName()+":"+packageName;
             child = initializeJarClassLoader(packageName,jarFile);
+            putModule(module);
+
         } catch (IOException e) {
             e.printStackTrace();
             return Response.status(500)
@@ -107,8 +165,6 @@ public class Workflow {
         JSONArray result=new JSONArray();
 
         try{
-
-
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
             Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class);
 
@@ -354,5 +410,35 @@ public class Workflow {
                 logger.error(e1.getMessage());
             }
         }
+    }
+
+    public static void putModule(String module) throws IOException {
+        List<String>modules=getModules();
+        if(!modules.contains(module)){
+            modules.add(module);
+        }
+        saveModules(modules);
+    }
+
+    public static List<String> getModules() throws IOException {
+        List<String>modules=new ArrayList<>();
+        File modulesFile = new File(UPLOAD_FOLDER+File.separator+"modules.json");
+        if(modulesFile.exists()){
+            JSONArray jsonArray =new JSONArray(FileUtils.readFileToString(modulesFile,Charset.defaultCharset()));
+            for(int i=0;i<jsonArray.length();i++){
+                modules.add(jsonArray.getString(i));
+            }
+        }
+        return modules;
+    }
+
+    public static void saveModules(List<String>modules) throws IOException {
+        File modulesFile = new File(UPLOAD_FOLDER+File.separator+"modules.json");
+        JSONArray jsonArray =new JSONArray();
+        for(int i=0;i<modules.size();i++){
+            jsonArray.put(modules.get(i));
+        }
+        FileUtils.writeStringToFile(modulesFile,jsonArray.toString(4),Charset.defaultCharset());
+
     }
 }
