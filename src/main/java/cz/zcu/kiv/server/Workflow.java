@@ -9,10 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -24,7 +21,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 @Path("/workflow")
-public class Workflow {
+public class Workflow extends Application {
     private static Log logger = LogFactory.getLog(Workflow.class);
 
     /** The path to the folder where we want to store the uploaded files */

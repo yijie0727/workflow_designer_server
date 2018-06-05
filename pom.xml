@@ -100,10 +100,8 @@
 
 	<build>
 		<finalName>workflow_designer_server</finalName>
+        <sourceDirectory>src/main/java</sourceDirectory>
 		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-			</resource>
 			<resource>
 				<directory>src/main/webapp</directory>
 			</resource>
