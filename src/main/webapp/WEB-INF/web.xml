@@ -4,15 +4,15 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 
 	<servlet>
-		<servlet-name>WorkflowDesignerServer</servlet-name>
+		<servlet-name>Workflow</servlet-name>
 		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 		<init-param>
-			<param-name>org.glassfish.jersey.config.server.provider.packages</param-name>
-			<param-value>cz.zcu.kiv.server</param-value>
+			<param-name>org.glassfish.jersey.servlet.ServletContainer</param-name>
+			<param-value>cz.zcu.kiv.server.AppConfig</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>WorkflowDesignerServer</servlet-name>
+		<servlet-name>Workflow</servlet-name>
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
 </web-app>
