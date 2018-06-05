@@ -67,7 +67,6 @@ public class Workflow {
      */
     @POST
     @Path("/initialize")
-    @Consumes()
     @Produces(MediaType.TEXT_PLAIN)
     public Response initializeAtom()  {
 
