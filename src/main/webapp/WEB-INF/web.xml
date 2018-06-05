@@ -7,8 +7,8 @@
 		<servlet-name>WorkflowDesignerServer</servlet-name>
 		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 		<init-param>
-			<param-name>javax.ws.rs.Application</param-name>
-			<param-value>cz.zcu.kiv.server.Workflow</param-value>
+			<param-name>org.glassfish.jersey.config.server.provider.packages</param-name>
+			<param-value>cz.zcu.kiv.server</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>

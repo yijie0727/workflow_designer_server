@@ -21,7 +21,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 @Path("/workflow")
-public class Workflow extends Application {
+public class Workflow {
     private static Log logger = LogFactory.getLog(Workflow.class);
 
     /** The path to the folder where we want to store the uploaded files */
