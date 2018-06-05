@@ -320,7 +320,8 @@ public class Workflow {
             throws SecurityException {
         File theDir = new File(dirName);
         if (!theDir.exists()) {
-            theDir.mkdir();
+            theDir.mkdirs();
+            logger.info(theDir.getAbsolutePath()+ " Created");
         }
     }
 
