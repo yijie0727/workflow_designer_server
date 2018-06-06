@@ -171,7 +171,6 @@ public class Workflow {
             File jarFile=getSingleJarFile(formData);
             module=jarFile.getName()+":"+packageName;
             child = initializeJarClassLoader(packageName,jarFile);
-            putModule(module);
 
         } catch (IOException e) {
             logger.error("Cannot read folder on server",e);
@@ -186,11 +185,11 @@ public class Workflow {
         try{
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
             Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class);
-
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
             Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER);
             result = (JSONArray)method.invoke(instance);
+            putModule(module);
         }
         catch(Exception e){
             logger.error("Initializing blocks failed",e);
