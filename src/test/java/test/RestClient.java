@@ -8,6 +8,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import cz.zcu.kiv.server.EmbeddedServer;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -28,7 +29,7 @@ public class RestClient extends Thread{
      */
     public static String test() {
 		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://localhost:8680").path("rest").path("workflow");
+		WebTarget target = client.target("http://localhost:"+EmbeddedServer.SERVER_PORT).path("rest").path("workflow");
         Response response = target.path("test")
                 .request(MediaType.APPLICATION_JSON_TYPE).get();
         return response.readEntity(String.class);
@@ -42,7 +43,7 @@ public class RestClient extends Thread{
 	public String upload(File file, String packageName)  {
 		Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
-		WebTarget target = client.target("http://localhost:8680").path("rest").path("workflow");
+		WebTarget target = client.target("http://localhost:"+EmbeddedServer.SERVER_PORT).path("rest").path("workflow");
 
        MultiPart multiPart = new MultiPart();
 
@@ -65,7 +66,7 @@ public class RestClient extends Thread{
     public String execute(JSONObject workflowObject)  {
         Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
-        WebTarget target = client.target("http://localhost:8680").path("rest").path("workflow");
+        WebTarget target = client.target("http://localhost:"+EmbeddedServer.SERVER_PORT).path("rest").path("workflow");
 
         MultiPart multiPart = new MultiPart();
 

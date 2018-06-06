@@ -19,6 +19,32 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+/***********************************************************************************************************************
+ *
+ * This file is part of the Workflow Designer project
+
+ * ==========================================
+ *
+ * Copyright (C) 2018 by University of West Bohemia (http://www.zcu.cz/en/)
+ *
+ ***********************************************************************************************************************
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ *
+ ***********************************************************************************************************************
+ *
+ * Workflow, 2018/22/05 10:02 Joey Pinto
+ *
+ * This file hosts the embedded primary APIs for the Workflow Designer Server.
+ **********************************************************************************************************************/
+
 
 @Path("/workflow")
 public class Workflow {
@@ -39,7 +65,6 @@ public class Workflow {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String test() {
-
         return "works";
     }
 
@@ -93,7 +118,7 @@ public class Workflow {
 
                 }
                 catch(Exception e){
-                    e.printStackTrace();
+                    logger.error("Execution failed",e);
                     Response.status(200)
                             .entity("Execution failed with " + e.getMessage()).build();
                 }
@@ -101,13 +126,11 @@ public class Workflow {
 
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error reading folder",e);
             return Response.status(500)
                     .entity("Can not read destination folder on server")
                     .build();
         }
-
-
 
         return Response.status(200)
                 .entity(result.toString(4)).build();
@@ -135,7 +158,7 @@ public class Workflow {
         try {
             createFolderIfNotExists(UPLOAD_FOLDER);
         } catch (SecurityException se) {
-            se.printStackTrace();
+            logger.error("Error saving folder on server ",se);
             return Response.status(500)
                     .entity("Can not create destination folder on server")
                     .build();
@@ -151,7 +174,7 @@ public class Workflow {
             putModule(module);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Cannot read folder on server",e);
             return Response.status(500)
                     .entity("Can not read destination folder on server")
                     .build();
@@ -170,7 +193,7 @@ public class Workflow {
             result = (JSONArray)method.invoke(instance);
         }
         catch(Exception e){
-            e.printStackTrace();
+            logger.error("Initializing blocks failed",e);
             Response.status(200)
                     .entity("Execution failed with " + e.getMessage()).build();
         }
@@ -211,7 +234,7 @@ public class Workflow {
 
         }
         catch (JSONException e){
-            e.printStackTrace();
+            logger.error("Error parsing workflow JSON",e);
             return Response.status(400).entity("Invalid workflow JSON").build();
 
         }
@@ -219,6 +242,7 @@ public class Workflow {
         try {
             createFolderIfNotExists(GENERATED_FILES_FOLDER);
         } catch (SecurityException se) {
+            logger.error("Couldn't create generated files folder on server",se);
             return Response.status(500)
                     .entity("Can not create destination folder on server")
                     .build();
@@ -230,6 +254,7 @@ public class Workflow {
         try {
             child = initializeClassLoader(modules,moduleSource);
         } catch (IOException e) {
+            logger.error("Cannot read jar from server",e);
             return Response.status(500)
                     .entity("Can not read destination folder on server")
                     .build();
@@ -247,7 +272,7 @@ public class Workflow {
             result = (JSONArray)method.invoke(instance,workflowObject,GENERATED_FILES_FOLDER);
         }
         catch(Exception e1){
-            e1.printStackTrace();
+            logger.error("Executing jar failed",e1);
             Response.status(500)
                     .entity("Execution failed with " + e1.getMessage() ).build();
         }
@@ -255,6 +280,7 @@ public class Workflow {
         return Response.status(200)
                 .entity(result.toString(4)).build();
         else{
+            logger.error("No result was generated");
             return Response.status(400).entity("No output").build();
         }
     }
@@ -273,9 +299,6 @@ public class Workflow {
 
             }
         }
-
-
-
         BodyPart part=filePart;
         InputStream is = part.getEntityAs(InputStream.class);
         ContentDisposition meta = part.getContentDisposition();
@@ -321,8 +344,10 @@ public class Workflow {
         File theDir = new File(dirName);
         if (!theDir.exists()) {
             theDir.mkdirs();
-            logger.info(theDir.getAbsolutePath()+ " Created");
+            logger.info(theDir.getAbsolutePath()+ "Created");
         }
+        else
+            logger.info(theDir.getAbsolutePath()+ "Exists");
     }
 
 

@@ -838,7 +838,7 @@ var Edge = function(id, block1, connector1, block2, connector2, blocks)
     this.connector2 = connector2;
     this.selected = false;
 
-    this.defaultSize = 3;
+    this.defaultSize = 2;
     this.defaultFontSize = 10;
 
     this.position1 = null;
