@@ -2098,7 +2098,7 @@ Blocks.prototype.run = function(selector)
     $(document).ready(function() {
         self.div = $(selector);
 
-        if (!self.div.size()) {
+        if (!self.div.height()) {
             alert('blocks.js: Unable to find ' + selector);
         }
 

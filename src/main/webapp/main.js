@@ -86,7 +86,7 @@
                   file.click();
                 }
         });
-        $('.open').click(function() {
+        $('#open').click(function() {
 
             var file=document.createElement("input");
             file.setAttribute("type","file");
@@ -110,7 +110,7 @@
             }
         });
 
-        $('.save').click(function () {
+        $('#save').click(function () {
             saveToFile(JSON.stringify(blocks.export(),null,4));
         });
 
