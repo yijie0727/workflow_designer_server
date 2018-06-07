@@ -1350,7 +1350,7 @@ var History = function(blocks)
     });
 
     $(document).keyup(function(evt) {
-        if (evt.keyCode == 17) {
+        if (evt.keyCode == 17||evt.metaKey) {
             self.ctrlDown = false;
         }
     });

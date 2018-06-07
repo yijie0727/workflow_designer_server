@@ -63,6 +63,11 @@
             blocks.redraw();
         });
 
+        $('#undo').click(function() {
+            blocks.history.restoreLast();
+        });
+
+
         $('.loadBlocks').click(function() {
 
                 var file=document.createElement("input");
@@ -114,14 +119,14 @@
             saveToFile(JSON.stringify(blocks.export(),null,4));
         });
 
-        $("#fileUploadForm").submit(function (event) {
+        $("#importSubmit").click(function (event) {
 
             event.preventDefault();
             // Get form
-            var form = $('#fileUploadForm')[0];
 
             // Create an FormData object
-            var data = new FormData(form);
+            var formData = new FormData(document.getElementById('fileUploadForm'));
+
 
             // If you want to add an extra field for the FormData
             //data.append("CustomField", "This is some extra data, testing");
@@ -130,20 +135,18 @@
                 type: "POST",
                 enctype: 'multipart/form-data',
                 url: "rest/workflow/upload",
-                data: data,
+                data: formData,
                 processData: false,
                 contentType: false,
                 cache: false,
                 timeout: 600000,
                 success: function (data) {
-
-                    blocks.register(JSON.parse(data));
-
+                    var newBlocks = JSON.parse(data);
+                    blocks.register(newBlocks);
+                    alertify.notify(newBlocks.length + ' blocks registered', 'success', 5);
                 },
                 error: function (e) {
-
-                    alert("Error!"+e.responseText);
-
+                    alertify.notify('Error Registering blocks', 'error', 5);
                 }
             });
 
@@ -181,14 +184,9 @@
                         }
 
                     }
-
-                    // blocks.load(data);
-
                 },
                 error: function (e) {
-
-                    alert("Error!"+e.responseText);
-
+                    alertify.notify(e.responseText, 'error', 5);
                 }
             });
         });
