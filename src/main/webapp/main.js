@@ -114,5 +114,84 @@
             saveToFile(JSON.stringify(blocks.export(),null,4));
         });
 
+        $("#fileUploadForm").submit(function (event) {
+
+            event.preventDefault();
+            // Get form
+            var form = $('#fileUploadForm')[0];
+
+            // Create an FormData object
+            var data = new FormData(form);
+
+            // If you want to add an extra field for the FormData
+            //data.append("CustomField", "This is some extra data, testing");
+
+            $.ajax({
+                type: "POST",
+                enctype: 'multipart/form-data',
+                url: "rest/workflow/upload",
+                data: data,
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+
+                    blocks.register(JSON.parse(data));
+
+                },
+                error: function (e) {
+
+                    alert("Error!"+e.responseText);
+
+                }
+            });
+
+        });
+
+        $("#execute").click(function(event){
+
+            // Create an FormData object
+            var data = new FormData();
+
+            // If you want to add an extra field for the FormData
+            data.append("workflow", JSON.stringify(blocks.export()));
+
+            $.ajax({
+                type: "POST",
+                enctype: 'multipart/form-data',
+                url: "rest/workflow/execute",
+                data: data,
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+                    data = JSON.parse(data);
+                    console.log(data);
+                    for (var k in blocks.blocks) {
+                        var block = blocks.blocks[k];
+
+                        for(var x in data){
+                            if(data[x].id===block.id){
+                                if(data[x].output){
+                                    block.setInfos('Previous Output:'+data[x].output);
+                                }
+                            }
+                        }
+
+                    }
+
+                    // blocks.load(data);
+
+                },
+                error: function (e) {
+
+                    alert("Error!"+e.responseText);
+
+                }
+            });
+        });
+
     });
 })();

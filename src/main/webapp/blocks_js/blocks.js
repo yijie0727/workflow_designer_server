@@ -1339,7 +1339,7 @@ var History = function(blocks)
     this.ctrlDown = false;
     
     $(document).keydown(function(evt) {
-        if (evt.keyCode == 17) {
+        if (evt.keyCode == 17||evt.metaKey) {
             self.ctrlDown = true;
         } 
 
@@ -1376,8 +1376,6 @@ History.prototype.restoreLast = function()
     if (this.history.length) {
         var last = this.history.pop();
         this.blocks.importData(last);
-    } else {
-        alert('Nothing to get');
     }
 };
 "use strict";

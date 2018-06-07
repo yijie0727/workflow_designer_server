@@ -11,8 +11,8 @@
         <script type="text/javascript" src="blocks_js/jquery.formserialize.min.js"></script>
         <script type="text/javascript" src="blocks_js/jquery.fancybox.min.js"></script> 
         <link rel="stylesheet" type="text/css" href="blocks_js/fancybox/jquery.fancybox.css" />
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <script src="js/bootstrap.min.js"></script>
         <!-- block_definitions.js -->
 	    <script type="text/javascript" src="blocks_js/blocks.js"></script>
         <link rel="stylesheet" type="text/css" href="blocks_js/blocks.css" />
@@ -45,13 +45,9 @@
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">Edit
                         <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#" id="undo">Undo</a></li>
-                        <li><a href="#" id="redo">Redo</a></li>
-                        <li></li>
+                        <li><a href="#" id="undo">Undo [Ctrl/Cmd + Z]</a></li>
                     </ul>
                 </li>
-                <li><a href="#">Page 2</a></li>
-                <li><a href="#">Page 3</a></li>
             </ul>
             <button class="btn btn-success navbar-btn pull-right" id="execute">Execute</button>
         </div>
@@ -104,9 +100,6 @@
         </div>
     </div>
 
-
-
-
         <script>
             $(document).ready(function () {
 
@@ -126,85 +119,6 @@
                     }
                 });
 
-
-                $("#fileUploadForm").submit(function (event) {
-
-                    event.preventDefault();
-                    // Get form
-                    var form = $('#fileUploadForm')[0];
-
-                    // Create an FormData object
-                    var data = new FormData(form);
-
-                    // If you want to add an extra field for the FormData
-                    //data.append("CustomField", "This is some extra data, testing");
-
-                    $.ajax({
-                        type: "POST",
-                        enctype: 'multipart/form-data',
-                        url: "rest/workflow/upload",
-                        data: data,
-                        processData: false,
-                        contentType: false,
-                        cache: false,
-                        timeout: 600000,
-                        success: function (data) {
-
-                            blocks.register(JSON.parse(data));
-
-                        },
-                        error: function (e) {
-
-                            alert("Error!"+e.responseText);
-
-                        }
-                    });
-
-                });
-
-                $("#execute").click(function(event){
-
-                    // Create an FormData object
-                    var data = new FormData();
-
-                    // If you want to add an extra field for the FormData
-                    data.append("workflow", JSON.stringify(blocks.export()));
-
-                    $.ajax({
-                        type: "POST",
-                        enctype: 'multipart/form-data',
-                        url: "rest/workflow/execute",
-                        data: data,
-                        processData: false,
-                        contentType: false,
-                        cache: false,
-                        timeout: 600000,
-                        success: function (data) {
-                            data = JSON.parse(data);
-                            console.log(data);
-                            for (var k in blocks.blocks) {
-                                var block = blocks.blocks[k];
-
-                                for(var x in data){
-                                    if(data[x].id===block.id){
-                                        if(data[x].output){
-                                            block.setInfos('Previous Output:'+data[x].output);
-                                        }
-                                    }
-                                }
-
-                            }
-
-                            // blocks.load(data);
-
-                        },
-                        error: function (e) {
-
-                            alert("Error!"+e.responseText);
-
-                        }
-                    });
-                });
 
             });
         </script>
