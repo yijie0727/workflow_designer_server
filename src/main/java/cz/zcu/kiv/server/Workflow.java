@@ -456,8 +456,8 @@ public class Workflow {
     public static void saveModules(List<String>modules) throws IOException {
         File modulesFile = new File(UPLOAD_FOLDER+File.separator+"modules.json");
         JSONArray jsonArray =new JSONArray();
-        for(int i=0;i<modules.size();i++){
-            jsonArray.put(modules.get(i));
+        for(String module:modules){
+            jsonArray.put(module);
         }
         FileUtils.writeStringToFile(modulesFile,jsonArray.toString(4),Charset.defaultCharset());
 

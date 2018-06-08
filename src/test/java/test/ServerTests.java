@@ -1,11 +1,13 @@
 package test;
 
 import cz.zcu.kiv.server.EmbeddedServer;
+import cz.zcu.kiv.server.Workflow;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
-
 import java.io.File;
 import java.nio.charset.Charset;
 
@@ -14,6 +16,9 @@ public class ServerTests {
      *  Test if server is running
      * @throws Exception
      */
+
+    private static Log logger = LogFactory.getLog(ServerTests.class);
+
     @Test
     public void testServer() throws Exception {
         final EmbeddedServer server = new EmbeddedServer(){
@@ -31,7 +36,7 @@ public class ServerTests {
                             server.stopServer();
                         }
                         catch (Exception e){
-                            e.printStackTrace();
+                            logger.error(e);
                             assert false;
                         }
                     }
@@ -67,7 +72,7 @@ public class ServerTests {
                             server.stopServer();
                         }
                         catch (Exception e){
-                            e.printStackTrace();
+                            logger.error(e);
                             assert false;
                         }
                     }
@@ -104,12 +109,11 @@ public class ServerTests {
                             server.stopServer();
                         }
                         catch (Exception e){
-                            e.printStackTrace();
+                            logger.error(e);
                             assert false;
                         }
                     }
                 }.run();
-
 
             }
         };
