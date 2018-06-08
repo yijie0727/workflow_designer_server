@@ -11,7 +11,13 @@
         <script type="text/javascript" src="blocks_js/jquery.formserialize.min.js"></script>
         <script type="text/javascript" src="blocks_js/jquery.fancybox.min.js"></script> 
         <link rel="stylesheet" type="text/css" href="blocks_js/fancybox/jquery.fancybox.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="css/bootstrap.min.css">
+
+        <!--Animara JS Tree -->
+        <link rel="stylesheet" type="text/css" href="animara/css/Aimara.css">
+        <link rel="stylesheet" type="text/css" href="animara/css/Example.css">
+        <script src="animara/lib/Aimara.js" type="text/javascript"></script>
 
         <!-- JavaScript -->
         <script src="js/alertify.min.js"></script>
@@ -59,8 +65,20 @@
             <button class="btn btn-success navbar-btn pull-right" id="execute">Execute</button>
         </div>
     </nav>
+    <!--sidebar-->
+    <div class="col-md-3" id="sidebar">
+        <h2>Library</h2>
+        <a onclick="collapse_all()"><i class="fa fa-toggle-left"></i> </a>
+        <a onclick="expand_all()"><i class="fa fa-toggle-right"></i> </a>
+        <div id="div_tree"></div>
+    </div>
+    <!--canvas-->
+    <div class="col-md-9" id="content">
+        <button class="btn btn-primary toggle-sidebar"><i class="fa fa-bars fa-1x"></i></button>
+        <div id="blocks" ></div>
+    </div>
         
-        <div id="blocks" class="col-xs-12 col-sm-9 container"></div>
+
      <!--<span>-->
             <!--<button class="setLabel">Set the edges label</button>-->
             <!--<button class="setInfos">Set the block infos</button>-->
@@ -95,10 +113,11 @@
                             <label for="file">Package:</label>
                             <input type="file" class="form-control" id="file" name="file"/>
                         </div>
-                        <button class="btn btn-primary" id="importSubmit">Submit</button>
+
                     </form>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="importSubmit" data-dismiss="modal">Submit</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -107,26 +126,8 @@
     </div>
 
         <script>
-            $(document).ready(function () {
-
-                $.ajax({
-                    type: "POST",
-                    enctype: 'multipart/form-data',
-                    url: "rest/workflow/initialize",
-                    processData: false,
-                    contentType: false,
-                    cache: false,
-                    timeout: 600000,
-                    success: function (data) {
-                        blocks.register(JSON.parse(data));
-                    },
-                    error: function (e) {
-                        alert("Error!"+e.responseText);
-                    }
-                });
 
 
-            });
         </script>
     </body>
 </html>
