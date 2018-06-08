@@ -68,7 +68,6 @@
     padding:1px;
     cursor:pointer;
     background-color:#fff;
-    height:18px;
     background-image:url('gfx/menufade.png');
     color:#666;
     border-left:1px solid #aaa;
@@ -78,7 +77,6 @@
     margin-left:-1px;
     margin-right:-1px;
     background-repeat:repeat-x;
-    padding:3px;
 }
 
 .blocks_js_editor .contextmenu .menu_icon

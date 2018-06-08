@@ -2262,7 +2262,16 @@ Blocks.prototype.register = function(meta)
 {
     if(Array.isArray(meta)){
         for(var i=0;i<meta.length;i++){
-            this.metas.push(new Meta(meta[i]));
+            var exists =  false;
+            for(var j=0;j<this.metas.length;j++){
+                var current = this.metas[j];
+                if(current.name===meta[i].name&&current.family===meta[i].family) {
+                    exists = true;
+                    break;
+                }
+            }
+            if(!exists)
+                this.metas.push(new Meta(meta[i]));
         }
     }
     else this.metas.push(new Meta(meta));
