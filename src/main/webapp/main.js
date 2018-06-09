@@ -175,14 +175,24 @@ var blocks;
                 timeout: 600000,
                 success: function (data) {
                     data = JSON.parse(data);
-                    console.log(data);
                     for (var k in blocks.blocks) {
                         var block = blocks.blocks[k];
 
                         for(var x in data){
                             if(data[x].id===block.id){
-                                if(data[x].output){
-                                    block.setInfos('Previous Output:'+data[x].output);
+                                if(data[x].output||data[x].stderr||data[x].stdout){
+                                    var output = 'Previous Output:'+data[x].output;
+                                    if(data[x].stdout){
+                                        output+="<br/>"+data[x].stdout;
+                                    }
+                                    if(data[x].stderr){
+                                        if(data[x].stderr.indexOf("Caused by:")>0){
+                                            output+="<br/>"+data[x].stderr.split("Caused by:")[1];
+                                        }
+                                        else
+                                            output+="<br/>"+data[x].stdout;
+                                    }
+                                    block.setInfos(output);
                                 }
                             }
                         }
