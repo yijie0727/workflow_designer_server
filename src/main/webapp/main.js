@@ -197,6 +197,7 @@ var contex_menu = {
                 function (e) {
                     var fr = new FileReader();
                     fr.onload=function(e){
+                        blocks.clear();
                         blocks.load(JSON.parse(e.target.result));
                     }
                     fr.readAsText(e. target. files[0]);
@@ -215,6 +216,11 @@ var contex_menu = {
 
         $('#save').click(function () {
             saveToFile(JSON.stringify(blocks.export(),null,4));
+        });
+
+        $('#clear').click(function () {
+            blocks.clear();
+            alertify.confirm('Workflow Desginer','Clear Workflow?', function(){ blocks.clear(); }, function(){});
         });
 
         $("#importSubmit").click(function (event) {
