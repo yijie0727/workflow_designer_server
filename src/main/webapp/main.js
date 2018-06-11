@@ -278,7 +278,7 @@ var contex_menu = {
                             if(data[x].id===block.id){
                                 if(data[x].output||data[x].stderr||data[x].stdout){
                                     var output = 'Previous Output:'+data[x].output;
-                                     if(data[x].stdout || output[x].stderr){
+                                     if(data[x].stdout || data[x].stderr){
                                          var modal = document.getElementById("logModal");
                                          var div = document.createElement('span');
                                          div.innerHTML=modal.innerHTML;
@@ -367,11 +367,9 @@ function initializeTree() {
                 library[jar][package][family].push(name);
             }
 
-            tree
             //Loop to create test nodes
             for (var jar in library) {
                 node1 = tree.createNode(jar,false,'animara/images/star.png',null,null,'context1');
-                console.log(node1);
                 for(var package in library[jar]){
                     var node2 = node1.createChildNode(package,false,'animara/images/leaf.png',null,null,'context1');
                     for(var family in library[jar][package]){
