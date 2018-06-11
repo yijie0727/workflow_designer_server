@@ -125,6 +125,40 @@
         </div>
     </div>
 
+    <div style="display:none" id="logModal">
+        <!-- Modal -->
+        <div class="modal fade" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Logs</h4>
+                    </div>
+                    <div class="modal-body" style="overflow:auto">
+                        <h5 class="modal-title">Std Out:</h5>
+                        <div class="stdout">
+
+                        </div>
+                        <h5 class="modal-title">Std Err:</h5>
+                        <div style="color:red" class="stderr">
+
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+    <div id="modals"></div>
+
         <script>
 
 

@@ -1,6 +1,101 @@
 var tree;
 var blocks;
 
+//Tree Context Menu Structure
+var contex_menu = {
+    'context1' : {
+        elements : [
+            {
+                text : 'Node Actions',
+                icon: 'animara/images/blue_key.png',
+                action : function(node) {
+
+                },
+                submenu: {
+                    elements : [
+                        {
+                            text : 'Toggle Node',
+                            icon: 'animara/images/leaf.png',
+                            action : function(node) {
+                                node.toggleNode();
+                            }
+                        },
+                        {
+                            text : 'Expand Node',
+                            icon: 'animara/images/leaf.png',
+                            action : function(node) {
+                                node.expandNode();
+                            }
+                        },
+                        {
+                            text : 'Collapse Node',
+                            icon: 'animara/images/leaf.png',
+                            action : function(node) {
+                                node.collapseNode();
+                            }
+                        },
+                        {
+                            text : 'Expand Subtree',
+                            icon: 'animara/images/tree.png',
+                            action : function(node) {
+                                node.expandSubtree();
+                            }
+                        },
+                        {
+                            text : 'Collapse Subtree',
+                            icon: 'animara/images/tree.png',
+                            action : function(node) {
+                                node.collapseSubtree();
+                            }
+                        },
+                        {
+                            text : 'Delete Node',
+                            icon: 'animara/images/delete.png',
+                            action : function(node) {
+                                node.removeNode();
+                            }
+                        },
+                    ]
+                }
+            },
+            {
+                text : 'Child Actions',
+                icon: 'animara/images/blue_key.png',
+                action : function(node) {
+
+                },
+                submenu: {
+                    elements : [
+                        {
+                            text : 'Create Child Node',
+                            icon: 'animara/images/add1.png',
+                            action : function(node) {
+                                node.createChildNode('Created',false,'animara/images/folder.png',null,'context1');
+                            }
+                        },
+                        {
+                            text : 'Create 1000 Child Nodes',
+                            icon: 'animara/images/add1.png',
+                            action : function(node) {
+                                for (var i=0; i<1000; i++)
+                                    node.createChildNode('Created -' + i,false,'animara/images/folder.png',null,'context1');
+                            }
+                        },
+                        {
+                            text : 'Delete Child Nodes',
+                            icon: 'animara/images/delete.png',
+                            action : function(node) {
+                                node.removeChildNodes();
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+};
+
+
 (function(){
 
 
@@ -146,8 +241,8 @@ var blocks;
                 success: function (data) {
                     var newBlocks = JSON.parse(data);
                     blocks.register(newBlocks);
-                    alertify.notify(newBlocks.length + ' blocks registered', 'success', 5);
                     initializeTree();
+                    alertify.notify(newBlocks.length + ' blocks registered', 'success', 5);
                 },
                 error: function (e) {
                     alertify.notify('Error Registering blocks', 'error', 5);
@@ -157,6 +252,7 @@ var blocks;
         });
 
         $("#execute").click(function(event){
+            alertify.notify('Workflow Execution Started', 'success', 5);
 
             // Create an FormData object
             var data = new FormData();
@@ -182,22 +278,25 @@ var blocks;
                             if(data[x].id===block.id){
                                 if(data[x].output||data[x].stderr||data[x].stdout){
                                     var output = 'Previous Output:'+data[x].output;
-                                    if(data[x].stdout){
-                                        output+="<br/>"+data[x].stdout;
-                                    }
-                                    if(data[x].stderr){
-                                        if(data[x].stderr.indexOf("Caused by:")>0){
-                                            output+="<br/>"+data[x].stderr.split("Caused by:")[1];
-                                        }
-                                        else
-                                            output+="<br/>"+data[x].stdout;
-                                    }
+                                     if(data[x].stdout || output[x].stderr){
+                                         var modal = document.getElementById("logModal");
+                                         var div = document.createElement('span');
+                                         div.innerHTML=modal.innerHTML;
+                                         div.getElementsByClassName("stdout")[0].innerHTML=data[x].stdout;
+                                         div.getElementsByClassName("stderr")[0].innerHTML=data[x].stderr;
+                                         div.getElementsByClassName("modal fade")[0].setAttribute("id", "logModal"+block.id);
+                                         document.getElementById("modals").innerHTML+=div.innerHTML;
+                                         output+="<br/>"+
+                                             '<button class="btn btn-primary btn-sm" href="#"  data-toggle="modal" data-target="#logModal'+block.id+'">Show Log</button>';
+                                     }
+
                                     block.setInfos(output);
                                 }
                             }
                         }
 
                     }
+                    alertify.notify('Workflow Execution Completed!', 'success', 5);
                 },
                 error: function (e) {
                     alertify.notify(e.responseText, 'error', 5);
@@ -218,105 +317,9 @@ var blocks;
 
         //Initializing Tree
 
-        //Tree Context Menu Structure
-        var contex_menu = {
-            'context1' : {
-                elements : [
-                    {
-                        text : 'Node Actions',
-                        icon: 'animara/images/blue_key.png',
-                        action : function(node) {
-
-                        },
-                        submenu: {
-                            elements : [
-                                {
-                                    text : 'Toggle Node',
-                                    icon: 'animara/images/leaf.png',
-                                    action : function(node) {
-                                        node.toggleNode();
-                                    }
-                                },
-                                {
-                                    text : 'Expand Node',
-                                    icon: 'animara/images/leaf.png',
-                                    action : function(node) {
-                                        node.expandNode();
-                                    }
-                                },
-                                {
-                                    text : 'Collapse Node',
-                                    icon: 'animara/images/leaf.png',
-                                    action : function(node) {
-                                        node.collapseNode();
-                                    }
-                                },
-                                {
-                                    text : 'Expand Subtree',
-                                    icon: 'animara/images/tree.png',
-                                    action : function(node) {
-                                        node.expandSubtree();
-                                    }
-                                },
-                                {
-                                    text : 'Collapse Subtree',
-                                    icon: 'animara/images/tree.png',
-                                    action : function(node) {
-                                        node.collapseSubtree();
-                                    }
-                                },
-                                {
-                                    text : 'Delete Node',
-                                    icon: 'animara/images/delete.png',
-                                    action : function(node) {
-                                        node.removeNode();
-                                    }
-                                },
-                            ]
-                        }
-                    },
-                    {
-                        text : 'Child Actions',
-                        icon: 'animara/images/blue_key.png',
-                        action : function(node) {
-
-                        },
-                        submenu: {
-                            elements : [
-                                {
-                                    text : 'Create Child Node',
-                                    icon: 'animara/images/add1.png',
-                                    action : function(node) {
-                                        node.createChildNode('Created',false,'animara/images/folder.png',null,'context1');
-                                    }
-                                },
-                                {
-                                    text : 'Create 1000 Child Nodes',
-                                    icon: 'animara/images/add1.png',
-                                    action : function(node) {
-                                        for (var i=0; i<1000; i++)
-                                            node.createChildNode('Created -' + i,false,'animara/images/folder.png',null,'context1');
-                                    }
-                                },
-                                {
-                                    text : 'Delete Child Nodes',
-                                    icon: 'animara/images/delete.png',
-                                    action : function(node) {
-                                        node.removeChildNodes();
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-        };
 
         //Creating the tree
-        tree = createTree('div_tree','white',contex_menu);
 
-        //Rendering the tree
-        tree.drawTree();
 
         initializeTree()
 
@@ -327,6 +330,11 @@ var blocks;
 })();
 
 function initializeTree() {
+    tree = createTree('div_tree','white',contex_menu);
+
+    //Rendering the tree
+    tree.drawTree();
+
     $.ajax({
         type: "POST",
         enctype: 'multipart/form-data',
@@ -359,10 +367,7 @@ function initializeTree() {
                 library[jar][package][family].push(name);
             }
 
-            var childNodes=tree.childNodes
-            for(var node in childNodes){
-                tree.removeNode(node);
-            }
+            tree
             //Loop to create test nodes
             for (var jar in library) {
                 node1 = tree.createNode(jar,false,'animara/images/star.png',null,null,'context1');
