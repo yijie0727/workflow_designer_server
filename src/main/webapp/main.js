@@ -283,7 +283,31 @@ var contex_menu = {
                         for(var x in data){
                             if(data[x].id===block.id){
                                 if(data[x].output||data[x].stderr||data[x].stdout){
-                                    var output = 'Previous Output:'+data[x].output;
+                                    var output = 'Previous Output:';
+                                     if(data[x].output){
+                                         var outputObj = data[x].output;
+                                         if (outputObj.type==="STRING"){
+                                             output+=outputObj.value;
+                                         }
+                                         else if (outputObj.type==="FILE"){
+                                             output+="<a href=\"rest/workflow/file/"+outputObj.filename+"\">"+outputObj.title+"</a>";
+                                         }
+                                         else if (outputObj.type==="GRAPH"){
+                                             var modal = document.getElementById("graphModal");
+                                             var div = document.createElement('span');
+                                             div.innerHTML=modal.innerHTML;
+                                             div.getElementsByClassName("modal fade")[0].setAttribute("id", "graphModal"+block.id);
+                                             div.getElementsByClassName("modal-body")[0].setAttribute("id", "graphDiv"+block.id);
+                                             document.getElementById("modals").innerHTML+=div.innerHTML;
+                                             output+="<br/>"+
+                                                 '<button class="btn btn-primary btn-sm" href="#"  data-toggle="modal" data-target="#graphModal'+block.id+'">Show Graph</button>';
+                                             var traces=[];
+                                             for(var p=0;p < outputObj.value.traces.length ;p++){
+                                                 traces.push(outputObj.value.traces[p]);
+                                             }
+                                             Plotly.newPlot('graphDiv'+block.id, traces, outputObj.value.layout);
+                                         }
+                                     }
                                      if(data[x].stdout || data[x].stderr){
                                          var modal = document.getElementById("logModal");
                                          var div = document.createElement('span');

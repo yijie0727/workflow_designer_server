@@ -164,9 +164,9 @@ Field.prototype.getSingleFieldHtml = function(value)
     }
 
     if (this.type == 'longtext') {
-        field += '<textarea name="'+this.getFieldName()+'"></textarea>';
+        field += '<textarea class="form-control" name="'+this.getFieldName()+'"></textarea>';
     } else if (this.type == 'choice' || this.choices) {
-        field += '<select name="'+this.getFieldName()+'">';
+        field += '<select class="form-control" name="'+this.getFieldName()+'">';
         for (var k in this.choices) {
             var choice = this.choices[k];
             var selected = (choice == value) ? 'selected' : '';
@@ -175,7 +175,7 @@ Field.prototype.getSingleFieldHtml = function(value)
         field += '</select>';
     } else {
         var type = this.type == 'bool' ? 'checkbox' : 'text';
-        field += '<input value="'+value+'" type="'+type+'" name="'+this.getFieldName()+'" />'+this.unit;
+        field += '<input class="form-control" value="'+value+'" type="'+type+'" name="'+this.getFieldName()+'" />'+this.unit;
     }
 
     return field;
@@ -416,14 +416,10 @@ Fields.prototype.show = function()
     html += '<input type="submit" style="display:none" width="0" height="0" />';
     html += '</form>';
     
-    html += '<button class="save" href="javascript:void(0);">Save</button>';
-    html += '<button class="close" href="javascript:void(0);">Close</button>';
+    html += '<button class="btn btn-success save pull-right" href="javascript:void(0);">Save</button>';
 
     this.div.html(html);
 
-    this.div.find('.close').click(function() {
-        $.fancybox.close();
-    });
 
     var form = this.div.find('form');
     
@@ -460,8 +456,8 @@ Fields.prototype.handleArrays = function()
         var fields = $(this).find('.fields');
 
         var buttons = '<div class="buttons">';
-        buttons += '<a class="add" href="#">Add</a> ';
-        buttons += '<a class="remove" href="#">Remove</a>';
+        buttons += '<a class="btn btn-primary add" href="#">Add</a> ';
+        buttons += '<a class="btn btn-warning remove" href="#">Remove</a>';
         buttons += '</div>';
         $(this).append(buttons);
 

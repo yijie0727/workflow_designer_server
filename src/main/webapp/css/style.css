@@ -75,3 +75,13 @@ button.navbar-btn{
     /* for the animation */
     transition: width 0.3s ease;
 }
+
+body .modal-dialog { /* Width */
+    max-width: 100%;
+    width: auto !important;
+    display: inline-block;
+}
+
+.modal.in{
+    text-align: center;
+}

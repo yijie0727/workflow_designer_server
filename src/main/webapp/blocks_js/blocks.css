@@ -345,26 +345,6 @@
     background-color:#eeffee;
 }
 
-.blocks_js_modal button {
-    margin:5px;
-    padding:2px;
-    cursor:pointer;
-    border:0;
-    color:#222;
-    font-size:18px;
-}
-
-.blocks_js_modal button.close {
-    color:white;
-    background-color:#ff4646;
-}
-
-.blocks_js_modal button.save {
-    color:white;
-    background-color:#21c40c;
-    float:right;
-}
-
 .blocks_js_modal input, 
 .blocks_js_modal select,
 .blocks_js_modal textarea {
