@@ -275,9 +275,10 @@ public class Workflow {
             return Response.status(500)
                     .entity("Execution failed with " + e1.getMessage() ).build();
         }
-        if(result!=null)
-        return Response.status(200)
-                .entity(result.toString(4)).build();
+        if(result!=null){
+            return Response.status(200)
+                    .entity(result.toString(4)).build();
+        }
         else{
             logger.error("No result was generated");
             return Response.status(400).entity("No output").build();
