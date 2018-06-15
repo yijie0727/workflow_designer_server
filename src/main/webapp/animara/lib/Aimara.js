@@ -140,7 +140,10 @@ function createTree(p_div,p_backColor,p_contextMenu) {
 			if (p_node.childNodes.length == 0) {
 				v_exp_col = createImgElement('toggle_off','exp_col','animara/images/collapse.png');
 				v_exp_col.style.visibility = "hidden";
-			}
+                v_span.setAttribute("draggable",true);
+                v_span.setAttribute("ondragstart","drag(event,'"+p_node.id+"')");
+
+            }
 			else {
 				if (p_node.expanded) {
 					v_exp_col = createImgElement('toggle_off','exp_col','animara/images/collapse.png');

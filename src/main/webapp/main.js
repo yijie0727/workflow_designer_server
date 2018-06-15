@@ -437,3 +437,37 @@ function expand_all() {
 function collapse_all() {
     tree.collapseTree();
 }
+
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev,node_id) {
+    var rel = getBlockRel(tree,node_id);
+    for(var meta in blocks.metas){
+        if(blocks.metas[meta].name===rel){
+            ev.dataTransfer.setData("rel", rel);
+            return;
+        }
+    }
+    ev.preventDefault();
+}
+
+function drop(ev) {
+    var rel = ev.dataTransfer.getData("rel");
+    var blocksPosition = $("#blocks").offset();
+    blocks.addBlock(rel, ev.clientX-blocksPosition.left-blocks.center.x, ev.clientY-blocksPosition.top-blocks.center.y);
+}
+
+function getBlockRel(tree,node_id){
+    var node=tree;
+    for(var child in node.childNodes){
+        if(node.childNodes[child].id==node_id){
+            return node.childNodes[child].text;
+        }
+        else{
+            var inChildren = getBlockRel(node.childNodes[child],node_id);
+            if(inChildren)return inChildren;
+        }
+    }
+}
