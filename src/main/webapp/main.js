@@ -260,6 +260,13 @@ var contex_menu = {
         $("#execute").click(function(event){
             alertify.notify('Workflow Execution Started', 'success', 5);
 
+            for (k in blocks.blocks) {
+                var block = blocks.blocks[k];
+                block.setInfos('');
+            }
+
+            document.getElementById("modals").innerHTML="";
+
             // Create an FormData object
             var data = new FormData();
 
@@ -291,6 +298,9 @@ var contex_menu = {
                                          }
                                          else if (outputObj.type==="FILE"){
                                              output+="<a href=\"rest/workflow/file/"+outputObj.filename+"\">"+outputObj.title+"</a>";
+                                         }
+                                         else if (outputObj.type==="TABLE"){
+                                             output+=outputObj.value;
                                          }
                                          else if (outputObj.type==="GRAPH"){
                                              var modal = document.getElementById("graphModal");

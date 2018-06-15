@@ -272,7 +272,7 @@ public class Workflow {
         }
         catch(Exception e1){
             logger.error("Executing jar failed",e1);
-            Response.status(500)
+            return Response.status(500)
                     .entity("Execution failed with " + e1.getMessage() ).build();
         }
         if(result!=null)
