@@ -156,6 +156,24 @@
         </div>
     </div>
 
+    <!-- Elfinder Modal -->
+    <div class="modal fade" id="browseModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content modal-fullscreen">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Select Remote File</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="elfinderBrowse"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <div style="display:none" id="logModal">
         <!-- Modal -->
         <div class="modal fade" role="dialog">
@@ -224,6 +242,34 @@
                     });
                 })
             });
+
+            function selectFile(event,target){
+                event.preventDefault();
+
+                $('#browseModal').on('shown.bs.modal', function (e) {
+                    $('#browseModal').css('z-index',9999)
+                    $('#elfinderBrowse').elfinder({
+                        url : 'elfinder/connector',
+                        commandsOptions:{
+                            getfile: {
+                                oncomplete: 'destroy'
+                            }
+                        },
+                        getFileCallback : function(file)
+                        {
+                            $('#browseModal').modal('hide');
+                            target.innerHTML=file.path;
+                            target.nextSibling.value=file.path;
+                        }
+                    });
+                });
+                $('#browseModal').modal('show');
+
+            }
+
+
+
+
         </script>
     </body>
 </html>

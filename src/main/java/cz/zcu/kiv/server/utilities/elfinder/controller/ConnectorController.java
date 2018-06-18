@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static cz.zcu.kiv.server.Workflow.TEMP_FOLDER;
+
 
 public class ConnectorController {
     Logger _logger = Logger.getLogger(this.getClass());
@@ -36,7 +38,7 @@ public class ConnectorController {
     private FsServiceFactory _fsServiceFactory;
 
     private File _tempDir = null;
-    String _tempDirPath = "workingDirectory";
+    String _tempDirPath = TEMP_FOLDER;
 
     /**
      * set temp file dir path, relative path is allowed (web root as base dir)

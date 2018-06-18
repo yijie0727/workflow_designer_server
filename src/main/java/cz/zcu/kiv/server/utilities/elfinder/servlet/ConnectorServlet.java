@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 
+import static cz.zcu.kiv.server.Workflow.WORK_FOLDER;
+
 /**
  * ConnectorServlet is an example servlet
  * it creates a ConnectorController on init() and use it to handle requests on doGet()/doPost()
@@ -77,10 +79,11 @@ public class ConnectorServlet extends HttpServlet
 
 		fsService.setServiceConfig(serviceConfig);
 
-		fsService.addVolume("A",
-				createLocalFsVolume("My Files", new File("/tmp/a")));
-		fsService.addVolume("B",
-				createLocalFsVolume("Shared", new File("/tmp/b")));
+		fsService.addVolume("MyFiles",
+				createLocalFsVolume("My Files", new File(WORK_FOLDER+"MyFiles")));
+		fsService.addVolume("Shared",
+				createLocalFsVolume("Shared", new File(WORK_FOLDER+"Shared")));
+
 
 		return fsService;
 	}

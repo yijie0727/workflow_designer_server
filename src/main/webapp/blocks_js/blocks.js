@@ -174,12 +174,12 @@ Field.prototype.getSingleFieldHtml = function(value)
         }
         field += '</select>';
     } else if (this.type == 'file'){
-        field += '<input class="form-control" value="'+value+'" type="file" onchange="var loc=$(this).val();$(this).next().val(loc==null?\'\':\'file:\\\\\\\\\'+loc);" />';
+        field += '<button class="btn btn-primary btn-sm" onclick="selectFile(event,this)" >Choose File</button>';
         field += '<input type="hidden" name="'+this.getFieldName()+'" />';
         field += this.unit;
     } else {
         var type = this.type == 'bool' ? 'checkbox' : 'text';
-        field += '<input class="form-control" value="'+value+'" type="'+type+'" name="'+this.getFieldName()+'" />'+this.unit;
+        field += '<input value="'+value+'" type="'+type+'" name="'+this.getFieldName()+'" />'+this.unit;
     }
 
     return field;
@@ -627,10 +627,11 @@ var Types = function()
 /**
  * Normalize types
  */
-Types.normalize = function(type)
+Types.normalize = function(fieldType)
 {
+    var type=fieldType.toLowerCase();
 
-    if (type == 'check' || type == 'bool' || type == 'checkbox') {
+    if (type == 'check' || type == 'bool'|| type=='boolean' || type == 'checkbox') {
         type = 'bool';
     }
 
@@ -654,6 +655,7 @@ Types.normalize = function(type)
         type = 'longtext';
     }
 
+    this.type=type;
     return type;
 }
 

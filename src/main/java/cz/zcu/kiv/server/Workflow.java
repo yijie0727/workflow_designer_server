@@ -53,6 +53,8 @@ public class Workflow {
     /** The path to the folder where we want to store the uploaded files */
     private static final String UPLOAD_FOLDER = "uploadedFiles/";
     private static final String GENERATED_FILES_FOLDER = "generatedFiles/";
+    public static final String WORK_FOLDER = "workFiles/";
+    public static final String TEMP_FOLDER = "tmp/";
 
     public Workflow() {
     }
@@ -94,6 +96,17 @@ public class Workflow {
     @Path("/initialize")
     @Produces(MediaType.TEXT_PLAIN)
     public Response initializeAtom()  {
+        try {
+            createFolderIfNotExists(UPLOAD_FOLDER);
+            createFolderIfNotExists(GENERATED_FILES_FOLDER);
+            createFolderIfNotExists(WORK_FOLDER);
+            createFolderIfNotExists(TEMP_FOLDER);
+        } catch (SecurityException se) {
+            logger.error("Error saving folder on server ",se);
+            return Response.status(500)
+                    .entity("Can not create destination folder on server")
+                    .build();
+        }
 
         ClassLoader child;
         JSONArray result=new JSONArray();
@@ -107,10 +120,10 @@ public class Workflow {
 
                 try{
                     Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
-                    Constructor<?> ctor = classToLoad.getConstructor(ClassLoader.class,String.class,String.class);
+                    Constructor<?> ctor = classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
                     Method method = classToLoad.getDeclaredMethod("initializeBlocks");
                     method.setAccessible(true);
-                    Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER);
+                    Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER,WORK_FOLDER);
                     JSONArray blocks = (JSONArray)method.invoke(instance);
                     for(int i=0;i<blocks.length();i++){
                         result.put(blocks.getJSONObject(i));
@@ -154,15 +167,6 @@ public class Workflow {
         // check if all form parameters are provided
         if (formData == null || packageName == null )
             return Response.status(400).entity("Invalid form data").build();
-        // create our destination folder, if it not exists
-        try {
-            createFolderIfNotExists(UPLOAD_FOLDER);
-        } catch (SecurityException se) {
-            logger.error("Error saving folder on server ",se);
-            return Response.status(500)
-                    .entity("Can not create destination folder on server")
-                    .build();
-        }
 
 
         ClassLoader child;
@@ -184,10 +188,10 @@ public class Workflow {
 
         try{
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
-            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class);
+            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
-            Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER);
+            Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER,WORK_FOLDER);
             result = (JSONArray)method.invoke(instance);
             putModule(module);
         }
@@ -237,15 +241,6 @@ public class Workflow {
             return Response.status(400).entity("Invalid workflow JSON").build();
 
         }
-        // create our destination folder, if it not exists
-        try {
-            createFolderIfNotExists(GENERATED_FILES_FOLDER);
-        } catch (SecurityException se) {
-            logger.error("Couldn't create generated files folder on server",se);
-            return Response.status(500)
-                    .entity("Can not create destination folder on server")
-                    .build();
-        }
 
         ClassLoader child;
         Map<Class,String>moduleSource = new HashMap<>();
@@ -265,9 +260,9 @@ public class Workflow {
             Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
             Thread.currentThread().setContextClassLoader(child);
 
-            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class);
+            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class);
             Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
-            Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER);
+            Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER);
             result = (JSONArray)method.invoke(instance,workflowObject,GENERATED_FILES_FOLDER);
         }
         catch(Exception e1){
