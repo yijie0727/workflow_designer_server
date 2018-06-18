@@ -16,9 +16,18 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
 	</servlet>
+    <servlet>
+        <servlet-name>Elfinder</servlet-name>
+        <servlet-class>cz.zcu.kiv.server.Servlet</servlet-class>
+    </servlet>
 	<servlet-mapping>
 		<servlet-name>Workflow</servlet-name>
 		<url-pattern>/rest/*</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>Elfinder</servlet-name>
+		<url-pattern>/elfinder/connector</url-pattern>
 	</servlet-mapping>
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

@@ -14,6 +14,7 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.eclipse.jetty.util.log.Slf4jLog;
@@ -72,9 +73,15 @@ public class EmbeddedServer{
 
 		URI baseUri = UriBuilder.fromUri("http://localhost").port(SERVER_PORT)
 				.build();
-		ResourceConfig config = new ResourceConfig(Workflow.class);
+
+		ResourceConfig config = new ResourceConfig();
+		config.register(Workflow.class);
 		config.register(Slf4jLog.class);
 		config.register(MultiPartFeature.class);
+
+		ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/elfinder",true, false);
+		servletContextHandler.addServlet(Servlet.class, "/connector");
+		servletContextHandler.setAllowNullPathInfo(true);
 		server = JettyHttpContainerFactory.createServer(baseUri, config,
 				false);
 
@@ -90,7 +97,7 @@ public class EmbeddedServer{
 		resourceHandler.setWelcomeFiles(new String[] { "index.html" });
 		resourceHandler.setResourceBase(location.toExternalForm());
 		HandlerCollection handlerCollection = new HandlerCollection();
-		handlerCollection.setHandlers(new Handler[] { resourceHandler,
+		handlerCollection.setHandlers(new Handler[] { servletContextHandler,resourceHandler,
 				contextHandler, new DefaultHandler() });
 		server.setHandler(handlerCollection);
 		server.addLifeCycleListener(new Listener() {

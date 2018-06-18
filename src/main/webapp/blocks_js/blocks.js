@@ -174,8 +174,8 @@ Field.prototype.getSingleFieldHtml = function(value)
         }
         field += '</select>';
     } else if (this.type == 'file'){
-        field += '<input class="form-control" value="'+value+'" type="file" onchange="$(this).next().val($(this).val())" />';
-        field += '<input type="text" name="'+this.getFieldName()+'" />';
+        field += '<input class="form-control" value="'+value+'" type="file" onchange="var loc=$(this).val();$(this).next().val(loc==null?\'\':\'file:\\\\\\\\\'+loc);" />';
+        field += '<input type="hidden" name="'+this.getFieldName()+'" />';
         field += this.unit;
     } else {
         var type = this.type == 'bool' ? 'checkbox' : 'text';
@@ -503,6 +503,7 @@ Fields.prototype.hide = function()
  */
 Fields.prototype.save = function(serialize)
 {
+    console.log(serialize);
     for (var key in serialize) {
         var newKey = key;
         var isArray = false;

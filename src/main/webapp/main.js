@@ -219,7 +219,6 @@ var contex_menu = {
         });
 
         $('#clear').click(function () {
-            blocks.clear();
             alertify.confirm('Workflow Desginer','Clear Workflow?', function(){ blocks.clear(); }, function(){});
         });
 
