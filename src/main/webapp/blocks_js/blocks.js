@@ -174,12 +174,19 @@ Field.prototype.getSingleFieldHtml = function(value)
         }
         field += '</select>';
     } else if (this.type == 'file'){
-        field += '<button class="btn btn-primary btn-sm" onclick="selectFile(event,this)" >Choose File</button>';
-        field += '<input type="hidden" name="'+this.getFieldName()+'" />';
+        field += '<button class="btn btn-primary btn-sm" onclick="selectFile(event,this)" >Choose File: '+value+'</button>';
+        field += '<input type="hidden" name="'+this.getFieldName()+'" value="'+value+'"/>';
         field += this.unit;
-    } else {
-        var type = this.type == 'bool' ? 'checkbox' : 'text';
-        field += '<input value="'+value+'" type="'+type+'" name="'+this.getFieldName()+'" />'+this.unit;
+    }
+    else if (this.type=='bool'){
+        field += '<select name="'+this.getFieldName()+'">';
+        field += '<option '+(value==true?"selected":"")+' value="true">Yes</option>';
+        field += '<option '+(value==false?"selected":"")+' value="false">No</option>';
+        field += '</select>';
+        field += this.unit;
+    }
+    else {
+        field += '<input value="'+value+'" type="text" name="'+this.getFieldName()+'" />'+this.unit;
     }
 
     return field;
@@ -503,7 +510,6 @@ Fields.prototype.hide = function()
  */
 Fields.prototype.save = function(serialize)
 {
-    console.log(serialize);
     for (var key in serialize) {
         var newKey = key;
         var isArray = false;
@@ -515,7 +521,14 @@ Fields.prototype.save = function(serialize)
             serialize[key] = [];
         }
 
-        this.getField(newKey).setValue(serialize[key]);
+        if(serialize[key]=="true"){
+            this.getField(newKey).setValue(true);
+        }
+        else if(serialize[key]=="false"){
+            this.getField(newKey).setValue(false);
+        }
+        else
+            this.getField(newKey).setValue(serialize[key]);
     }
 
     this.block.render();
