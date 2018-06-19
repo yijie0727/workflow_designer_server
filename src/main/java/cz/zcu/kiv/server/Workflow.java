@@ -51,12 +51,14 @@ public class Workflow {
     private static Log logger = LogFactory.getLog(Workflow.class);
 
     /** The path to the folder where we want to store the uploaded files */
-    private static final String UPLOAD_FOLDER = "uploadedFiles/";
-    private static final String GENERATED_FILES_FOLDER = "generatedFiles/";
-    public static final String WORK_FOLDER = "workFiles/";
-    public static final String TEMP_FOLDER = "tmp/";
+    private static final String DATA_FOLDER = new File(Workflow.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getAbsolutePath();
+    private static final String UPLOAD_FOLDER = DATA_FOLDER+"/uploadedFiles/";
+    private static final String GENERATED_FILES_FOLDER = DATA_FOLDER+"/generatedFiles/";
+    public static final String WORK_FOLDER = DATA_FOLDER+"/workFiles/";
+    public static final String TEMP_FOLDER = DATA_FOLDER+"/tmp/";
 
     public Workflow() {
+        System.out.println(DATA_FOLDER);
     }
 
     @Context

@@ -35,7 +35,7 @@ public abstract class MimeTypesUtils
 
 	private static void load() throws IOException
 	{
-		InputStream is = new FileInputStream(new File("mime.types"));
+		InputStream is = MimeTypesUtils.class.getClassLoader().getResourceAsStream("mime.types");
 		BufferedReader fr = new BufferedReader(new InputStreamReader(is));
 		String line;
 		while ((line = fr.readLine()) != null)
