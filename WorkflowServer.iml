@@ -89,13 +89,13 @@
     <orderEntry type="library" name="Maven: org.apache.ws.xmlschema:xmlschema-core:2.2.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.cxf:cxf-rt-transports-http:3.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish.jersey.containers:jersey-container-servlet:2.17" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlets:9.0.5.v20130815" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-http:9.0.5.v20130815" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-io:9.0.5.v20130815" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.0.5.v20130815" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty.orbit:javax.servlet:3.0.0.v201112011016" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlet:9.0.5.v20130815" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-security:9.0.5.v20130815" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-util:9.0.5.v20130815" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlets:9.3.0.M2" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-http:9.3.0.M2" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-io:9.3.0.M2" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.3.0.M2" level="project" />
+    <orderEntry type="library" name="Maven: javax.servlet:javax.servlet-api:3.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-servlet:9.3.0.M2" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-security:9.3.0.M2" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-util:9.3.0.M2" level="project" />
   </component>
 </module>
