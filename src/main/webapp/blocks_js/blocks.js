@@ -277,6 +277,7 @@ Field.prototype.setValue = function(value)
  */
 Field.prototype.asDimension = function()
 {
+    if(!this.is("editable"))return 9999;
     if (this.extensible) {
         return this.size+1;
     } else if (this.isArray) {
@@ -1586,7 +1587,7 @@ Block.prototype.getHtml = function()
             }
 
             var size = 1;
-            if (field.variadic) {
+            if (field.variadic && field.is('editable')) {
                 size = field.getDimension(self.fields);
             }
 

@@ -58,7 +58,6 @@ public class Workflow {
     public static final String TEMP_FOLDER = DATA_FOLDER+"/tmp/";
 
     public Workflow() {
-        System.out.println(DATA_FOLDER);
     }
 
     @Context
