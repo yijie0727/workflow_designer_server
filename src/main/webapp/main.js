@@ -296,7 +296,7 @@ var contex_menu = {
                                              output+=outputObj.value;
                                          }
                                          else if (outputObj.type==="FILE"){
-                                             output+="<a href=\"rest/workflow/file/"+outputObj.filename+"\">"+outputObj.title+"</a>";
+                                             output+="<a href=\"rest/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
                                          }
                                          else if (outputObj.type==="TABLE"){
                                              output+=outputObj.value;
