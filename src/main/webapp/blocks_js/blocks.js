@@ -173,9 +173,20 @@ Field.prototype.getSingleFieldHtml = function(value)
             field += '<option '+selected+' value="'+choice+'">'+choice+'</option>';
         }
         field += '</select>';
-    } else {
-        var type = this.type == 'bool' ? 'checkbox' : 'text';
-        field += '<input class="form-control" value="'+value+'" type="'+type+'" name="'+this.getFieldName()+'" />'+this.unit;
+    } else if (this.type == 'file'){
+        field += '<button class="btn btn-primary btn-sm" onclick="selectFile(event,this)" >Choose File: '+value+'</button>';
+        field += '<input type="hidden" name="'+this.getFieldName()+'" value="'+value+'"/>';
+        field += this.unit;
+    }
+    else if (this.type=='bool'){
+        field += '<select name="'+this.getFieldName()+'">';
+        field += '<option '+(value==true?"selected":"")+' value="true">Yes</option>';
+        field += '<option '+(value==false?"selected":"")+' value="false">No</option>';
+        field += '</select>';
+        field += this.unit;
+    }
+    else {
+        field += '<input value="'+value+'" type="text" name="'+this.getFieldName()+'" />'+this.unit;
     }
 
     return field;
@@ -266,6 +277,7 @@ Field.prototype.setValue = function(value)
  */
 Field.prototype.asDimension = function()
 {
+    if(!this.is("editable"))return 9999;
     if (this.extensible) {
         return this.size+1;
     } else if (this.isArray) {
@@ -499,8 +511,6 @@ Fields.prototype.hide = function()
  */
 Fields.prototype.save = function(serialize)
 {
-    var values = {};
-
     for (var key in serialize) {
         var newKey = key;
         var isArray = false;
@@ -512,7 +522,14 @@ Fields.prototype.save = function(serialize)
             serialize[key] = [];
         }
 
-        this.getField(newKey).setValue(serialize[key]);
+        if(serialize[key]=="true"){
+            this.getField(newKey).setValue(true);
+        }
+        else if(serialize[key]=="false"){
+            this.getField(newKey).setValue(false);
+        }
+        else
+            this.getField(newKey).setValue(serialize[key]);
     }
 
     this.block.render();
@@ -624,11 +641,11 @@ var Types = function()
 /**
  * Normalize types
  */
-Types.normalize = function(type)
+Types.normalize = function(fieldType)
 {
-    type = type;
+    var type=fieldType.toLowerCase();
 
-    if (type == 'check' || type == 'bool' || type == 'checkbox') {
+    if (type == 'check' || type == 'bool'|| type=='boolean' || type == 'checkbox') {
         type = 'bool';
     }
 
@@ -652,6 +669,7 @@ Types.normalize = function(type)
         type = 'longtext';
     }
 
+    this.type=type;
     return type;
 }
 
@@ -1569,7 +1587,7 @@ Block.prototype.getHtml = function()
             }
 
             var size = 1;
-            if (field.variadic) {
+            if (field.variadic && field.is('editable')) {
                 size = field.getDimension(self.fields);
             }
 

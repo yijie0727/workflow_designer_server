@@ -13,7 +13,7 @@
         <link rel="stylesheet" type="text/css" href="blocks_js/fancybox/jquery.fancybox.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <!-- Plotly.js -->
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="js/plotly.min.js"></script>
         <link rel="stylesheet" href="css/bootstrap.min.css">
 
         <!--Animara JS Tree -->
@@ -24,10 +24,19 @@
         <!-- JavaScript -->
         <script src="js/alertify.min.js"></script>
 
-        <!-- CSS -->
+        <!-- Alertify -->
         <link rel="stylesheet" href="css/alertify.min.css"/>
 
+        <!--BootStrap -->
         <script src="js/bootstrap.min.js"></script>
+
+        <!--Elfinder-->
+        <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
+        <script src="js/jquery-ui.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/elfinder.min.css">
+        <link rel="stylesheet" type="text/css" href="css/elfinder-theme.css">
+        <script src="js/elfinder-min.js"></script>
+
         <!-- block_definitions.js -->
 	    <script type="text/javascript" src="blocks_js/blocks.js"></script>
         <link rel="stylesheet" type="text/css" href="blocks_js/blocks.css" />
@@ -54,6 +63,7 @@
                         <li><a href="#" id="save">Save Workflow(.json)</a></li>
                         <li><a href="#" id="clear">Clear Workflow</a></li>
                         <li><a href="#" id="import" data-toggle="modal" data-target="#importModal">Import Library (.Jar)</a></li>
+                        <li><a href="#" id="remote" data-toggle="modal" data-target="#elfinderModal">Browse Remote</a></li>
                         <li></li>
                     </ul>
                 </li>
@@ -96,7 +106,7 @@
 
 
 
-    <!-- Modal -->
+    <!-- Import Modal -->
     <div class="modal fade" id="importModal" role="dialog">
         <div class="modal-dialog">
 
@@ -122,6 +132,42 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" id="importSubmit" data-dismiss="modal">Submit</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Elfinder Modal -->
+    <div class="modal fade" id="elfinderModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content modal-fullscreen">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Browser Remote directory</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="elfinder"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Elfinder Modal -->
+    <div class="modal fade" id="browseModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content modal-fullscreen">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Select Remote File</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="elfinderBrowse"></div>
                 </div>
             </div>
 
@@ -187,6 +233,41 @@
     <div id="modals"></div>
 
         <script>
+            $(document).ready(function() {
+
+                $('#elfinderModal').on('shown.bs.modal', function (e) {
+                     $('#elfinder').elfinder({
+                        url : 'elfinder/connector',
+                        // , lang: 'ru'                    // language (OPTIONAL)
+                    });
+                })
+            });
+
+            function selectFile(event,target){
+                event.preventDefault();
+
+                $('#browseModal').on('shown.bs.modal', function (e) {
+                    $('#browseModal').css('z-index',9999)
+                    $('#elfinderBrowse').elfinder({
+                        url : 'elfinder/connector',
+                        commandsOptions:{
+                            getfile: {
+                                oncomplete: 'destroy'
+                            }
+                        },
+                        getFileCallback : function(file)
+                        {
+                            $('#browseModal').modal('hide');
+                            target.innerHTML=file.path;
+                            target.nextSibling.value=file.path;
+                        }
+                    });
+                });
+                $('#browseModal').modal('show');
+
+            }
+
+
 
 
         </script>
