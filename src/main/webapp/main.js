@@ -299,7 +299,20 @@ var contex_menu = {
                                              output+="<a href=\"rest/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
                                          }
                                          else if (outputObj.type==="TABLE"){
-                                             output+=outputObj.value;
+                                             var modal = document.getElementById("tableModal");
+                                             var div = document.createElement('span');
+                                             div.innerHTML=modal.innerHTML;
+                                             div.getElementsByClassName("modal fade")[0].setAttribute("id", "tableModal"+block.id);
+                                             div.getElementsByClassName("modal-body")[0].setAttribute("id", "tableDiv"+block.id);
+                                             document.getElementById("modals").innerHTML+=div.innerHTML;
+                                             output+="<br/>"+
+                                                 '<button class="btn btn-success btn-sm" href="#"  data-toggle="modal" data-target="#tableModal'+block.id+'">Show Table</button>';
+                                             $("#tableDiv"+block.id).jexcel({
+                                                 data:outputObj.value.data,
+                                                 tableOverflow:true,
+                                                 tableHeight:'300px',
+                                                 tableWidth:'400px'
+                                             });
                                          }
                                          else if (outputObj.type==="GRAPH"){
                                              var modal = document.getElementById("graphModal");
