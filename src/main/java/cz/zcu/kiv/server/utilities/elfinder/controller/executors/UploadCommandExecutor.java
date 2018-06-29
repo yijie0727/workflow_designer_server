@@ -117,9 +117,6 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					while (true)
 					{
 						// current part is not read completely
-                        if(partIndex==12){
-                            int a=1;
-                        }
                         int c;
                         try {
                             c = is.read();
@@ -209,7 +206,6 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				 */
 				newFile.createFile();
 				newFile.writeStream(is);
-				FileUtils.cleanDirectory(new File(ConnectorController._tempDirPath));
 				if (filter.accepts(newFile))
 					added.add(newFile);
 
