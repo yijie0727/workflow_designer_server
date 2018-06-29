@@ -271,7 +271,7 @@
                 event.preventDefault();
 
                 $('#browseModal').on('shown.bs.modal', function (e) {
-                   this.css('z-index',9999);
+                    $('#browseModal').css('z-index',9999);
                     $('#elfinderBrowse').elfinder({
                         url : 'elfinder/connector',
                         commandsOptions:{
@@ -287,7 +287,7 @@
                         }
                     });
                 });
-                this.modal('show');
+                $('#browseModal').modal('show');
 
             }
 
