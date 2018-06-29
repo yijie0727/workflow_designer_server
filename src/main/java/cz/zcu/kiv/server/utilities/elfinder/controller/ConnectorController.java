@@ -38,7 +38,7 @@ public class ConnectorController {
     private FsServiceFactory _fsServiceFactory;
 
     private File _tempDir = null;
-    String _tempDirPath = TEMP_FOLDER;
+    public static String _tempDirPath = TEMP_FOLDER;
 
     /**
      * set temp file dir path, relative path is allowed (web root as base dir)
@@ -93,7 +93,6 @@ public class ConnectorController {
 
             //clean temp files, cached objects...
             MultipleUploadItems.finalize(request);
-            FileUtils.cleanDirectory(new File(_tempDirPath));
         } catch (Exception e) {
             throw new FsException("unknown error", e);
         }

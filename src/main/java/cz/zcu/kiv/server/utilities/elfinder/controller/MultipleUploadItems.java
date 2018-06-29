@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -57,6 +58,7 @@ public class MultipleUploadItems {
         //ByteArrayOutputStream os = new ByteArrayOutputStream();
         //create a temp source
         final File source = File.createTempFile("elfinder_upload_", "", _tempDir);
+        source.deleteOnExit();
         FileOutputStream os = new FileOutputStream(source);
         IOUtils.copy(stream, os);
         os.close();
@@ -74,7 +76,7 @@ public class MultipleUploadItems {
                             return new FileInputStream(source.getCanonicalPath());
                         }
                         if ("finalize".equals(method.getName())) {
-//                            source.delete();
+                           // source.delete();
                             _logger.debug(String.format("removing item: %s", source.getCanonicalPath()));
                             return null;
                         }

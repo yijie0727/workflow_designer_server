@@ -1,5 +1,6 @@
 package cz.zcu.kiv.server.utilities.elfinder.controller.executors;
 
+import cz.zcu.kiv.server.utilities.elfinder.controller.ConnectorController;
 import cz.zcu.kiv.server.utilities.elfinder.controller.MultipleUploadItems;
 import cz.zcu.kiv.server.utilities.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cz.zcu.kiv.server.utilities.elfinder.controller.executor.CommandExecutor;
@@ -7,11 +8,13 @@ import cz.zcu.kiv.server.utilities.elfinder.controller.executor.FsItemEx;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsItemFilter;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsService;
 import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,9 +116,18 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				{
 					while (true)
 					{
-
 						// current part is not read completely
-						int c = is.read();
+                        if(partIndex==12){
+                            int a=1;
+                        }
+                        int c;
+                        try {
+                            c = is.read();
+                        }
+                        catch (IOException e){
+                            //TODO System.out.println(partIndex+"/"+_numberOfParts);
+                            return -1;
+                        }
 						if (c != -1)
 						{
 							return c;
@@ -197,7 +209,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				 */
 				newFile.createFile();
 				newFile.writeStream(is);
-
+				FileUtils.cleanDirectory(new File(ConnectorController._tempDirPath));
 				if (filter.accepts(newFile))
 					added.add(newFile);
 
