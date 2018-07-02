@@ -317,7 +317,11 @@ var contex_menu = {
                                              for(var p=0;p < outputObj.value.traces.length ;p++){
                                                  traces.push(outputObj.value.traces[p]);
                                              }
-                                             Plotly.newPlot('graphDiv'+block.id, traces, outputObj.value.layout);
+                                             var plot = Plotly.newPlot('graphDiv'+block.id, traces, outputObj.value.layout);
+                                             Plotly.relayout('graphDiv'+block.id, {
+                                                 'xaxis.autorange': true,
+                                                 'yaxis.autorange': true
+                                             });
                                          }
                                      }
                                      if(data[x].stdout || data[x].stderr){
