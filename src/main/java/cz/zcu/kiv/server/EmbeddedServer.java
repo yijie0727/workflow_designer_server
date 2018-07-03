@@ -6,6 +6,7 @@ import java.security.ProtectionDomain;
 
 import javax.ws.rs.core.UriBuilder;
 
+import cz.zcu.kiv.server.scheduler.Manager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Handler;
@@ -127,8 +128,11 @@ public class EmbeddedServer{
 			}
 
 		});
+        Manager manager=new Manager();
+        manager.start();
 		server.start();
 		server.join();
+
 
 	}
 

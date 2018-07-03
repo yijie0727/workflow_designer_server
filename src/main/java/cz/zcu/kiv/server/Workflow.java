@@ -1,6 +1,8 @@
 package cz.zcu.kiv.server;
 
 
+import cz.zcu.kiv.server.scheduler.Job;
+import cz.zcu.kiv.server.scheduler.Manager;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,6 +21,10 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+
+import static cz.zcu.kiv.server.scheduler.Manager.getJobs;
+import static cz.zcu.kiv.server.scheduler.Manager.jobs;
+
 /***********************************************************************************************************************
  *
  * This file is part of the Workflow Designer project
@@ -52,8 +58,8 @@ public class Workflow {
 
     /** The path to the folder where we want to store the uploaded files */
     private static final String DATA_FOLDER = new File(Workflow.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getAbsolutePath();
-    private static final String UPLOAD_FOLDER = DATA_FOLDER+"/uploadedFiles/";
-    private static final String GENERATED_FILES_FOLDER = DATA_FOLDER+"/generatedFiles/";
+    public static final String UPLOAD_FOLDER = DATA_FOLDER+"/uploadedFiles/";
+    public static final String GENERATED_FILES_FOLDER = DATA_FOLDER+"/generatedFiles/";
     public static final String WORK_FOLDER = DATA_FOLDER+"/workFiles/";
     public static final String TEMP_FOLDER = DATA_FOLDER+"/tmp/";
 
@@ -258,13 +264,7 @@ public class Workflow {
         JSONArray result = null;
 
         try{
-            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
-            Thread.currentThread().setContextClassLoader(child);
-
-            Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class);
-            Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
-            Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER);
-            result = (JSONArray)method.invoke(instance,workflowObject,GENERATED_FILES_FOLDER);
+            result = executeJar(child,workflowObject,moduleSource);
         }
         catch(Exception e1){
             logger.error("Executing jar failed",e1);
@@ -279,6 +279,45 @@ public class Workflow {
             logger.error("No result was generated");
             return Response.status(400).entity("No output").build();
         }
+    }
+
+    /**
+     * Returns text response to indicate job scheduling success
+     *
+     * @return job ID
+     */
+    @POST
+    @Path("/schedule")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response schedule(
+            @FormDataParam("workflow") String workflow)  {
+
+        if (workflow == null)
+            return Response.status(400).entity("Invalid form data").build();
+
+        JSONObject workflowObject = new JSONObject(workflow);
+        // check if all form parameters are provided
+
+        Job job=new Job(workflowObject);
+        long jobId = Manager.addJob(job);
+        return Response.status(200)
+                .entity(jobId).build();
+    }
+
+    /**
+     * Returns text response to indicate job scheduling success
+     *
+     * @return job ID
+     */
+    @GET
+    @Path("/schedule")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response schedule()  {
+
+        JSONArray jobs = getJobs();
+        return Response.status(200)
+                .entity(jobs.toString(4)).build();
     }
 
     private File getSingleJarFile(FormDataMultiPart multiPart) throws IOException {
@@ -347,7 +386,7 @@ public class Workflow {
     }
 
 
-    private ClassLoader initializeClassLoader(Set<String>modules, Map<Class,String>moduleSource) throws IOException {
+    public static ClassLoader initializeClassLoader(Set<String>modules, Map<Class,String>moduleSource) throws IOException {
 
 
         int files = modules.size();
@@ -361,7 +400,7 @@ public class Workflow {
                 outputFiles[i] = new File(uploadedFileLocation);
                 urls[i]=outputFiles[i].toURL();
         }
-        URLClassLoader child = new URLClassLoader(urls, this.getClass().getClassLoader());
+        URLClassLoader child = new URLClassLoader(urls, Workflow.class.getClassLoader());
 
         iterator = modules.iterator();
 
@@ -395,6 +434,16 @@ public class Workflow {
         return child;
     }
 
+    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource)throws Exception{
+        Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
+        Thread.currentThread().setContextClassLoader(child);
+
+        Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class);
+        Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
+        Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER);
+        JSONArray result = (JSONArray)method.invoke(instance,workflow,GENERATED_FILES_FOLDER);
+        return result;
+    }
     private ClassLoader initializeJarClassLoader(String packageName,File outputFile) throws IOException {
 
 

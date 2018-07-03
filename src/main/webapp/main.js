@@ -342,10 +342,45 @@ var contex_menu = {
                         }
 
                     }
-                    alertify.notify('Workflow Execution Completed!', 'success', 5);
+                    alertify.notify('Workflow Execution Completed!', 'success', 3);
                 },
                 error: function (e) {
-                    alertify.notify(e.responseText, 'error', 5);
+                    alertify.notify(e.responseText, 'error', 3);
+                }
+            });
+        });
+
+        $("#schedule").click(function(event){
+            alertify.notify('Workflow Execution Scheduled', 'success', 3);
+
+            for (k in blocks.blocks) {
+                var block = blocks.blocks[k];
+                block.setInfos('');
+            }
+
+            document.getElementById("modals").innerHTML="";
+
+            // Create an FormData object
+            var data = new FormData();
+
+            // If you want to add an extra field for the FormData
+            data.append("workflow", JSON.stringify(blocks.export()));
+
+            $.ajax({
+                type: "POST",
+                enctype: 'multipart/form-data',
+                url: "rest/workflow/schedule",
+                data: data,
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+
+                    alertify.notify('Job ID '+data+' scheduled !', 'success', 3);
+                },
+                error: function (e) {
+                    alertify.notify(e.responseText, 'error', 3);
                 }
             });
         });
