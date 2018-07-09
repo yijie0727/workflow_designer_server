@@ -1,5 +1,6 @@
 var tree;
 var blocks;
+var tracking=0;
 
 //Tree Context Menu Structure
 var contex_menu = {
@@ -219,7 +220,7 @@ var contex_menu = {
         });
 
         $('#clear').click(function () {
-            alertify.confirm('Workflow Desginer','Clear Workflow?', function(){ blocks.clear(); }, function(){});
+            alertify.confirm('Workflow Desginer','Clear Workflow?', function(){ clearTracking(); blocks.clear(); }, function(){});
         });
 
         $("#importSubmit").click(function (event) {
@@ -257,6 +258,7 @@ var contex_menu = {
         });
 
         $("#execute").click(function(event){
+            clearTracking();;
             alertify.notify('Workflow Execution Started', 'success', 5);
 
             for (k in blocks.blocks) {
@@ -283,65 +285,7 @@ var contex_menu = {
                 timeout: 600000,
                 success: function (data) {
                     data = JSON.parse(data);
-                    for (var k in blocks.blocks) {
-                        var block = blocks.blocks[k];
-
-                        for(var x in data){
-                            if(data[x].id===block.id){
-                                if(data[x].output||data[x].stderr||data[x].stdout){
-                                    var output = 'Previous Output:';
-                                     if(data[x].output){
-                                         var outputObj = data[x].output;
-                                         if (outputObj.type==="STRING"){
-                                             output+=outputObj.value;
-                                         }
-                                         else if (outputObj.type==="FILE"){
-                                             output+="<a href=\"rest/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
-                                         }
-                                         else if (outputObj.type==="TABLE"){
-                                             output+="<br/>"+
-                                                 '<a href="rest/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Table</button></a>'+
-                                                 '<a href="csv.html?csv='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
-
-                                         }
-                                         else if (outputObj.type==="GRAPH"){
-                                             var modal = document.getElementById("graphModal");
-                                             var div = document.createElement('span');
-                                             div.innerHTML=modal.innerHTML;
-                                             div.getElementsByClassName("modal fade")[0].setAttribute("id", "graphModal"+block.id);
-                                             div.getElementsByClassName("modal-body")[0].setAttribute("id", "graphDiv"+block.id);
-                                             document.getElementById("modals").innerHTML+=div.innerHTML;
-                                             output+="<br/>"+
-                                                 '<button class="btn btn-primary btn-sm" href="#"  data-toggle="modal" data-target="#graphModal'+block.id+'">Show Graph</button>';
-                                             var traces=[];
-                                             for(var p=0;p < outputObj.value.traces.length ;p++){
-                                                 traces.push(outputObj.value.traces[p]);
-                                             }
-                                             var plot = Plotly.newPlot('graphDiv'+block.id, traces, outputObj.value.layout);
-                                             Plotly.relayout('graphDiv'+block.id, {
-                                                 'xaxis.autorange': true,
-                                                 'yaxis.autorange': true
-                                             });
-                                         }
-                                     }
-                                     if(data[x].stdout || data[x].stderr){
-                                         var modal = document.getElementById("logModal");
-                                         var div = document.createElement('span');
-                                         div.innerHTML=modal.innerHTML;
-                                         div.getElementsByClassName("stdout")[0].innerHTML=data[x].stdout;
-                                         div.getElementsByClassName("stderr")[0].innerHTML=data[x].stderr;
-                                         div.getElementsByClassName("modal fade")[0].setAttribute("id", "logModal"+block.id);
-                                         document.getElementById("modals").innerHTML+=div.innerHTML;
-                                         output+="<br/>"+
-                                             '<button class="btn btn-primary btn-sm" href="#"  data-toggle="modal" data-target="#logModal'+block.id+'">Show Log</button>';
-                                     }
-
-                                    block.setInfos(output);
-                                }
-                            }
-                        }
-
-                    }
+                    populateOutputs(data);
                     alertify.notify('Workflow Execution Completed!', 'success', 3);
                 },
                 error: function (e) {
@@ -351,7 +295,6 @@ var contex_menu = {
         });
 
         $("#schedule").click(function(event){
-            alertify.notify('Workflow Execution Scheduled', 'success', 3);
 
             for (k in blocks.blocks) {
                 var block = blocks.blocks[k];
@@ -376,8 +319,9 @@ var contex_menu = {
                 cache: false,
                 timeout: 600000,
                 success: function (data) {
-
+                    tracking=data;
                     alertify.notify('Job ID '+data+' scheduled !', 'success', 3);
+                    track(tracking);
                 },
                 error: function (e) {
                     alertify.notify(e.responseText, 'error', 3);
@@ -402,7 +346,7 @@ var contex_menu = {
         //Creating the tree
 
 
-        initializeTree()
+        initializeTree();
 
     });
 
@@ -512,3 +456,157 @@ function getBlockRel(tree,node_id){
         }
     }
 }
+
+function updateJobsTable(){
+
+    $.ajax({
+        type: "GET",
+        url: "rest/workflow/schedule",
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            data=JSON.parse(data);
+            var table=$("#jobTable");
+            $("#jobTable tbody").empty();
+            for(var i=0;i<data.length;i++){
+                var job=data[i];
+                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")'>Preview</button></td></tr>"
+                table.append(row);
+            }
+        }
+    });
+}
+
+function track(jobId){
+    tracking=jobId;
+    var intervalID=setInterval(function(){getWorkflowStatus(tracking,intervalID)},1000);
+}
+
+function clearTracking() {
+    var jobStatus= document.getElementById("jobStatus");
+    jobStatus.innerHTML="";
+    tracking=0;
+}
+
+function getWorkflow(jobId){
+    if(jobId!=0);
+    $.ajax({
+        type: "GET",
+        url: "rest/workflow/jobs/"+jobId,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            data=JSON.parse(data);
+            blocks.clear();
+            blocks.load(data.workflow);
+            var jobStatus= document.getElementById("jobStatus");
+            jobStatus.innerHTML="Job ID:"+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
+                " End Time:"+data.endTime;
+            if(data.status!=="COMPLETED"||data.status!=="FAILED"){
+                track(jobId);
+            }
+        }
+    });
+}
+
+function getWorkflowStatus(jobId,intervalId){
+    if(jobId==0){
+        clearInterval(intervalId);
+        return;
+    }
+    $.ajax({
+        type: "GET",
+        url: "rest/workflow/jobs/"+jobId,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            data=JSON.parse(data);
+            var jobStatus= document.getElementById("jobStatus");
+            jobStatus.innerHTML="Job ID:"+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
+                " End Time:"+data.endTime;
+            if(data.executionStatus)
+                populateOutputs(data.executionStatus);
+            else
+                populateOutputs(data.workflow.blocks);
+            if(data.status==="COMPLETED"||data.status==="FAILED"){
+                clearInterval(intervalId);
+                tracking=0;
+            }
+        }
+    });
+}
+
+function populateOutputs(data){
+    for (var k in blocks.blocks) {
+        var block = blocks.blocks[k];
+
+        for(var x in data){
+            if(data[x].id===block.id){
+
+                if(data[x].completed)block.div[0].setAttribute("class","block block_completed");
+                else $(block.div[0]).removeClass("block_completed");
+                if(data[x].output||data[x].stderr||data[x].stdout){
+                    var output = 'Output:';
+                    if(data[x].output){
+
+                        var outputObj = data[x].output;
+                        if (outputObj.type==="STRING"){
+                            output+=outputObj.value;
+                        }
+                        else if (outputObj.type==="FILE"){
+                            output+="<a href=\"rest/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
+                        }
+                        else if (outputObj.type==="TABLE"){
+                            output+="<br/>"+
+                                '<a href="rest/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Table</button></a>'+
+                                '<a href="csv.html?csv='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
+
+                        }
+                        else if (outputObj.type==="GRAPH"){
+                            var modal = document.getElementById("graphModal");
+                            var div = document.createElement('span');
+                            div.innerHTML=modal.innerHTML;
+                            div.getElementsByClassName("modal fade")[0].setAttribute("id", "graphModal"+block.id);
+                            div.getElementsByClassName("modal-body")[0].setAttribute("id", "graphDiv"+block.id);
+                            document.getElementById("modals").innerHTML+=div.innerHTML;
+                            output+="<br/>"+
+                                '<button class="btn btn-primary btn-sm" href="#"  data-toggle="modal" data-target="#graphModal'+block.id+'">Show Graph</button>';
+                            var traces=[];
+                            for(var p=0;p < outputObj.value.traces.length ;p++){
+                                traces.push(outputObj.value.traces[p]);
+                            }
+                            var plot = Plotly.newPlot('graphDiv'+block.id, traces, outputObj.value.layout);
+                            Plotly.relayout('graphDiv'+block.id, {
+                                'xaxis.autorange': true,
+                                'yaxis.autorange': true
+                            });
+                        }
+                    }
+                    if(data[x].stdout || data[x].stderr){
+                        var modal = document.getElementById("logModal");
+                        var div = document.createElement('span');
+                        div.innerHTML=modal.innerHTML;
+                        div.getElementsByClassName("stdout")[0].innerHTML=data[x].stdout;
+                        div.getElementsByClassName("stderr")[0].innerHTML=data[x].stderr;
+                        div.getElementsByClassName("modal fade")[0].setAttribute("id", "logModal"+block.id);
+                        document.getElementById("modals").innerHTML+=div.innerHTML;
+                        output+="<br/>"+
+                            '<button class="btn btn-primary btn-sm" href="#"  data-toggle="modal" data-target="#logModal'+block.id+'">Show Log</button>';
+                    }
+
+                    block.setInfos(output);
+                }
+
+            }
+        }
+
+    }
+
+}
+setInterval(function(){updateJobsTable()},3000);

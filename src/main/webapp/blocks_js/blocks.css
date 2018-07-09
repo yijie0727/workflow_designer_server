@@ -199,6 +199,14 @@
     background-image:url('gfx/info.png');
 }
 
+.blocks_js_editor .block_completed {
+    border:2px solid #4aaffd;
+}
+
+.blocks_js_editor .block_completed .blockTitle {
+    background-color:#4aaffd;
+}
+
 .blocks_js_editor .block_selected {
     border:2px solid #0a0;
 }

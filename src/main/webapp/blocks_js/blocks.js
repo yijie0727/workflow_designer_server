@@ -1795,6 +1795,12 @@ Block.prototype.initListeners = function()
         self.cssParameters();
     });
 
+    self.div.dblclick(function(){
+        self.fields.toggle();
+        self.cssParameters();
+        self.redraw();
+    });
+
     // Handle the deletion
     self.div.find('.delete').click(function() {
         self.blocks.removeBlock(self.blocks.getBlockId(self));
@@ -2183,6 +2189,7 @@ Blocks.prototype.run = function(selector)
             }   
 
             // "del" will delete a selected link
+            //TODO handle only if block in focus
             if (e.keyCode == 46 || e.keyCode == 8) {
                 self.deleteEvent();
             }

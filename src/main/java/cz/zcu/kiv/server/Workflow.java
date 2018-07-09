@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static cz.zcu.kiv.server.scheduler.Manager.getJob;
 import static cz.zcu.kiv.server.scheduler.Manager.getJobs;
 import static cz.zcu.kiv.server.scheduler.Manager.jobs;
 
@@ -62,6 +63,7 @@ public class Workflow {
     public static final String GENERATED_FILES_FOLDER = DATA_FOLDER+"/generatedFiles/";
     public static final String WORK_FOLDER = DATA_FOLDER+"/workFiles/";
     public static final String TEMP_FOLDER = DATA_FOLDER+"/tmp/";
+    public static final String WORKING_DIRECTORY = DATA_FOLDER+"/workingDirectory/";
 
     public Workflow() {
     }
@@ -264,7 +266,7 @@ public class Workflow {
         JSONArray result = null;
 
         try{
-            result = executeJar(child,workflowObject,moduleSource);
+            result = executeJar(child,workflowObject,moduleSource,null);
         }
         catch(Exception e1){
             logger.error("Executing jar failed",e1);
@@ -318,6 +320,21 @@ public class Workflow {
         JSONArray jobs = getJobs();
         return Response.status(200)
                 .entity(jobs.toString(4)).build();
+    }
+
+    /**
+     * Returns text response to indicate job scheduling success
+     *
+     * @return job ID
+     */
+    @GET
+    @Path("/jobs/{jobId}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getJobById(@PathParam("jobId")long jobId)  {
+
+        JSONObject job = getJob(jobId);
+        return Response.status(200)
+                .entity(job.toString(4)).build();
     }
 
     private File getSingleJarFile(FormDataMultiPart multiPart) throws IOException {
@@ -434,14 +451,14 @@ public class Workflow {
         return child;
     }
 
-    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource)throws Exception{
+    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile)throws Exception{
         Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
         Thread.currentThread().setContextClassLoader(child);
 
         Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class);
-        Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class);
+        Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class,String.class);
         Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER);
-        JSONArray result = (JSONArray)method.invoke(instance,workflow,GENERATED_FILES_FOLDER);
+        JSONArray result = (JSONArray)method.invoke(instance,workflow,GENERATED_FILES_FOLDER,workflowOutputFile);
         return result;
     }
     private ClassLoader initializeJarClassLoader(String packageName,File outputFile) throws IOException {

@@ -6,14 +6,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class Manager extends Thread{
     private static Log logger = LogFactory.getLog(Manager.class);
 
     public static long newJobId=1;
-    public static long currentJobId=0;
     public static List<Job> jobs=new ArrayList();
 
     public static long addJob(Job job){
@@ -38,10 +36,18 @@ public class Manager extends Thread{
     public static JSONArray getJobs(){
         JSONArray jsonArray=new JSONArray();
         for(Job job:jobs) {
-            JSONObject jobObject=job.toJSON();
+            JSONObject jobObject=job.toJSON(false);
             jsonArray.put(jobObject);
         }
         return jsonArray;
+    }
+
+    public static JSONObject getJob(long jobId){
+        for(Job job:jobs) {
+            if(job.getId()==jobId)
+                return job.toJSON(true);
+        }
+        return null;
     }
 
     private static Job[] getPendingJobs(){

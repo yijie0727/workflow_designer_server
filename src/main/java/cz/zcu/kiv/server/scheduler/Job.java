@@ -1,12 +1,15 @@
 package cz.zcu.kiv.server.scheduler;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import static cz.zcu.kiv.server.Workflow.*;
@@ -19,6 +22,7 @@ public class Job {
     private Date startTime;
     private Date endTime;
     private Status status;
+    private String workflowOutputFile;
 
     public Job(JSONObject workflowObject) {
         this.workflow=workflowObject;
@@ -67,6 +71,14 @@ public class Job {
         this.status = status;
     }
 
+    public String getWorkflowOutputFile() {
+        return workflowOutputFile;
+    }
+
+    public void setWorkflowOutputFile(String workflowOutputFile) {
+        this.workflowOutputFile = workflowOutputFile;
+    }
+
     public void execute(){
         setStatus(Status.RUNNING);
         Set<String> modules=new HashSet<>();
@@ -95,10 +107,12 @@ public class Job {
             return;
         }
 
-        JSONArray result = null;
+        JSONArray result;
 
         try{
-            result=executeJar(child,workflow,moduleSource);
+            File workflowOutputFile = File.createTempFile("job_"+getId(),".json",new File(WORKING_DIRECTORY));
+            setWorkflowOutputFile(workflowOutputFile.getAbsolutePath());
+            result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath());
         }
         catch(Exception e1){
             logger.error("Executing jar failed",e1);
@@ -115,12 +129,25 @@ public class Job {
         setEndTime(new Date());
     }
 
-    public JSONObject toJSON() {
+    public JSONObject toJSON(boolean withWorkflow) {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put("id",getId());
-        jsonObject.put("startTime",getStartTime().getTime());
-        jsonObject.put("endTime",getEndTime()!=null?getEndTime().getTime():"");
+        jsonObject.put("startTime",getStartTime().toString());
+        jsonObject.put("endTime",getEndTime()!=null?getEndTime().toString():"");
         jsonObject.put("status",getStatus().name());
+        if(withWorkflow){
+            jsonObject.put("workflow",getWorkflow());
+            if(workflowOutputFile!=null) {
+                try {
+                    String workflowExecutionStatus = FileUtils.readFileToString(new File(workflowOutputFile),Charset.defaultCharset());
+                    if(!workflowExecutionStatus.isEmpty())
+                        jsonObject.put("executionStatus", new JSONArray(workflowExecutionStatus));
+                } catch (IOException e) {
+                   logger.error(e);
+                }
+            }
+        }
+
         return jsonObject;
     }
 }
