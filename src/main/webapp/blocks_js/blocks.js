@@ -95,6 +95,9 @@ var Field = function(metaField)
 
     // Default value
     this.defaultValue = 'defaultValue' in metaField ? metaField.defaultValue : null;
+
+    //Description
+    this.description = metaField.description;
 };
 
 /**
@@ -112,7 +115,7 @@ Field.prototype.updated = function()
  */
 Field.prototype.getFieldHtml = function()
 {
-    var field = this.label+':<br/>';
+    var field = this.label+':'+(this.description?'('+this.description+')':"")+'<br/>';
 
     if (this.isArray) {
         field += '<div class="fieldsArray">';
