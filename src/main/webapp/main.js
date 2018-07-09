@@ -258,12 +258,13 @@ var contex_menu = {
         });
 
         $("#execute").click(function(event){
-            clearTracking();;
+            clearTracking();
             alertify.notify('Workflow Execution Started', 'success', 5);
 
             for (k in blocks.blocks) {
                 var block = blocks.blocks[k];
                 block.setInfos('');
+                $(block.div[0]).removeClass("block_completed");
             }
 
             document.getElementById("modals").innerHTML="";
