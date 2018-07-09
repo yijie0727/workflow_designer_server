@@ -51,6 +51,7 @@ import org.glassfish.jersey.server.ServerProperties;
  **********************************************************************************************************************/
 
 public class EmbeddedServer{
+	public static Manager manager;
     private static Log logger = LogFactory.getLog(EmbeddedServer.class);
 
 	public static final int SERVER_PORT = 8680;
@@ -128,7 +129,7 @@ public class EmbeddedServer{
 			}
 
 		});
-        Manager manager=new Manager();
+        manager=new Manager();
         manager.start();
 		server.start();
 		server.join();

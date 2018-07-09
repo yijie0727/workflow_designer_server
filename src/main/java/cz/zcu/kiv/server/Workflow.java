@@ -106,6 +106,10 @@ public class Workflow {
     @Path("/initialize")
     @Produces(MediaType.TEXT_PLAIN)
     public Response initializeAtom()  {
+        if (EmbeddedServer.manager==null){
+            EmbeddedServer.manager=new Manager();
+            EmbeddedServer.manager.start();
+        }
         try {
             createFolderIfNotExists(UPLOAD_FOLDER);
             createFolderIfNotExists(GENERATED_FILES_FOLDER);
