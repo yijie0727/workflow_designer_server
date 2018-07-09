@@ -58,7 +58,8 @@ public class Workflow {
     private static Log logger = LogFactory.getLog(Workflow.class);
 
     /** The path to the folder where we want to store the uploaded files */
-    private static final String DATA_FOLDER = new File(Workflow.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getAbsolutePath();
+    //private static final String DATA_FOLDER = new File(Workflow.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getAbsolutePath();
+    private static final String DATA_FOLDER = System.getProperty("user.home")+"/.workflow_designer_files";
     public static final String UPLOAD_FOLDER = DATA_FOLDER+"/uploadedFiles/";
     public static final String GENERATED_FILES_FOLDER = DATA_FOLDER+"/generatedFiles/";
     public static final String WORK_FOLDER = DATA_FOLDER+"/workFiles/";
@@ -110,6 +111,7 @@ public class Workflow {
             createFolderIfNotExists(GENERATED_FILES_FOLDER);
             createFolderIfNotExists(WORK_FOLDER);
             createFolderIfNotExists(TEMP_FOLDER);
+            createFolderIfNotExists(WORKING_DIRECTORY);
         } catch (SecurityException se) {
             logger.error("Error saving folder on server ",se);
             return Response.status(500)
