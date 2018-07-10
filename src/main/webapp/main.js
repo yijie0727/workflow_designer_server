@@ -265,6 +265,7 @@ var contex_menu = {
                 var block = blocks.blocks[k];
                 block.setInfos('');
                 $(block.div[0]).removeClass("block_completed");
+                $(block.div[0]).removeClass("block_error");
             }
 
             document.getElementById("modals").innerHTML="";
@@ -551,7 +552,10 @@ function populateOutputs(data){
             if(data[x].id===block.id){
 
                 if(data[x].completed)block.div[0].setAttribute("class","block block_completed");
-                else $(block.div[0]).removeClass("block_completed");
+                else {
+                    $(block.div[0]).removeClass("block_completed");
+                    $(block.div[0]).removeClass("block_error");
+                }
                 if(data[x].output||data[x].stderr||data[x].stdout){
                     var output = 'Output:';
                     if(data[x].output){
@@ -570,26 +574,13 @@ function populateOutputs(data){
 
                         }
                         else if (outputObj.type==="GRAPH"){
-                            var modal = document.getElementById("graphModal");
-                            var div = document.createElement('span');
-                            div.innerHTML=modal.innerHTML;
-                            div.getElementsByClassName("modal fade")[0].setAttribute("id", "graphModal"+block.id);
-                            div.getElementsByClassName("modal-body")[0].setAttribute("id", "graphDiv"+block.id);
-                            document.getElementById("modals").innerHTML+=div.innerHTML;
                             output+="<br/>"+
-                                '<button class="btn btn-primary btn-sm" href="#"  data-toggle="modal" data-target="#graphModal'+block.id+'">Show Graph</button>';
-                            var traces=[];
-                            for(var p=0;p < outputObj.value.traces.length ;p++){
-                                traces.push(outputObj.value.traces[p]);
-                            }
-                            var plot = Plotly.newPlot('graphDiv'+block.id, traces, outputObj.value.layout);
-                            Plotly.relayout('graphDiv'+block.id, {
-                                'xaxis.autorange': true,
-                                'yaxis.autorange': true
-                            });
+                                '<a href="rest/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Graph Data</button></a>'+
+                                '<a href="graph.html?graph='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
                         }
                     }
                     if(data[x].stdout || data[x].stderr){
+                        if(data[x].stderr)block.div[0].setAttribute("class","block block_error");
                         var modal = document.getElementById("logModal");
                         var div = document.createElement('span');
                         div.innerHTML=modal.innerHTML;

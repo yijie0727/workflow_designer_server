@@ -207,6 +207,14 @@
     background-color:#4aaffd;
 }
 
+.blocks_js_editor .block_error {
+    border:2px solid #fd3729;
+}
+
+.blocks_js_editor .block_error .blockTitle {
+    background-color:#fd3729;
+}
+
 .blocks_js_editor .block_selected {
     border:2px solid #0a0;
 }
