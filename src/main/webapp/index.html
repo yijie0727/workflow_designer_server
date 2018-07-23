@@ -75,8 +75,16 @@
                         <li><a href="#" id="undo">Undo [Ctrl/Cmd + Z]</a></li>
                     </ul>
                 </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">Scheduler
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" id="jobs" data-toggle="modal" data-target="#jobsModal">Jobs List</a></li>
+                    </ul>
+                </li>
             </ul>
-            <button class="btn btn-success navbar-btn pull-right" id="execute">Execute</button>
+            <!--<button class="btn btn-success navbar-btn pull-right" id="execute">Execute</button>-->
+            <button class="btn btn-primary navbar-btn pull-right" id="schedule">Schedule</button>
         </div>
     </nav>
     <!--sidebar-->
@@ -89,6 +97,7 @@
     <!--canvas-->
     <div class="col-md-9" id="content">
         <button class="btn btn-primary toggle-sidebar"><i class="fa fa-bars fa-1x"></i></button>
+        <div id="jobStatus"></div>
         <div id="blocks" ondrop="drop(event)" ondragover="allowDrop(event)" ></div>
     </div>
         
@@ -175,6 +184,39 @@
         </div>
     </div>
 
+    <!-- Jobs Modal -->
+    <div class="modal fade " role="dialog" id="jobsModal" >
+        <div class="modal-dialog" style="max-width:100% !important;">
+
+            <!-- Modal content-->
+            <div class="modal-content modal-fullscreen">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Jobs</h4>
+                </div>
+                <div class="modal-body" style="overflow:auto;min-width: 400px;" align="center" >
+                    <table id="jobTable" class="table-bordered" >
+                        <thead>
+                            <tr>
+                                <th>JobID</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <div style="display:none" id="logModal">
         <!-- Modal -->
         <div class="modal fade" role="dialog">
@@ -187,11 +229,9 @@
                         <h4 class="modal-title">Logs</h4>
                     </div>
                     <div class="modal-body" style="overflow:auto">
-                        <h5 class="modal-title">Std Out:</h5>
-                        <div class="stdout">
 
+                        <div class="stdout">
                         </div>
-                        <h5 class="modal-title">Std Err:</h5>
                         <div style="color:red" class="stderr">
 
                         </div>

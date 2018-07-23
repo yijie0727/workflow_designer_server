@@ -95,6 +95,9 @@ var Field = function(metaField)
 
     // Default value
     this.defaultValue = 'defaultValue' in metaField ? metaField.defaultValue : null;
+
+    //Description
+    this.description = metaField.description;
 };
 
 /**
@@ -112,7 +115,7 @@ Field.prototype.updated = function()
  */
 Field.prototype.getFieldHtml = function()
 {
-    var field = this.label+':<br/>';
+    var field = this.label+':'+(this.description?'('+this.description+')':"")+'<br/>';
 
     if (this.isArray) {
         field += '<div class="fieldsArray">';
@@ -549,7 +552,8 @@ Fields.prototype.toggle = function()
         });
     } else {
         if (this.display) {
-            this.hide();
+           // this.hide();
+            this.display=false;
         } else {
             this.show();
         }
@@ -1791,9 +1795,18 @@ Block.prototype.initListeners = function()
 
     // Handle the parameters
     self.div.find('.settings').click(function() {
-        self.fields.toggle();
-        self.cssParameters();
+       showSettings(self);
     });
+
+    self.div.find('.parameter').dblclick(function(){
+        self.div.find('.settings').click();
+    });
+
+    function showSettings(target){
+        console.log(target);
+        target.fields.toggle();
+        target.cssParameters();
+    }
 
     // Handle the deletion
     self.div.find('.delete').click(function() {
@@ -2183,6 +2196,7 @@ Blocks.prototype.run = function(selector)
             }   
 
             // "del" will delete a selected link
+            //TODO handle only if block in focus
             if (e.keyCode == 46 || e.keyCode == 8) {
                 self.deleteEvent();
             }

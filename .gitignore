@@ -11,6 +11,13 @@ hs_err_pid*
 
 target/
 .idea/
-.log
-output.txt
-uploadedFiles
+.log*
+uploadedFiles/*
+generatedFiles/*
+std_error.log
+std_output.log
+test-output/*
+test-results/*
+tmp/*
+workFiles/*
+workingDirectory/*
