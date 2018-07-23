@@ -257,6 +257,7 @@ var contex_menu = {
 
         });
 
+        /*
         $("#execute").click(function(event){
             clearTracking();
             alertify.notify('Workflow Execution Started', 'success', 5);
@@ -295,6 +296,7 @@ var contex_menu = {
                 }
             });
         });
+        */
 
         $("#schedule").click(function(event){
 
@@ -584,8 +586,8 @@ function populateOutputs(data){
                         var modal = document.getElementById("logModal");
                         var div = document.createElement('span');
                         div.innerHTML=modal.innerHTML;
-                        div.getElementsByClassName("stdout")[0].innerHTML=data[x].stdout;
-                        div.getElementsByClassName("stderr")[0].innerHTML=data[x].stderr;
+                        div.getElementsByClassName("stdout")[0].innerHTML="<h5 class=\"modal-title\">Output Stream:</h5>"+data[x].stdout.replace(new RegExp('\r?\n','g'), '<br />');
+                        div.getElementsByClassName("stderr")[0].innerHTML="<h5 class=\"modal-title\">Error Stream:</h5>"+data[x].stderr.replace(new RegExp('\r?\n','g'), '<br />');
                         div.getElementsByClassName("modal fade")[0].setAttribute("id", "logModal"+block.id);
                         document.getElementById("modals").innerHTML+=div.innerHTML;
                         output+="<br/>"+

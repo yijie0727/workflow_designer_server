@@ -552,7 +552,8 @@ Fields.prototype.toggle = function()
         });
     } else {
         if (this.display) {
-            this.hide();
+           // this.hide();
+            this.display=false;
         } else {
             this.show();
         }
@@ -1794,15 +1795,18 @@ Block.prototype.initListeners = function()
 
     // Handle the parameters
     self.div.find('.settings').click(function() {
-        self.fields.toggle();
-        self.cssParameters();
+       showSettings(self);
     });
 
-    self.div.dblclick(function(){
-        self.fields.toggle();
-        self.cssParameters();
-        self.redraw();
+    self.div.find('.parameter').dblclick(function(){
+        self.div.find('.settings').click();
     });
+
+    function showSettings(target){
+        console.log(target);
+        target.fields.toggle();
+        target.cssParameters();
+    }
 
     // Handle the deletion
     self.div.find('.delete').click(function() {
