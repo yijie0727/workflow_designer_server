@@ -3,6 +3,7 @@ package cz.zcu.kiv.server;
 
 import cz.zcu.kiv.server.scheduler.Job;
 import cz.zcu.kiv.server.scheduler.Manager;
+import cz.zcu.kiv.server.sqlite.Users;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static cz.zcu.kiv.server.UserAccounts.SQLITE_DB;
 import static cz.zcu.kiv.server.scheduler.Manager.getJob;
 import static cz.zcu.kiv.server.scheduler.Manager.getJobs;
 import static cz.zcu.kiv.server.scheduler.Manager.jobs;
@@ -59,7 +61,7 @@ public class Workflow {
 
     /** The path to the folder where we want to store the uploaded files */
     //private static final String DATA_FOLDER = new File(Workflow.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getAbsolutePath();
-    private static final String DATA_FOLDER = System.getProperty("user.home")+"/.workflow_designer_files";
+    public static final String DATA_FOLDER = System.getProperty("user.home")+"/.workflow_designer_files";
     public static final String UPLOAD_FOLDER = DATA_FOLDER+"/uploadedFiles/";
     public static final String GENERATED_FILES_FOLDER = DATA_FOLDER+"/generatedFiles/";
     public static final String WORK_FOLDER = DATA_FOLDER+"/workFiles/";
@@ -178,11 +180,16 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response uploadJar(
             final FormDataMultiPart formData,
-            @FormDataParam("package") String packageName)  {
+            @FormDataParam("package") String packageName,
+            @FormDataParam("public") Boolean publicModule,
+            @Context HttpHeaders httpHeaders)  {
         // check if all form parameters are provided
         if (formData == null || packageName == null )
             return Response.status(400).entity("Invalid form data").build();
 
+        String email = httpHeaders.getHeaderString("email");
+        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
+            return Response.status(403).entity("Unauthorized").build();
 
         ClassLoader child;
         String module;
@@ -321,8 +328,10 @@ public class Workflow {
     @GET
     @Path("/schedule")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response schedule()  {
-
+    public Response schedule(@Context HttpHeaders httpHeaders)  {
+        String email = httpHeaders.getHeaderString("email");
+        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
+            return Response.status(403).entity("Unauthorized").build();
         JSONArray jobs = getJobs();
         return Response.status(200)
                 .entity(jobs.toString(4)).build();

@@ -78,6 +78,7 @@ public class EmbeddedServer{
 
 		ResourceConfig config = new ResourceConfig();
 		config.register(Workflow.class);
+		config.register(UserAccounts.class);
 		config.register(Slf4jLog.class);
 		config.register(MultiPartFeature.class);
 
@@ -88,7 +89,7 @@ public class EmbeddedServer{
 				false);
 
 
-		ContextHandler contextHandler = new ContextHandler("/rest");
+		ContextHandler contextHandler = new ContextHandler("/api");
 		contextHandler.setHandler(server.getHandler());
 		contextHandler.setInitParameter(ServerProperties.PROVIDER_CLASSNAMES, MultiPartFeature.class.getCanonicalName());
 		ProtectionDomain protectionDomain = EmbeddedServer.class

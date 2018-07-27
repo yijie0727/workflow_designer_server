@@ -233,12 +233,12 @@ var contex_menu = {
 
 
             // If you want to add an extra field for the FormData
-            //data.append("CustomField", "This is some extra data, testing");
+            data.append("email", $.cookie("email"));
 
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
-                url: "rest/workflow/upload",
+                url: "api/workflow/upload",
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -280,7 +280,7 @@ var contex_menu = {
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
-                url: "rest/workflow/execute",
+                url: "api/workflow/execute",
                 data: data,
                 processData: false,
                 contentType: false,
@@ -312,11 +312,12 @@ var contex_menu = {
 
             // If you want to add an extra field for the FormData
             data.append("workflow", JSON.stringify(blocks.export()));
+            data.append("email", $.cookie("email"));
 
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
-                url: "rest/workflow/schedule",
+                url: "api/workflow/schedule",
                 data: data,
                 processData: false,
                 contentType: false,
@@ -367,7 +368,7 @@ function initializeTree() {
     $.ajax({
         type: "POST",
         enctype: 'multipart/form-data',
-        url: "rest/workflow/initialize",
+        url: "api/workflow/initialize",
         processData: false,
         contentType: false,
         cache: false,
@@ -465,11 +466,14 @@ function updateJobsTable(){
 
     $.ajax({
         type: "GET",
-        url: "rest/workflow/schedule",
+        url: "api/workflow/schedule",
         processData: false,
         contentType: false,
         cache: false,
         timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+        },
         success: function (data) {
             data=JSON.parse(data);
             var table=$("#jobTable");
@@ -498,7 +502,7 @@ function getWorkflow(jobId){
     if(jobId!=0);
     $.ajax({
         type: "GET",
-        url: "rest/workflow/jobs/"+jobId,
+        url: "api/workflow/jobs/"+jobId,
         processData: false,
         contentType: false,
         cache: false,
@@ -524,7 +528,7 @@ function getWorkflowStatus(jobId,intervalId){
     }
     $.ajax({
         type: "GET",
-        url: "rest/workflow/jobs/"+jobId,
+        url: "api/workflow/jobs/"+jobId,
         processData: false,
         contentType: false,
         cache: false,
@@ -567,17 +571,17 @@ function populateOutputs(data){
                             output+=outputObj.value;
                         }
                         else if (outputObj.type==="FILE"){
-                            output+="<a href=\"rest/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
+                            output+="<a href=\"api/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
                         }
                         else if (outputObj.type==="TABLE"){
                             output+="<br/>"+
-                                '<a href="rest/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Table</button></a>'+
+                                '<a href="api/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Table</button></a>'+
                                 '<a href="csv.html?csv='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
 
                         }
                         else if (outputObj.type==="GRAPH"){
                             output+="<br/>"+
-                                '<a href="rest/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Graph Data</button></a>'+
+                                '<a href="api/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Graph Data</button></a>'+
                                 '<a href="graph.html?graph='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
                         }
                     }
