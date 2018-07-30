@@ -97,7 +97,11 @@ var contex_menu = {
 };
 
 
+
 (function(){
+
+
+
 
 
     blocks = new Blocks();
@@ -231,10 +235,6 @@ var contex_menu = {
             // Create an FormData object
             var formData = new FormData(document.getElementById('fileUploadForm'));
 
-
-            // If you want to add an extra field for the FormData
-            data.append("email", $.cookie("email"));
-
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
@@ -244,6 +244,9 @@ var contex_menu = {
                 contentType: false,
                 cache: false,
                 timeout: 600000,
+                beforeSend: function(request) {
+                    request.setRequestHeader("email",  $.cookie("email"));
+                },
                 success: function (data) {
                     var newBlocks = JSON.parse(data);
                     blocks.register(newBlocks);
@@ -359,6 +362,20 @@ var contex_menu = {
 
 })();
 
+$(document).ready(function() {
+
+    $('#elfinderModal').on('shown.bs.modal', function (e) {
+        $('#elfinder').elfinder({
+            url : 'elfinder/connector'
+        });
+    });
+
+    if($.cookie("email")){
+        document.getElementById("login").innerHTML='Logout '+$.cookie("email");
+        document.getElementById("login").onclick=logout;
+    }
+});
+
 function initializeTree() {
     tree = createTree('div_tree','white',contex_menu);
 
@@ -372,6 +389,9 @@ function initializeTree() {
         processData: false,
         contentType: false,
         cache: false,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+        },
         timeout: 600000,
         success: function (data) {
             var blockDefinitions = JSON.parse(data)
@@ -606,5 +626,122 @@ function populateOutputs(data){
 
     }
 
+}
+function selectFile(event,target){
+    event.preventDefault();
+
+    $('#browseModal').on('shown.bs.modal', function (e) {
+        $('#browseModal').css('z-index',9999);
+        $('#elfinderBrowse').elfinder({
+            url : 'elfinder/connector',
+            commandsOptions:{
+                getfile: {
+                    oncomplete: 'destroy'
+                }
+            },
+            getFileCallback : function(file)
+            {
+                $('#browseModal').modal('hide');
+                target.innerHTML=file.path;
+                target.nextSibling.value=file.path;
+            }
+        });
+    });
+    $('#browseModal').modal('show');
+
+}
+
+function logout(){
+    $.removeCookie("email");
+    $.removeCookie("name");
+    document.getElementById("login").innerHTML='Login/Register';
+    document.getElementById("login").onclick=showLogin;
+}
+
+function showRegister() {
+    $("#loginDiv").hide();
+    $("#registerDiv").show();
+    document.getElementById("primarySubmit").onclick=register;
+
+    document.getElementById("switch").onclick=showLogin;
+    document.getElementById("switch").innerHTML="I already have an account"
+}
+
+function showLogin() {
+    $("#loginDiv").show();
+    $("#registerDiv").hide();
+    document.getElementById("primarySubmit").onclick=login;
+
+    document.getElementById("switch").onclick=showRegister;
+    document.getElementById("switch").innerHTML="Create an account"
+}
+
+function login(){
+    // Create an FormData object
+    var data = new FormData();
+
+    // If you want to add an extra field for the FormData
+    data.append("email", $("#loginEmail").val());
+    data.append("password", $("#loginPassword").val());
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/login",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            if(data.id){
+                $.cookie("email", data.email, { expires : 10 });
+                $.cookie("name", data.name, { expires : 10 });
+                document.getElementById("login").innerHTML='Logout '+$.cookie("email");
+                document.getElementById("login").onclick=logout;
+            }
+            else{
+                alert("Error");
+            }
+        },
+        error: function (e) {
+            alertify.notify(e.responseText, 'error', 3);
+        }
+    });
+}
+
+function register(){
+    // Create an FormData object
+    var data = new FormData();
+
+    // If you want to add an extra field for the FormData
+    data.append("email", $("#registerEmail").val());
+    data.append("password", $("#registerPassword").val());
+    data.append("username", $("#registerName").val());
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/register",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            if(data.id){
+                $.cookie("email", data.email, { expires : 10 });
+                $.cookie("name", data.name, { expires : 10 });
+                document.getElementById("login").innerHTML='Logout '+$.cookie("email");
+                document.getElementById("login").onclick=logout;
+            }
+            else{
+                alert("Error");
+            }
+        },
+        error: function (e) {
+            alertify.notify(e.responseText, 'error', 3);
+        }
+    });
 }
 setInterval(function(){updateJobsTable()},3000);

@@ -3,6 +3,8 @@ package cz.zcu.kiv.server;
 
 import cz.zcu.kiv.server.scheduler.Job;
 import cz.zcu.kiv.server.scheduler.Manager;
+import cz.zcu.kiv.server.sqlite.Model.Module;
+import cz.zcu.kiv.server.sqlite.Modules;
 import cz.zcu.kiv.server.sqlite.Users;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
@@ -107,7 +109,7 @@ public class Workflow {
     @POST
     @Path("/initialize")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response initializeAtom()  {
+    public Response initializeAtom(@Context HttpHeaders httpHeaders)  {
         if (EmbeddedServer.manager==null){
             EmbeddedServer.manager=new Manager();
             EmbeddedServer.manager.start();
@@ -125,10 +127,14 @@ public class Workflow {
                     .build();
         }
 
+        String email = httpHeaders.getHeaderString("email");
+        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
+            return Response.status(403).entity("Unauthorized").build();
+
         ClassLoader child;
         JSONArray result=new JSONArray();
         try {
-            for(String module: getModules()){
+            for(String module: getModulesList(email)){
                 String jarFileName=module.split(":")[0];
                 String packageName=module.split(":")[1];
                 File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);
@@ -184,19 +190,28 @@ public class Workflow {
             @FormDataParam("public") Boolean publicModule,
             @Context HttpHeaders httpHeaders)  {
         // check if all form parameters are provided
-        if (formData == null || packageName == null )
+        if (formData == null || packageName == null)
             return Response.status(400).entity("Invalid form data").build();
+
+        if(publicModule==null)publicModule=false;
+        else publicModule=true;
 
         String email = httpHeaders.getHeaderString("email");
         if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
             return Response.status(403).entity("Unauthorized").build();
 
         ClassLoader child;
-        String module;
+        String jarName;
+        String moduleName;
+        Module newModule;
         try {
+
+
             File jarFile=getSingleJarFile(formData);
-            module=jarFile.getName()+":"+packageName;
+            jarName=jarFile.getName();
+            moduleName=jarFile.getName()+":"+packageName;
             child = initializeJarClassLoader(packageName,jarFile);
+            newModule=new Modules(SQLITE_DB).getModuleByName(jarFile.getName(),packageName);
 
         } catch (IOException e) {
             logger.error("Cannot read folder on server",e);
@@ -206,6 +221,7 @@ public class Workflow {
         }
 
 
+
         JSONArray result=new JSONArray();
 
         try{
@@ -213,9 +229,22 @@ public class Workflow {
             Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
-            Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER,WORK_FOLDER);
+            Object instance = ctor.newInstance(child,moduleName,UPLOAD_FOLDER,WORK_FOLDER);
             result = (JSONArray)method.invoke(instance);
-            putModule(module);
+
+            if(newModule==null){
+                newModule = new Module();
+                newModule.setAuthor(email);
+                newModule.setPublicJar(publicModule);
+                newModule.setJarName(jarName);
+                newModule.setPackageName(packageName);
+                new Modules(SQLITE_DB).addModule(newModule);
+            }
+            else{
+                newModule.setAuthor(email);
+                newModule.setPublicJar(publicModule);
+                new Modules(SQLITE_DB).updateModule(newModule);
+            }
         }
         catch(Exception e){
             logger.error("Initializing blocks failed",e);
@@ -511,33 +540,16 @@ public class Workflow {
         }
     }
 
-    public static void putModule(String module) throws IOException {
-        List<String>modules=getModules();
-        if(!modules.contains(module)){
-            modules.add(module);
-        }
-        saveModules(modules);
-    }
-
-    public static List<String> getModules() throws IOException {
-        List<String>modules=new ArrayList<>();
-        File modulesFile = new File(UPLOAD_FOLDER+File.separator+"modules.json");
-        if(modulesFile.exists()){
-            JSONArray jsonArray =new JSONArray(FileUtils.readFileToString(modulesFile,Charset.defaultCharset()));
-            for(int i=0;i<jsonArray.length();i++){
-                modules.add(jsonArray.getString(i));
+    public static List<String> getModulesList(String userEmail){
+        List<Module> modules=new Modules(SQLITE_DB).getModulesForUser(userEmail);
+        List<String>list=new ArrayList<>();
+        if(modules!=null){
+            for(Module module:modules){
+                list.add(module.getJarName()+":"+module.getPackageName());
             }
         }
-        return modules;
-    }
+        return list;
 
-    public static void saveModules(List<String>modules) throws IOException {
-        File modulesFile = new File(UPLOAD_FOLDER+File.separator+"modules.json");
-        JSONArray jsonArray =new JSONArray();
-        for(String module:modules){
-            jsonArray.put(module);
-        }
-        FileUtils.writeStringToFile(modulesFile,jsonArray.toString(4),Charset.defaultCharset());
 
     }
 }

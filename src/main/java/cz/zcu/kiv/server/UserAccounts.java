@@ -1,6 +1,6 @@
 package cz.zcu.kiv.server;
 
-import cz.zcu.kiv.server.sqlite.User;
+import cz.zcu.kiv.server.sqlite.Model.User;
 import cz.zcu.kiv.server.sqlite.Users;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 

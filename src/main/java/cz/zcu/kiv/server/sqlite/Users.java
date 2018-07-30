@@ -1,5 +1,6 @@
 package cz.zcu.kiv.server.sqlite;
 
+import cz.zcu.kiv.server.sqlite.Model.User;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

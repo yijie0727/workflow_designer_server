@@ -1,4 +1,4 @@
-package cz.zcu.kiv.server.sqlite;
+package cz.zcu.kiv.server.sqlite.Model;
 
 import org.json.JSONObject;
 

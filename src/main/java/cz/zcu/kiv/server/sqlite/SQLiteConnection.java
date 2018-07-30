@@ -29,16 +29,27 @@ public class SQLiteConnection {
             // create a connection to the database
             conn = DriverManager.getConnection(url);
             if(!initialized){
-                String createTableSQL = "CREATE TABLE IF NOT EXISTS users ("
+                String createUsersTableSQL = "CREATE TABLE IF NOT EXISTS users ("
                         + "	id integer PRIMARY KEY AUTOINCREMENT,"
                         + "	email text NOT NULL,"
                         + "	password text NOT NULL,"
                         + "	username text NOT NULL"
                         + ");";
 
+                String createModulesTableSQL = "CREATE TABLE IF NOT EXISTS modules ("
+                        + "	id integer PRIMARY KEY AUTOINCREMENT,"
+                        + "	jarName text NOT NULL,"
+                        + "	packageName text NOT NULL,"
+                        + "	publicJar boolean NOT NULL,"
+                        + "	author text NOT NULL,"
+                        + "	lastUpdate text NOT NULL"
+                        + ");";
+
                 stmt = conn.createStatement();
                 // create a new table
-                stmt.execute(createTableSQL);
+                stmt.execute(createUsersTableSQL);
+                stmt.execute(createModulesTableSQL);
+
                 stmt.close();
                 initialized=true;
             }
