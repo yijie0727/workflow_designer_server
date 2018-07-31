@@ -701,11 +701,16 @@ function login(){
                 document.getElementById("login").onclick=logout;
             }
             else{
-                alert("Error");
+                alertify.notify(e.responseText, 'error', 3);
             }
         },
         error: function (e) {
-            alertify.notify(e.responseText, 'error', 3);
+            if(e.status===403)
+                alertify.notify("Unauthorized, Try again", 'error', 3);
+            else
+                alertify.notify("Some error occurred", 'error', 3);
+
+
         }
     });
 }

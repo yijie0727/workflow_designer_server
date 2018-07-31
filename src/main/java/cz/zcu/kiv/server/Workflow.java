@@ -335,15 +335,20 @@ public class Workflow {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
     public Response schedule(
-            @FormDataParam("workflow") String workflow)  {
+            @FormDataParam("workflow") String workflow, @Context HttpHeaders httpHeaders)  {
 
         if (workflow == null)
             return Response.status(400).entity("Invalid form data").build();
+
+        String email = httpHeaders.getHeaderString("email");
+        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
+            return Response.status(403).entity("Unauthorized").build();
 
         JSONObject workflowObject = new JSONObject(workflow);
         // check if all form parameters are provided
 
         Job job=new Job(workflowObject);
+        job.setOwner(email);
         long jobId = Manager.addJob(job);
         return Response.status(200)
                 .entity(jobId).build();
@@ -361,7 +366,8 @@ public class Workflow {
         String email = httpHeaders.getHeaderString("email");
         if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
             return Response.status(403).entity("Unauthorized").build();
-        JSONArray jobs = getJobs();
+
+        JSONArray jobs = getJobs(email);
         return Response.status(200)
                 .entity(jobs.toString(4)).build();
     }
@@ -435,7 +441,7 @@ public class Workflow {
      * @throws SecurityException
      *             - in case you don't have permission to create the folder
      */
-    private void createFolderIfNotExists(String dirName)
+    public static void createFolderIfNotExists(String dirName)
             throws SecurityException {
         File theDir = new File(dirName);
         if (!theDir.exists()) {

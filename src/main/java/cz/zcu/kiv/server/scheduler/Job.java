@@ -23,6 +23,7 @@ public class Job {
     private Date endTime;
     private Status status;
     private String workflowOutputFile;
+    private String owner;
 
     public Job(JSONObject workflowObject) {
         this.workflow=workflowObject;
@@ -77,6 +78,14 @@ public class Job {
 
     public void setWorkflowOutputFile(String workflowOutputFile) {
         this.workflowOutputFile = workflowOutputFile;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
     public void execute(){

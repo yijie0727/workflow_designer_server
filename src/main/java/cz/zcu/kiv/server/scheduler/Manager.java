@@ -33,11 +33,14 @@ public class Manager extends Thread{
         }
     }
 
-    public static JSONArray getJobs(){
+    public static JSONArray getJobs(String email){
         JSONArray jsonArray=new JSONArray();
         for(Job job:jobs) {
-            JSONObject jobObject=job.toJSON(false);
-            jsonArray.put(jobObject);
+            if(job.getOwner().equals(email)){
+                JSONObject jobObject=job.toJSON(false);
+                jsonArray.put(jobObject);
+            }
+
         }
         return jsonArray;
     }

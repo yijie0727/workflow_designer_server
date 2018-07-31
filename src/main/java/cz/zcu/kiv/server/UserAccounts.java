@@ -9,6 +9,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static cz.zcu.kiv.server.Workflow.DATA_FOLDER;
+import static cz.zcu.kiv.server.Workflow.WORK_FOLDER;
+import static cz.zcu.kiv.server.Workflow.createFolderIfNotExists;
 
 @Path("/users")
 public class UserAccounts {
@@ -26,6 +28,7 @@ public class UserAccounts {
         user.setUsername(username);
         user = new Users(SQLITE_DB).addUser(user);
         if(user!=null){
+            createFolderIfNotExists(WORK_FOLDER+"user_dir_"+user.getEmail());
             return Response.status(200).entity(user.toJSON().toString(4)).build();
         }
         else{
