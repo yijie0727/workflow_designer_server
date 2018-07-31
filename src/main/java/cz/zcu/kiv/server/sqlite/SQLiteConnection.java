@@ -24,7 +24,7 @@ public class SQLiteConnection {
         Connection conn = null;
         Statement stmt = null;
         try {
-
+            Class.forName("org.sqlite.JDBC");
             String url = "jdbc:sqlite:"+database;
             // create a connection to the database
             conn = DriverManager.getConnection(url);
@@ -59,6 +59,8 @@ public class SQLiteConnection {
 
         } catch (SQLException e) {
             logger.error(e);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         } finally {
             try {
                 if(stmt !=null) {
