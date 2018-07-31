@@ -28,25 +28,30 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 	}
 
 	protected void addChildren(Map<String, FsItemEx> map, FsItemEx fsi,
-			String[] mimeFilters) throws IOException
+			String[] mimeFilters, String user) throws IOException
 	{
 		FsItemFilter filter = FsItemFilterUtils.createMimeFilter(mimeFilters);
-		addChildren(map, fsi, filter);
+		addChildren(map, fsi, filter,user);
 	}
 
 	private void addChildren(Map<String, FsItemEx> map, FsItemEx fsi,
-			FsItemFilter filter) throws IOException
+			FsItemFilter filter,String user) throws IOException
 	{
 		for (FsItemEx f : fsi.listChildren(filter))
 		{
-			map.put(f.getHash(), f);
+            if(user!=null && fsi.getName().equals("MyFiles")){
+                if(f.getName().equals("user_dir_"+user)){
+                    map.put(f.getHash(), f);
+                }
+            }
+			else map.put(f.getHash(), f);
 		}
 	}
 
-	protected void addSubfolders(Map<String, FsItemEx> map, FsItemEx fsi)
+	protected void addSubfolders(Map<String, FsItemEx> map, FsItemEx fsi,String user)
 			throws IOException
 	{
-		addChildren(map, fsi, FsItemFilterUtils.FILTER_FOLDER);
+		addChildren(map, fsi, FsItemFilterUtils.FILTER_FOLDER,user);
 	}
 
 	protected void createAndCopy(FsItemEx src, FsItemEx dst) throws IOException

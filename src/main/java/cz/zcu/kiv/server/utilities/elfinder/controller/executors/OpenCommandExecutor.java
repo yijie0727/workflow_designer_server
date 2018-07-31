@@ -36,14 +36,14 @@ public class OpenCommandExecutor extends AbstractJsonCommandExecutor implements
 			{
 				FsItemEx root = new FsItemEx(v.getRoot(), fsService);
 				files.put(root.getHash(), root);
-				addSubfolders(files, root);
+				addSubfolders(files, root,request.getHeader("email"));
 			}
 		}
 
 		FsItemEx cwd = findCwd(fsService, target);
 		files.put(cwd.getHash(), cwd);
 		String[] onlyMimes = request.getParameterValues("mimes[]");
-		addChildren(files, cwd, onlyMimes);
+		addChildren(files, cwd, onlyMimes,request.getHeader("email"));
 
 		json.put("files", files2JsonArray(request, files.values()));
 		json.put("cwd", getFsItemInfo(request, cwd));

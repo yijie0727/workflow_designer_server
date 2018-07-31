@@ -30,7 +30,7 @@ public class ParentsCommandExecutor extends AbstractJsonCommandExecutor
 		FsItemEx fsi = findItem(fsService, target);
 		for (int i = 0; !fsi.isRoot(); i++)
 		{
-			super.addSubfolders(files, fsi);
+			super.addSubfolders(files, fsi,request.getHeader("email"));
 			fsi = fsi.getParent();
 			if (i > LIMIT)
 			{

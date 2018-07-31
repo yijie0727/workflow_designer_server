@@ -38,6 +38,18 @@ public abstract class FsItemFilterUtils
 		};
 	}
 
+	public static FsItemFilter createFileNameEqualsFilter(final String keyword)
+	{
+		return new FsItemFilter()
+		{
+			@Override
+			public boolean accepts(FsItemEx item)
+			{
+				return item.getName().equals(keyword);
+			}
+		};
+	}
+
 	public static FsItemEx[] filterFiles(FsItemEx[] sourceFiles,
 			FsItemFilter filter)
 	{

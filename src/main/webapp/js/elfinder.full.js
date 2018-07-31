@@ -2029,7 +2029,11 @@ window.elFinder = function(node, opts) {
 	}
 	
 	if (typeof(this.transport.send) != 'function') {
-		this.transport.send = function(opts) { return $.ajax(opts); }
+		this.transport.send = function(opts) {
+			opts.beforeSend=function(request) {
+                request.setRequestHeader("email",  $.cookie("email"));
+            };
+			return $.ajax(opts); }
 	}
 	
 	if (this.transport.upload == 'iframe') {
