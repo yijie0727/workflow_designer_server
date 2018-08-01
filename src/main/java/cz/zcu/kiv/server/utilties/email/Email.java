@@ -5,7 +5,7 @@ import javax.mail.*;
 import javax.mail.internet.*;
 import javax.activation.*;
 
-public class SendEmail {
+public class Email {
 
     public static void sendMail(String to, String subject, String text) throws MessagingException {
 

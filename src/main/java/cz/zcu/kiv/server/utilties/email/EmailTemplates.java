@@ -342,4 +342,45 @@ public class EmailTemplates {
 
     }
 
-   }
+    public static String getResetPasswordEmail(String name, String email, String link) {
+        return
+                getHeader()+
+                        "              <!-- START MAIN CONTENT AREA -->\n" +
+                        "              <tr>\n" +
+                        "                <td class=\"wrapper\">\n" +
+                        "                   <h2>INCF Workflow Designer</h2>"+
+                        "                  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n" +
+                        "                    <tr>\n" +
+                        "                      <td>\n" +
+                        "                        <p>Hi there "+name+",</p>\n" +
+                        "                        <p>Welcome to INCF Workflow Designer,</p>\n" +
+                        "                        <p>Password reset has been requested for "+email+"</p>\n" +
+                        "\t\t\t\t\t\t<p>Click on this link to receive the new password for this account</p>\n" +
+                        "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" class=\"btn btn-primary\">\n" +
+                        "                          <tbody>\n" +
+                        "                            <tr>\n" +
+                        "                              <td align=\"left\">\n" +
+                        "                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n" +
+                        "                                  <tbody>\n" +
+                        "                                    <tr>\n" +
+                        "                                      <td> <a href=\""+link+"\">Click here</a> </td>\n" +
+                        "                                    </tr>\n" +
+                        "                                  </tbody>\n" +
+                        "                                </table>\n" +
+                        "                              </td>\n" +
+                        "                            </tr>\n" +
+                        "                          </tbody>\n" +
+                        "                        </table>\n" +
+                        "                        <p>Have a great day!</p>\n" +
+                        "                      </td>\n" +
+                        "                    </tr>\n" +
+                        "                  </table>\n" +
+                        "                </td>\n" +
+                        "              </tr>\n" +
+                        "\n" +
+                        "            <!-- END MAIN CONTENT AREA -->\n" +
+                        getFooter();
+
+    }
+
+}

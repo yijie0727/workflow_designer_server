@@ -707,6 +707,9 @@ function login(){
                 document.getElementById("login").innerHTML='Logout '+$.cookie("email");
                 document.getElementById("login").onclick=logout;
                 $('#loginModal').modal('hide');
+                $("#loginEmail").val("");
+                $("#loginPassword").val("");
+                alertify.notify("Check your Email for Password", 'success', 3);
             }
             else{
                 alertify.notify(e.responseText, 'error', 3);
@@ -723,11 +726,45 @@ function login(){
     });
 }
 
+function  forgot() {
+    var data = new FormData();
+
+    if(!$("#loginEmail").val()){
+        $("#loginError").html("Please enter email");
+        return;
+    }
+
+    // If you want to add an extra field for the FormData
+    data.append("email", $("#loginEmail").val());
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/forgot",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            alertify.notify("Reset link sent on Email", 'success', 3);
+        },
+        error: function (e) {
+            if(e.status===403)
+                alertify.notify("User does not exist", 'error', 3);
+            else
+                alertify.notify("Some error occurred", 'error', 3);
+
+
+        }
+    });
+}
+
 function register(){
     // Create an FormData object
     var data = new FormData();
 
-    if(!$("#registerName").val()||!$("#registerEmail").val()||!$("#registerPassword").val()){
+    if(!$("#registerName").val()||!$("#registerEmail").val()){
         $("#registerError").html("Please fill all fields");
         return;
     }
@@ -747,6 +784,9 @@ function register(){
         timeout: 600000,
         success: function () {
             showLogin();
+            $("#loginEmail").val($("#registerEmail").val());
+            $("#registerEmail").val("");
+            $("#registerName").val("");
         },
         error: function (e) {
             if(e.status===403)

@@ -9,13 +9,27 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class SQLiteConnection {
-    private static Log logger = LogFactory.getLog(SQLiteConnection.class);
-    private static boolean initialized = false;
+import static cz.zcu.kiv.server.Workflow.DATA_FOLDER;
+
+
+public class SQLiteDB {
+    private static Log logger = LogFactory.getLog(SQLiteDB.class);
+
+    public static final String SQLITE_DB = DATA_FOLDER+"/sqlite.db";
+
+    private boolean initialized = false;
 
     private String database;
-    public SQLiteConnection(String database){
+    private static SQLiteDB instance;
+    private SQLiteDB(String database){
         this.database=database;
+    }
+
+    public static SQLiteDB getInstance(){
+        if(instance==null){
+            instance=new SQLiteDB(SQLITE_DB);
+        }
+      return instance;
     }
     /**
      * Connect to a database
@@ -34,6 +48,7 @@ public class SQLiteConnection {
                         + "	email text NOT NULL,"
                         + "	password text NOT NULL,"
                         + "	username text NOT NULL"
+                        + "	token text NOT NULL"
                         + ");";
 
                 String createModulesTableSQL = "CREATE TABLE IF NOT EXISTS modules ("
@@ -50,17 +65,14 @@ public class SQLiteConnection {
                 stmt.execute(createUsersTableSQL);
                 stmt.execute(createModulesTableSQL);
 
-                stmt.close();
                 initialized=true;
             }
 
             return conn;
 
 
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             logger.error(e);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         } finally {
             try {
                 if(stmt !=null) {

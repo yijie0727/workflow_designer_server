@@ -1,7 +1,6 @@
 package cz.zcu.kiv.server.sqlite;
 
 import cz.zcu.kiv.server.sqlite.Model.Module;
-import cz.zcu.kiv.server.sqlite.Model.User;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -14,16 +13,13 @@ public class Modules {
     private static Log logger = LogFactory.getLog(Modules.class);
 
     private String database;
-    public Modules(String database){
-        this.database=database;
-    }
 
-    public Module addModule(Module module) {
+    public static Module addModule(Module module) {
         if(getModuleByName(module.getJarName(),module.getPackageName())==null){
             Connection connection = null;
             PreparedStatement preparedStatement = null;
             try {
-                connection = new SQLiteConnection(database).connect();
+                connection = SQLiteDB.getInstance().connect();
                 preparedStatement =
                         connection.prepareStatement("INSERT into modules (jarName, packageName, publicJar, author, lastUpdate) VALUES (?,?,?,?,?);",
                                 Statement.RETURN_GENERATED_KEYS);
@@ -71,11 +67,11 @@ public class Modules {
         }
     }
 
-    public Module getModuleByName(String jarName, String packageName ){
+    public static Module getModuleByName(String jarName, String packageName ){
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = new SQLiteConnection(database).connect();
+            connection = SQLiteDB.getInstance().connect();
             preparedStatement =
                     connection.prepareStatement("SELECT * FROM modules WHERE jarName=? AND packageName=?;" );
 
@@ -117,11 +113,11 @@ public class Modules {
         }
     }
 
-    public List<Module> getModulesByJar(String jarName ){
+    public static List<Module> getModulesByJar(String jarName ){
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = new SQLiteConnection(database).connect();
+            connection = SQLiteDB.getInstance().connect();
             preparedStatement =
                     connection.prepareStatement("SELECT * FROM modules WHERE jarName=?;" );
 
@@ -165,11 +161,11 @@ public class Modules {
 
 
 
-    public Module updateModule(Module module){
+    public static Module updateModule(Module module){
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = new SQLiteConnection(database).connect();
+            connection = SQLiteDB.getInstance().connect();
             preparedStatement =
                     connection.prepareStatement("UPDATE modules SET publicJar=?,author=?,lastUpdate=?  WHERE id=?;" );
 
@@ -208,11 +204,11 @@ public class Modules {
         }
     }
 
-    public List<Module> getModulesForUser(String userEmail ){
+    public static List<Module> getModulesForUser(String userEmail ){
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = new SQLiteConnection(database).connect();
+            connection = SQLiteDB.getInstance().connect();
             preparedStatement =
                     connection.prepareStatement("SELECT * FROM modules WHERE publicJar=true;" );
 

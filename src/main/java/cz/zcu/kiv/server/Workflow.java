@@ -6,7 +6,6 @@ import cz.zcu.kiv.server.scheduler.Manager;
 import cz.zcu.kiv.server.sqlite.Model.Module;
 import cz.zcu.kiv.server.sqlite.Modules;
 import cz.zcu.kiv.server.sqlite.Users;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.*;
@@ -20,15 +19,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-
-import static cz.zcu.kiv.server.UserAccounts.SQLITE_DB;
 import static cz.zcu.kiv.server.scheduler.Manager.getJob;
 import static cz.zcu.kiv.server.scheduler.Manager.getJobs;
-import static cz.zcu.kiv.server.scheduler.Manager.jobs;
 
 /***********************************************************************************************************************
  *
@@ -128,8 +124,13 @@ public class Workflow {
         }
 
         String email = httpHeaders.getHeaderString("email");
-        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
-            return Response.status(403).entity("Unauthorized").build();
+        try {
+            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
 
         ClassLoader child;
         JSONArray result=new JSONArray();
@@ -197,8 +198,13 @@ public class Workflow {
         else publicModule=true;
 
         String email = httpHeaders.getHeaderString("email");
-        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
-            return Response.status(403).entity("Unauthorized").build();
+        try {
+            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
 
         ClassLoader child;
         String jarName;
@@ -211,7 +217,7 @@ public class Workflow {
             jarName=jarFile.getName();
             moduleName=jarFile.getName()+":"+packageName;
             child = initializeJarClassLoader(packageName,jarFile);
-            newModule=new Modules(SQLITE_DB).getModuleByName(jarFile.getName(),packageName);
+            newModule=Modules.getModuleByName(jarFile.getName(),packageName);
 
         } catch (IOException e) {
             logger.error("Cannot read folder on server",e);
@@ -238,12 +244,12 @@ public class Workflow {
                 newModule.setPublicJar(publicModule);
                 newModule.setJarName(jarName);
                 newModule.setPackageName(packageName);
-                new Modules(SQLITE_DB).addModule(newModule);
+                Modules.addModule(newModule);
             }
             else{
                 newModule.setAuthor(email);
                 newModule.setPublicJar(publicModule);
-                new Modules(SQLITE_DB).updateModule(newModule);
+                Modules.updateModule(newModule);
             }
         }
         catch(Exception e){
@@ -341,8 +347,13 @@ public class Workflow {
             return Response.status(400).entity("Invalid form data").build();
 
         String email = httpHeaders.getHeaderString("email");
-        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
-            return Response.status(403).entity("Unauthorized").build();
+        try {
+            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return Response.status(500).entity("Database Error").build();
+        }
 
         JSONObject workflowObject = new JSONObject(workflow);
         // check if all form parameters are provided
@@ -364,8 +375,12 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response schedule(@Context HttpHeaders httpHeaders)  {
         String email = httpHeaders.getHeaderString("email");
-        if(email==null||email.equals("undefined")||new Users(SQLITE_DB).getUserByEmail(email)==null)
-            return Response.status(403).entity("Unauthorized").build();
+        try {
+            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            logger.error(e);
+        }
 
         JSONArray jobs = getJobs(email);
         return Response.status(200)
@@ -547,7 +562,7 @@ public class Workflow {
     }
 
     public static List<String> getModulesList(String userEmail){
-        List<Module> modules=new Modules(SQLITE_DB).getModulesForUser(userEmail);
+        List<Module> modules=Modules.getModulesForUser(userEmail);
         List<String>list=new ArrayList<>();
         if(modules!=null){
             for(Module module:modules){
