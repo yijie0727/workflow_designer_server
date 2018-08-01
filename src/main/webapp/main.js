@@ -353,8 +353,10 @@ var contex_menu = {
 
         //Creating the tree
 
-
-        initializeTree();
+        if(!$.cookie("email")){
+            $('#loginModal').modal('show');
+        }
+        else initializeTree();
 
     });
 
@@ -680,6 +682,11 @@ function login(){
     // Create an FormData object
     var data = new FormData();
 
+    if(!$("#loginEmail").val()||!$("#loginPassword").val()){
+        $("#loginError").html("Please fill both fields");
+        return;
+    }
+
     // If you want to add an extra field for the FormData
     data.append("email", $("#loginEmail").val());
     data.append("password", $("#loginPassword").val());
@@ -699,6 +706,7 @@ function login(){
                 $.cookie("name", data.name, { expires : 10 });
                 document.getElementById("login").innerHTML='Logout '+$.cookie("email");
                 document.getElementById("login").onclick=logout;
+                $('#loginModal').modal('hide');
             }
             else{
                 alertify.notify(e.responseText, 'error', 3);
@@ -719,9 +727,13 @@ function register(){
     // Create an FormData object
     var data = new FormData();
 
+    if(!$("#registerName").val()||!$("#registerEmail").val()||!$("#registerPassword").val()){
+        $("#registerError").html("Please fill all fields");
+        return;
+    }
+
     // If you want to add an extra field for the FormData
     data.append("email", $("#registerEmail").val());
-    data.append("password", $("#registerPassword").val());
     data.append("username", $("#registerName").val());
 
     $.ajax({
@@ -733,20 +745,13 @@ function register(){
         contentType: false,
         cache: false,
         timeout: 600000,
-        success: function (data) {
-            if(data.id){
-                $.cookie("email", data.email, { expires : 10 });
-                $.cookie("name", data.name, { expires : 10 });
-                document.getElementById("login").innerHTML='Logout '+$.cookie("email");
-                document.getElementById("login").onclick=logout;
-            }
-            else{
-                alert("Error");
-            }
+        success: function () {
+            showLogin();
         },
         error: function (e) {
-            alertify.notify(e.responseText, 'error', 3);
+            if(e.status===403)
+                alertify.notify("Account already exists", 'error', 3);
         }
     });
 }
-setInterval(function(){updateJobsTable()},3000);
+//setInterval(function(){updateJobsTable()},3000);

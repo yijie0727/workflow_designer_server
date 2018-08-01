@@ -123,8 +123,7 @@
             <!-- Modal content-->
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Login</h4>
+                    <h4 class="modal-title">Login to Continue</h4>
                 </div>
                 <div class="modal-body">
                         <div id="loginDiv">
@@ -137,6 +136,7 @@
                                     <label for="loginPassword">Password:</label>
                                     <input type="password" class="form-control" id="loginPassword" value="" name="password" placeholder="4+ Character Alphanumeric "/>
                                 </div>
+                                <span style="color: red;" id="loginError"></span>
                             </form>
                         </div>
 
@@ -145,22 +145,24 @@
                             <form method="POST" id="registerForm">
                                 <div class="form-group">
                                     <label for="registerName">Name:</label>
-                                    <input type="text" class="form-control" id="registerName" value="" name="name"/>
+                                    <input type="text" class="form-control" id="registerName" value="" name="name" placeholder="John Doe"/>
                                 </div>
                                 <div class="form-group">
-                                    <label for="registerEmail">Username:</label>
-                                    <input type="text" class="form-control" id="registerEmail" value="" name="email"/>
+                                    <label for="registerEmail">Email:</label>
+                                    <input type="text" class="form-control" id="registerEmail" value="" name="email" placeholder="johndoe@gmail.com"/>
                                 </div>
                                 <div class="form-group">
                                     <label for="registerPassword">Password:</label>
                                     <input type="password" class="form-control" id="registerPassword" value="" name="password"/>
                                 </div>
+                                <span style="color: red;" id="registerError"></span>
+
                             </form>
                         </div>
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="primarySubmit" data-dismiss="modal" onclick="login()">Submit</button>
+                    <button type="button" class="btn btn-primary" id="primarySubmit" onclick="login()">Submit</button>
                     <button type="button" class="btn btn-default" id="switch" onclick="showRegister()">Create An Account</button>
                 </div>
             </div>
