@@ -1,12 +1,11 @@
 package cz.zcu.kiv.server;
 
-import com.sun.deploy.net.HttpRequest;
 import cz.zcu.kiv.server.sqlite.Model.User;
 import cz.zcu.kiv.server.sqlite.UserAlreadyExistsException;
 import cz.zcu.kiv.server.sqlite.UserDoesNotExistException;
 import cz.zcu.kiv.server.sqlite.Users;
 import cz.zcu.kiv.server.utilties.email.Email;
-import cz.zcu.kiv.server.utilties.email.EmailTemplates;
+import cz.zcu.kiv.server.utilties.email.Templates;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,11 +39,13 @@ public class UserAccounts {
         user.setUsername(username);
         String generatedPassword = RandomStringUtils.randomAlphanumeric(6);
         user.setPassword(generatedPassword);
+        String generatedToken = RandomStringUtils.randomAlphanumeric(6);
+        user.setToken(generatedToken);
 
         try {
             user = Users.addUser(user);
             Email.sendMail(email,"New Account has been created",
-                    EmailTemplates.getNewAccountPasswordEmail(user.getUsername(),user.getEmail(),generatedPassword));
+                    Templates.getNewAccountPasswordEmail(user.getUsername(),user.getEmail(),generatedPassword));
             createFolderIfNotExists(WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail());
             return Response.status(200)
                     .entity(user.toJSON().toString(4)).build();
@@ -72,6 +73,9 @@ public class UserAccounts {
         try {
             User user = Users.getUserByEmail(email);
             if(user.getPassword().equals(password)){
+                String generatedToken = RandomStringUtils.randomAlphanumeric(6);
+                user.setToken(generatedToken);
+                Users.updateUser(user);
                 return Response.status(200).entity(user.toJSON().toString(4)).build();
             }
             else{
@@ -91,14 +95,16 @@ public class UserAccounts {
     @POST
     @Path("/forgot")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public Response forgot(@FormDataParam("email")String email, @Context HttpHeaders headers) {
 
         try {
             User user = Users.getUserByEmail(email);
-            String link = headers.getHeaderString("referer");
+            String referrer=headers.getHeaderString("referer");
+            String link = referrer+(referrer.endsWith("/")?"":"/")
+                    +"api/users/forgotReset/"+user.getEmail()+"/"+user.getToken();
             Email.sendMail(email,"Password reset link",
-                    EmailTemplates.getResetPasswordEmail(user.getUsername(),user.getEmail(),link));
+                    Templates.getResetPasswordEmail(user.getUsername(),user.getEmail(),link));
 
             return Response.status(200).entity("Reset link sent").build();
 
@@ -113,6 +119,79 @@ public class UserAccounts {
         } catch (UserDoesNotExistException e) {
             return Response.status(403)
                     .entity("User does not exist!").build();
+        }
+    }
+
+    @GET
+    @Path("/forgotReset/{email}/{token}")
+    @Produces(MediaType.TEXT_HTML)
+    public Response resetRequest(@PathParam("email")String email,@PathParam("token")String token, @Context HttpHeaders headers) {
+
+        try {
+            User user = Users.getUserByEmail(email);
+            if(token.equals(user.getToken())){
+                String generatedPassword = RandomStringUtils.randomAlphanumeric(6);
+                user.setPassword(generatedPassword);
+                String generatedToken = RandomStringUtils.randomAlphanumeric(6);
+                user.setToken(generatedToken);
+                Users.updateUser(user);
+                Email.sendMail(email,"Password reset link",
+                        Templates.getResetAccountPasswordEmail(user.getUsername(),user.getEmail(),generatedPassword));
+
+                return Response.status(200).entity(Templates.getResetAccountPasswordEmail(user.getUsername(),user.getEmail(),generatedPassword)).build();
+            }
+            else
+                return Response.status(403).entity("Unauthorized").build();
+
+
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500)
+                    .entity("Database Error").build();
+        } catch (MessagingException e) {
+            logger.error(e);
+            return Response.status(500)
+                    .entity("Error sending email").build();
+        } catch (UserDoesNotExistException e) {
+            return Response.status(403)
+                    .entity("User does not exist!").build();
+        }
+    }
+
+    @POST
+    @Path("/reset")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response reset(@FormDataParam("currentPassword")String currentPassword,@FormDataParam("newPassword")String newPassword, @Context HttpHeaders httpHeaders){
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        try {
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
+                return Response.status(403).entity("Unauthorized!").build();
+        } catch (SQLException e) {
+            logger.error(e);
+        }
+
+        try {
+            User user = Users.getUserByEmail(email);
+            if(user.getPassword().equals(currentPassword)){
+                user.setPassword(newPassword);
+                Users.updateUser(user);
+                return Response.status(200).entity(user.toJSON().toString(4)).build();
+            }
+            else{
+                return Response.status(403)
+                        .entity("Unauthorized!").build();
+            }
+        }  catch (UserDoesNotExistException e) {
+            return Response.status(403)
+                    .entity("Unauthorized!").build();
+        }  catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500)
+                    .entity("Database Error").build();
         }
     }
 }

@@ -124,8 +124,11 @@ public class Workflow {
         }
 
         String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
         try {
-            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
                 return Response.status(403).entity("Unauthorized").build();
         } catch (SQLException e) {
             logger.error(e);
@@ -198,8 +201,11 @@ public class Workflow {
         else publicModule=true;
 
         String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
         try {
-            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
                 return Response.status(403).entity("Unauthorized").build();
         } catch (SQLException e) {
             logger.error(e);
@@ -347,8 +353,11 @@ public class Workflow {
             return Response.status(400).entity("Invalid form data").build();
 
         String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
         try {
-            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
                 return Response.status(403).entity("Unauthorized").build();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -375,8 +384,11 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response schedule(@Context HttpHeaders httpHeaders)  {
         String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
         try {
-            if(email==null||email.equals("undefined")||Users.getUserByEmail(email)==null)
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
                 return Response.status(403).entity("Unauthorized").build();
         } catch (SQLException e) {
             logger.error(e);

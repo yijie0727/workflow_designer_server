@@ -83,6 +83,13 @@
                         <li><a href="#" id="jobs" data-toggle="modal" data-target="#jobsModal">Jobs List</a></li>
                     </ul>
                 </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">User Account
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-toggle="modal" data-target="#resetModal">Reset Password</a></li>
+                    </ul>
+                </li>
             </ul>
             <!--<button class="btn btn-success navbar-btn pull-right" id="execute">Execute</button>-->
             <button class="btn btn-primary navbar-btn pull-right" id="schedule">Schedule</button>
@@ -165,6 +172,41 @@
 
         </div>
     </div>
+
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="resetModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Reset Password</h4>
+                </div>
+                <div class="modal-body">
+
+                        <form method="POST" id="resetForm">
+                            <div class="form-group">
+                                <label for="resetCurrent">Current Password:</label>
+                                <input type="password" class="form-control" id="resetCurrent" value="" name="currentPassword" placeholder="johndoe@gmail.com"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="resetNew">New Password:</label>
+                                <input type="password" class="form-control" id="resetNew" value="" name="newPassword" placeholder="4+ Character Alphanumeric "/>
+                            </div>
+                            <span style="color: red;" id="resetError"></span>
+                        </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="resetSubmit" onclick="reset()">Reset Password</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 
     <!-- Import Modal -->
     <div class="modal fade" id="importModal" role="dialog">

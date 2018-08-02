@@ -47,7 +47,7 @@ public class SQLiteDB {
                         + "	id integer PRIMARY KEY AUTOINCREMENT,"
                         + "	email text NOT NULL,"
                         + "	password text NOT NULL,"
-                        + "	username text NOT NULL"
+                        + "	username text NOT NULL,"
                         + "	token text NOT NULL"
                         + ");";
 
