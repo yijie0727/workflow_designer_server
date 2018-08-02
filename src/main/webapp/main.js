@@ -361,7 +361,12 @@ var contex_menu = {
         if(!$.cookie("email")){
             $('#loginModal').modal('show');
         }
-        else initializeTree();
+        else {
+            $('#elfinder').elfinder({
+                url : 'elfinder/connector'
+            });
+            initializeTree();
+        }
 
     });
 
@@ -370,12 +375,6 @@ var contex_menu = {
 })();
 
 $(document).ready(function() {
-
-    $('#elfinderModal').on('shown.bs.modal', function (e) {
-        $('#elfinder').elfinder({
-            url : 'elfinder/connector'
-        });
-    });
 
     if($.cookie("email")){
         document.getElementById("login").innerHTML='Logout '+$.cookie("email");
@@ -673,6 +672,15 @@ function logout(){
     $.removeCookie("name");
     document.getElementById("login").innerHTML='Login/Register';
     document.getElementById("login").onclick=showLogin;
+    clearTracking();
+    //Clearing blocks
+    blocks.clear();
+    //Clearing Tree
+    tree = createTree('div_tree','white',contex_menu);
+    tree.drawTree();
+
+    //Clearing elfinder
+    $('#elfinder').elfinder("destroy");
 }
 
 function showRegister() {
@@ -724,7 +732,11 @@ function login(){
                 $('#loginModal').modal('hide');
                 $("#loginEmail").val("");
                 $("#loginPassword").val("");
+
                 initializeTree();
+                $('#elfinder').elfinder({
+                    url : 'elfinder/connector'
+                });
 
             }
             else{
