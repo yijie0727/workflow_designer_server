@@ -724,6 +724,7 @@ function login(){
                 $('#loginModal').modal('hide');
                 $("#loginEmail").val("");
                 $("#loginPassword").val("");
+                initializeTree();
 
             }
             else{
