@@ -3,7 +3,6 @@ package cz.zcu.kiv.server.utilties.email;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
-import javax.activation.*;
 
 public class Email {
 
@@ -64,7 +63,7 @@ public class Email {
 
     public static void main(String[] args) {
         try {
-            sendMail("pintojoey@gmail.com","New Account",EmailTemplates.getNewAccountPasswordEmail("Joey Pinto","pintojoey@gmail.com","12345"));
+            sendMail("pintojoey@gmail.com","New Account",Templates.getNewAccountPasswordEmail("Joey Pinto","pintojoey@gmail.com","12345"));
         } catch (MessagingException e) {
             e.printStackTrace();
         }

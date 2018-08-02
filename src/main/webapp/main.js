@@ -246,6 +246,7 @@ var contex_menu = {
                 timeout: 600000,
                 beforeSend: function(request) {
                     request.setRequestHeader("email",  $.cookie("email"));
+                    request.setRequestHeader("token",  $.cookie("token"));
                 },
                 success: function (data) {
                     var newBlocks = JSON.parse(data);
@@ -326,6 +327,10 @@ var contex_menu = {
                 contentType: false,
                 cache: false,
                 timeout: 600000,
+                beforeSend: function(request) {
+                    request.setRequestHeader("email",  $.cookie("email"));
+                    request.setRequestHeader("token",  $.cookie("token"));
+                },
                 success: function (data) {
                     tracking=data;
                     alertify.notify('Job ID '+data+' scheduled !', 'success', 3);
@@ -393,6 +398,7 @@ function initializeTree() {
         cache: false,
         beforeSend: function(request) {
             request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
         },
         timeout: 600000,
         success: function (data) {
@@ -495,6 +501,7 @@ function updateJobsTable(){
         timeout: 600000,
         beforeSend: function(request) {
             request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
         },
         success: function (data) {
             data=JSON.parse(data);
@@ -529,6 +536,10 @@ function getWorkflow(jobId){
         contentType: false,
         cache: false,
         timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
         success: function (data) {
             data=JSON.parse(data);
             blocks.clear();
@@ -555,6 +566,10 @@ function getWorkflowStatus(jobId,intervalId){
         contentType: false,
         cache: false,
         timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
         success: function (data) {
             data=JSON.parse(data);
             var jobStatus= document.getElementById("jobStatus");
@@ -681,7 +696,7 @@ function showLogin() {
 function login(){
     // Create an FormData object
     var data = new FormData();
-
+    $("#loginError").html("");
     if(!$("#loginEmail").val()||!$("#loginPassword").val()){
         $("#loginError").html("Please fill both fields");
         return;
@@ -703,13 +718,13 @@ function login(){
         success: function (data) {
             if(data.id){
                 $.cookie("email", data.email, { expires : 10 });
-                $.cookie("name", data.name, { expires : 10 });
+                $.cookie("token", data.token, { expires : 10 });
                 document.getElementById("login").innerHTML='Logout '+$.cookie("email");
                 document.getElementById("login").onclick=logout;
                 $('#loginModal').modal('hide');
                 $("#loginEmail").val("");
                 $("#loginPassword").val("");
-                alertify.notify("Check your Email for Password", 'success', 3);
+
             }
             else{
                 alertify.notify(e.responseText, 'error', 3);
@@ -727,6 +742,7 @@ function login(){
 }
 
 function  forgot() {
+    $("#loginError").html("");
     var data = new FormData();
 
     if(!$("#loginEmail").val()){
@@ -746,16 +762,14 @@ function  forgot() {
         contentType: false,
         cache: false,
         timeout: 600000,
-        success: function (data) {
+        success: function () {
             alertify.notify("Reset link sent on Email", 'success', 3);
         },
         error: function (e) {
             if(e.status===403)
                 alertify.notify("User does not exist", 'error', 3);
             else
-                alertify.notify("Some error occurred", 'error', 3);
-
-
+                alertify.notify(e.responseText, 'error', 3);
         }
     });
 }
@@ -783,6 +797,7 @@ function register(){
         cache: false,
         timeout: 600000,
         success: function () {
+            alertify.notify("Check your Email for Password", 'success', 3);
             showLogin();
             $("#loginEmail").val($("#registerEmail").val());
             $("#registerEmail").val("");
@@ -791,7 +806,62 @@ function register(){
         error: function (e) {
             if(e.status===403)
                 alertify.notify("Account already exists", 'error', 3);
+            else
+                alertify.notify(e.responseText, 'error', 3);
         }
     });
 }
-//setInterval(function(){updateJobsTable()},3000);
+
+function  reset() {
+    $("#resetError").html("");
+    var data = new FormData();
+
+    data.append("currentPassword", $("#resetCurrent").val());
+    data.append("newPassword", $("#resetNew").val());
+
+    if(!$("#resetCurrent").val()||!$("#resetNew").val()){
+        $("#resetError").html("Please fill both fields");
+        return;
+    }
+
+    if($("#resetCurrent").val()===$("#resetNew").val()){
+        $("#resetError").html("Current and New Password cannot be same!");
+        return;
+    }
+
+    // If you want to add an extra field for the FormData
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/reset",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function () {
+            $("#resetModal").modal('hide');
+            $("#resetCurrent").val("");
+            $("#resetNew").val("");
+            alertify.notify("Password has been reset", 'success', 3);
+        },
+        error: function (e) {
+            if(e.status===403){
+                $("#resetError").html("Current Password is incorrect!");
+            }
+            else{
+                alertify.notify("Sorry there was an error", 'error', 3);
+            }
+
+        }
+    });
+}
+setInterval(function(){
+    if($.cookie("email"))
+        updateJobsTable()
+},3000);

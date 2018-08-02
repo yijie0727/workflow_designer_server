@@ -1,6 +1,6 @@
 package cz.zcu.kiv.server.utilties.email;
 
-public class EmailTemplates {
+public class Templates {
     private static final String getFooter(){
         return "            </table>\n" +
                 "\n" +
@@ -9,7 +9,7 @@ public class EmailTemplates {
                 "              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n" +
                 "                <tr>\n" +
                 "                  <td class=\"content-block\">\n" +
-                "                    <span class=\"apple-link\">Workflow Designer Project /span>\n" +
+                "                    <span class=\"apple-link\">Workflow Designer Project </span>\n" +
                 "                  </td>\n" +
                 "                </tr>\n" +
                 "              </table>\n" +
@@ -22,20 +22,6 @@ public class EmailTemplates {
                 "        <td>&nbsp;</td>\n" +
                 "      </tr>\n" +
                 "    </table>\n" +
-                "\t<script>\n" +
-                "\tfunction copy() {\n" +
-                "  /* Get the text field */\n" +
-                "  var copyText = document.getElementById(\"token\");\n" +
-                "\n" +
-                "  /* Select the text field */\n" +
-                "  window.getSelection().selectAllChildren( copyText );\n" +
-                "\n" +
-                "  /* Copy the text inside the text field */\n" +
-                "  document.execCommand(\"Copy\");\n" +
-                "  document.getElementById(\"copied\").setAttribute(\"style\",\"\");\n" +
-                "\n" +
-                "}\n" +
-                "\t</script>\n" +
                 "  </body>\n" +
                 "</html>";
     }
@@ -183,8 +169,7 @@ public class EmailTemplates {
                 "          font-weight: bold;\n" +
                 "          margin: 0;\n" +
                 "          padding: 12px 25px;\n" +
-                "          text-decoration: none;\n" +
-                "          text-transform: capitalize; }\n" +
+                "          text-decoration: none; }\n" +
                 "      .btn-primary table td {\n" +
                 "        background-color: #3498db; }\n" +
                 "      .btn-primary a {\n" +
@@ -363,7 +348,7 @@ public class EmailTemplates {
                         "                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n" +
                         "                                  <tbody>\n" +
                         "                                    <tr>\n" +
-                        "                                      <td> <a href=\""+link+"\">Click here</a> </td>\n" +
+                        "                                      <td> <a href=\""+link+"\">Click Here</a> </td>\n" +
                         "                                    </tr>\n" +
                         "                                  </tbody>\n" +
                         "                                </table>\n" +
@@ -371,6 +356,7 @@ public class EmailTemplates {
                         "                            </tr>\n" +
                         "                          </tbody>\n" +
                         "                        </table>\n" +
+                        "\t\t\t\t\t\t<p>You will receive your new password on this email shortly</p>\n" +
                         "                        <p>Have a great day!</p>\n" +
                         "                      </td>\n" +
                         "                    </tr>\n" +
@@ -383,4 +369,44 @@ public class EmailTemplates {
 
     }
 
+    public static String getResetAccountPasswordEmail(String name, String email, String password) {
+        return
+                getHeader()+
+                        "              <!-- START MAIN CONTENT AREA -->\n" +
+                        "              <tr>\n" +
+                        "                <td class=\"wrapper\">\n" +
+                        "                   <h2>INCF Workflow Designer</h2>"+
+                        "                  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n" +
+                        "                    <tr>\n" +
+                        "                      <td>\n" +
+                        "                        <p>Hi there "+name+",</p>\n" +
+                        "                        <p>Welcome to INCF Workflow Designer,</p>\n" +
+                        "                        <p>Your new password for "+email+" is</p>\n" +
+                        "                        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" class=\"btn btn-primary\">\n" +
+                        "                          <tbody>\n" +
+                        "                            <tr>\n" +
+                        "                              <td align=\"left\">\n" +
+                        "                                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\">\n" +
+                        "                                  <tbody>\n" +
+                        "                                    <tr>\n" +
+                        "                                      <td> <a >"+password+"</a> </td>\n" +
+                        "                                    </tr>\n" +
+                        "                                  </tbody>\n" +
+                        "                                </table>\n" +
+                        "                              </td>\n" +
+                        "                            </tr>\n" +
+                        "                          </tbody>\n" +
+                        "                        </table>\n" +
+                        "\t\t\t\t\t\t<p>Please use this password to Sign in</p>\n" +
+                        "                        <p>Have a great day!</p>\n" +
+                        "                      </td>\n" +
+                        "                    </tr>\n" +
+                        "                  </table>\n" +
+                        "                </td>\n" +
+                        "              </tr>\n" +
+                        "\n" +
+                        "            <!-- END MAIN CONTENT AREA -->\n" +
+                        getFooter();
+
+    }
 }

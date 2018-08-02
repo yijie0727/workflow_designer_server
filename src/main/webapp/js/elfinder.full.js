@@ -2030,8 +2030,9 @@ window.elFinder = function(node, opts) {
 	
 	if (typeof(this.transport.send) != 'function') {
 		this.transport.send = function(opts) {
-			opts.beforeSend=function(request) {
+			opts.beforeSend = function(request) {
                 request.setRequestHeader("email",  $.cookie("email"));
+                request.setRequestHeader("token",  $.cookie("token"));
             };
 			return $.ajax(opts); }
 	}

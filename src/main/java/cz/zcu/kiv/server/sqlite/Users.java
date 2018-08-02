@@ -21,12 +21,13 @@ public class Users {
             try {
                 connection = SQLiteDB.getInstance().connect();
                 preparedStatement =
-                        connection.prepareStatement("INSERT into users (email, password, username) VALUES (?,?,?);",
+                        connection.prepareStatement("INSERT into users (email, password, username, token) VALUES (?,?,?,?);",
                                 Statement.RETURN_GENERATED_KEYS);
 
                 preparedStatement.setString(1, user.getEmail());
                 preparedStatement.setString(2, user.getPassword());
                 preparedStatement.setString(3, user.getUsername());
+                preparedStatement.setString(4, user.getToken());
 
                 preparedStatement.executeUpdate();
 
@@ -71,6 +72,7 @@ public class Users {
                 user.setEmail(resultSet.getString("email"));
                 user.setPassword(resultSet.getString("password"));
                 user.setUsername(resultSet.getString("username"));
+                user.setToken(resultSet.getString("token"));
                 user.setId(resultSet.getLong("id"));
                 return user;
             }
@@ -96,7 +98,9 @@ public class Users {
     }
 
     public static User updateUser(User user) throws SQLException, UserDoesNotExistException {
-        if(getUserByEmail(user.getEmail())==null){
+        //Check if user exists
+        getUserByEmail(user.getEmail());
+        {
             Connection connection = null;
             PreparedStatement preparedStatement = null;
             try {
@@ -130,8 +134,17 @@ public class Users {
             }
 
         }
-        else{
-            throw new UserDoesNotExistException(user.getEmail());
+    }
+
+    public static boolean checkAuthorized(String email, String token) throws SQLException{
+        try {
+            User user=getUserByEmail(email);
+            if(!user.getToken().equals(token))
+                return false;
+        } catch (UserDoesNotExistException e) {
+            logger.error(e);
+            return false;
         }
+        return true;
     }
 }
