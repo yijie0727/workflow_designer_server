@@ -12,10 +12,8 @@ import java.util.List;
 public class Modules {
     private static Log logger = LogFactory.getLog(Modules.class);
 
-    private String database;
-
-    public static Module addModule(Module module) {
-        if(getModuleByName(module.getJarName(),module.getPackageName())==null){
+    public static Module addModule(Module module) throws SQLException {
+        if(!jarExists(module.getJarName())){
             Connection connection = null;
             PreparedStatement preparedStatement = null;
             try {
@@ -40,10 +38,6 @@ public class Modules {
                 module.setLastUpdate(new Date(currentTimestamp.getTime()));
                 return module;
             }
-            catch (SQLException e){
-                logger.error(e);
-                return null;
-            }
             finally {
                 if(preparedStatement!=null) {
                     try {
@@ -62,37 +56,31 @@ public class Modules {
             }
 
         }
-        else{
-           return null;
-        }
+        else
+            throw new SQLException(module.getJarName()+ " already exists");
     }
 
-    public static Module getModuleByName(String jarName, String packageName ){
+    public static Module getModuleByJar(String jarName ) throws SQLException{
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("SELECT * FROM modules WHERE jarName=? AND packageName=?;" );
+                    connection.prepareStatement("SELECT * FROM modules WHERE jarName=?;" );
 
             preparedStatement.setString(1, jarName);
-            preparedStatement.setString(2, packageName);
 
             ResultSet resultSet = preparedStatement.executeQuery();
+            Module module = null;
             if(resultSet.next()){
-                Module module=new Module();
+                module=new Module();
                 module.setJarName(resultSet.getString("jarName"));
                 module.setPackageName(resultSet.getString("packageName"));
                 module.setPublicJar(resultSet.getBoolean("publicJar"));
                 module.setAuthor(resultSet.getString("author"));
                 module.setId(resultSet.getLong("id"));
-                return module;
             }
-            else return null;
-        }
-        catch (SQLException e){
-            logger.error(e);
-            return null;
+            return module;
         }
         finally {
             if(preparedStatement!=null) {
@@ -113,7 +101,7 @@ public class Modules {
         }
     }
 
-    public static List<Module> getModulesByJar(String jarName ){
+    public static boolean jarExists(String jarName ) throws SQLException{
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -122,23 +110,11 @@ public class Modules {
                     connection.prepareStatement("SELECT * FROM modules WHERE jarName=?;" );
 
             preparedStatement.setString(1, jarName);
-
             ResultSet resultSet = preparedStatement.executeQuery();
-            List<Module>modules=new ArrayList<>();
-            while(resultSet.next()){
-                Module module=new Module();
-                module.setJarName(resultSet.getString("jarName"));
-                module.setPackageName(resultSet.getString("packageName"));
-                module.setPublicJar(resultSet.getBoolean("publicJar"));
-                module.setAuthor(resultSet.getString("author"));
-                module.setId(resultSet.getLong("id"));
-                modules.add(module);
+            if(resultSet.next()){
+                return true;
             }
-            return modules.isEmpty()?null:modules;
-        }
-        catch (SQLException e){
-            logger.error(e);
-            return null;
+            else return false;
         }
         finally {
             if(preparedStatement!=null) {
@@ -172,14 +148,13 @@ public class Modules {
             preparedStatement.setBoolean(1, module.isPublicJar());
             preparedStatement.setString(2, module.getAuthor());
             Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+            module.setLastUpdate(currentTimestamp);
             preparedStatement.setTimestamp(3,currentTimestamp);
             preparedStatement.setLong(4, module.getId());
 
 
-            int updateRows = preparedStatement.executeUpdate();
-            if(updateRows!=0)
-                return module;
-            return null;
+            preparedStatement.executeUpdate();
+            return module;
         }
         catch (SQLException e){
             logger.error(e);
@@ -210,9 +185,9 @@ public class Modules {
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("SELECT * FROM modules WHERE publicJar=true;" );
+                    connection.prepareStatement("SELECT * FROM modules WHERE publicJar=true OR author=?;" );
 
-           // preparedStatement.setString(1, userEmail);
+            preparedStatement.setString(1, userEmail);
 
             ResultSet resultSet = preparedStatement.executeQuery();
             List<Module>modules=new ArrayList<>();

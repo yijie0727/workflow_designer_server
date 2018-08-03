@@ -215,15 +215,36 @@ public class Workflow {
         ClassLoader child;
         String jarName;
         String moduleName;
-        Module newModule;
+        Module existingModule;
+        jarName=getSingleJarFileName(formData);
+        moduleName=jarName+":"+packageName;
         try {
+            existingModule=Modules.getModuleByJar(jarName);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
+
+        if(existingModule!=null){
+            boolean owner=existingModule.getAuthor().equals(email);
+            if(!owner ){
+                if(!existingModule.isPublicJar()){
+                    logger.error("Unauthorized to reupload jar");
+                    return Response.status(403).entity("A private Jar file with this name already exists by another user").build();
+                }
 
 
+            }
+            if(existingModule.isPublicJar()&&!publicModule){
+                logger.error("Unauthorized to reupload jar");
+                return Response.status(403).entity("An existing Public Jar cannot be made private").build();
+            }
+
+        }
+        //Save file
+        try {
             File jarFile=getSingleJarFile(formData);
-            jarName=jarFile.getName();
-            moduleName=jarFile.getName()+":"+packageName;
             child = initializeJarClassLoader(packageName,jarFile);
-            newModule=Modules.getModuleByName(jarFile.getName(),packageName);
 
         } catch (IOException e) {
             logger.error("Cannot read folder on server",e);
@@ -244,18 +265,18 @@ public class Workflow {
             Object instance = ctor.newInstance(child,moduleName,UPLOAD_FOLDER,WORK_FOLDER);
             result = (JSONArray)method.invoke(instance);
 
-            if(newModule==null){
-                newModule = new Module();
-                newModule.setAuthor(email);
-                newModule.setPublicJar(publicModule);
-                newModule.setJarName(jarName);
-                newModule.setPackageName(packageName);
-                Modules.addModule(newModule);
+            if(existingModule==null){
+                existingModule = new Module();
+                existingModule.setAuthor(email);
+                existingModule.setPublicJar(publicModule);
+                existingModule.setJarName(jarName);
+                existingModule.setPackageName(packageName);
+                Modules.addModule(existingModule);
             }
             else{
-                newModule.setAuthor(email);
-                newModule.setPublicJar(publicModule);
-                Modules.updateModule(newModule);
+                existingModule.setAuthor(email);
+                existingModule.setPublicJar(publicModule);
+                Modules.updateModule(existingModule);
             }
         }
         catch(Exception e){
@@ -437,6 +458,21 @@ public class Workflow {
         return outputFile;
     }
 
+    private String getSingleJarFileName(FormDataMultiPart multiPart) {
+        Map<String, List<FormDataBodyPart>> map = multiPart.getFields();
+
+        for (Map.Entry<String, List<FormDataBodyPart>> entry : map.entrySet()) {
+
+            for (FormDataBodyPart part : entry.getValue()) {
+                if(part.getName().equals("file")){
+                    return part.getContentDisposition().getFileName();
+                }
+
+            }
+        }
+       return null;
+    }
+
     /**
      * Utility method to save InputStream data to target location/file
      *  @param inStream
@@ -578,7 +614,9 @@ public class Workflow {
         List<String>list=new ArrayList<>();
         if(modules!=null){
             for(Module module:modules){
-                list.add(module.getJarName()+":"+module.getPackageName());
+                String [] packageNames =module.getPackageName().split(",");
+                for(String packageName:packageNames)
+                    list.add(module.getJarName()+":"+packageName);
             }
         }
         return list;

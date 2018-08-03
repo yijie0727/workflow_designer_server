@@ -255,7 +255,10 @@ var contex_menu = {
                     alertify.notify(newBlocks.length + ' blocks registered', 'success', 5);
                 },
                 error: function (e) {
-                    alertify.notify('Error Registering blocks', 'error', 5);
+                    alertify.notify('Error Registering blocks', 'error', 3);
+                    if(e.status===403){
+                        alertify.notify(e.responseText, 'error', 10);
+                    }
                 }
             });
 

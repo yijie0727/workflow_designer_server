@@ -19,10 +19,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.io.File;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
 import static cz.zcu.kiv.server.Workflow.WORK_FOLDER;
 import static cz.zcu.kiv.server.Workflow.createFolderIfNotExists;
+import static cz.zcu.kiv.server.sqlite.Users.MD5;
 
 @Path("/users")
 public class UserAccounts {
@@ -72,7 +74,7 @@ public class UserAccounts {
 
         try {
             User user = Users.getUserByEmail(email);
-            if(user.getPassword().equals(password)){
+            if(user.getPassword().equals(MD5(password))){
                 String generatedToken = RandomStringUtils.randomAlphanumeric(6);
                 user.setToken(generatedToken);
                 Users.updateUser(user);
@@ -83,6 +85,7 @@ public class UserAccounts {
                         .entity("Unauthorized!").build();
             }
         }  catch (UserDoesNotExistException e) {
+            logger.error(e);
             return Response.status(403)
                     .entity("Unauthorized!").build();
         }  catch (SQLException e) {
@@ -176,7 +179,7 @@ public class UserAccounts {
 
         try {
             User user = Users.getUserByEmail(email);
-            if(user.getPassword().equals(currentPassword)){
+            if(user.getPassword().equals(MD5(currentPassword))){
                 user.setPassword(newPassword);
                 Users.updateUser(user);
                 return Response.status(200).entity(user.toJSON().toString(4)).build();
