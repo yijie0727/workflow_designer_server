@@ -43,6 +43,8 @@ public class UserAccounts {
         user.setPassword(generatedPassword);
         String generatedToken = RandomStringUtils.randomAlphanumeric(6);
         user.setToken(generatedToken);
+        user.setActive(true);
+        user.setReset(true);
 
         try {
             user = Users.addUser(user);
@@ -74,7 +76,7 @@ public class UserAccounts {
 
         try {
             User user = Users.getUserByEmail(email);
-            if(user.getPassword().equals(MD5(password))){
+            if(user.getActive() && user.getPassword().equals(MD5(password))){
                 String generatedToken = RandomStringUtils.randomAlphanumeric(6);
                 user.setToken(generatedToken);
                 Users.updateUser(user);
@@ -137,11 +139,12 @@ public class UserAccounts {
                 user.setPassword(generatedPassword);
                 String generatedToken = RandomStringUtils.randomAlphanumeric(6);
                 user.setToken(generatedToken);
+                user.setReset(true);
                 Users.updateUser(user);
-                Email.sendMail(email,"Password reset link",
+                Email.sendMail(email,"New Password",
                         Templates.getResetAccountPasswordEmail(user.getUsername(),user.getEmail(),generatedPassword));
 
-                return Response.status(200).entity(Templates.getResetAccountPasswordEmail(user.getUsername(),user.getEmail(),generatedPassword)).build();
+                return Response.status(200).entity("Please check your email for the new password. You can close this tab.").build();
             }
             else
                 return Response.status(403).entity("Unauthorized").build();
@@ -181,6 +184,7 @@ public class UserAccounts {
             User user = Users.getUserByEmail(email);
             if(user.getPassword().equals(MD5(currentPassword))){
                 user.setPassword(newPassword);
+                user.setReset(false);
                 Users.updateUser(user);
                 return Response.status(200).entity(user.toJSON().toString(4)).build();
             }

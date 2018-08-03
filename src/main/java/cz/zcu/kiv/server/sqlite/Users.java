@@ -21,14 +21,15 @@ public class Users {
             try {
                 connection = SQLiteDB.getInstance().connect();
                 preparedStatement =
-                        connection.prepareStatement("INSERT into users (email, password, username, token) VALUES (?,?,?,?);",
+                        connection.prepareStatement("INSERT into users (email, password, username, token, reset, active) VALUES (?,?,?,?,?,?);",
                                 Statement.RETURN_GENERATED_KEYS);
 
                 preparedStatement.setString(1, user.getEmail());
                 preparedStatement.setString(2, MD5(user.getPassword()));
                 preparedStatement.setString(3, user.getUsername());
                 preparedStatement.setString(4, user.getToken());
-
+                preparedStatement.setBoolean(5,user.getReset());
+                preparedStatement.setBoolean(6,user.getActive());
                 preparedStatement.executeUpdate();
 
                 ResultSet tableKeys = preparedStatement.getGeneratedKeys();
@@ -76,6 +77,8 @@ public class Users {
                 user.setUsername(resultSet.getString("username"));
                 user.setToken(resultSet.getString("token"));
                 user.setId(resultSet.getLong("id"));
+                user.setActive(resultSet.getBoolean("active"));
+                user.setReset(resultSet.getBoolean("reset"));
                 return user;
             }
             else throw new UserDoesNotExistException(email);
@@ -108,13 +111,15 @@ public class Users {
             try {
                 connection = SQLiteDB.getInstance().connect();
                 preparedStatement =
-                        connection.prepareStatement("UPDATE users SET password=?, token=? WHERE id=?;",
+                        connection.prepareStatement("UPDATE users SET password=?, token=?, active=?, reset=? WHERE id=?;",
                                 Statement.RETURN_GENERATED_KEYS);
 
                 boolean passwordChanged=!oldUser.getPassword().equals(user.getPassword());
                 preparedStatement.setString(1, passwordChanged?MD5(user.getPassword()):user.getPassword());
                 preparedStatement.setString(2, user.getToken());
-                preparedStatement.setLong(3, user.getId());
+                preparedStatement.setBoolean(3, user.getActive());
+                preparedStatement.setBoolean(4, user.getReset());
+                preparedStatement.setLong(5, user.getId());
 
                 preparedStatement.executeUpdate();
                 return user;

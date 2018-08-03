@@ -48,7 +48,9 @@ public class SQLiteDB {
                         + "	email text NOT NULL,"
                         + "	password text NOT NULL,"
                         + "	username text NOT NULL,"
-                        + "	token text NOT NULL"
+                        + "	token text NOT NULL,"
+                        + "	reset boolean NOT NULL,"
+                        + "	active boolean NOT NULL"
                         + ");";
 
                 String createModulesTableSQL = "CREATE TABLE IF NOT EXISTS modules ("

@@ -740,6 +740,8 @@ function login(){
                 $('#elfinder').elfinder({
                     url : 'elfinder/connector'
                 });
+                if(data.reset)
+                    $("#resetModal").modal("show");
 
             }
             else{
@@ -837,6 +839,11 @@ function  reset() {
 
     if(!$("#resetCurrent").val()||!$("#resetNew").val()){
         $("#resetError").html("Please fill both fields");
+        return;
+    }
+
+    if($("#resetNew").val().length<4){
+        $("#resetError").html("Please use a longer password");
         return;
     }
 

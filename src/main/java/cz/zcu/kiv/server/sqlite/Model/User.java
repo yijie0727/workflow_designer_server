@@ -8,6 +8,8 @@ public class User {
     private String username;
     private String token;
     private Long id;
+    private Boolean active;
+    private Boolean reset;
 
     public String getEmail() {
         return email;
@@ -49,12 +51,30 @@ public class User {
         this.id = id;
     }
 
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public Boolean getReset() {
+        return reset;
+    }
+
+    public void setReset(Boolean reset) {
+        this.reset = reset;
+    }
+
     public JSONObject toJSON() {
         JSONObject userObject =  new JSONObject();
         userObject.put("email", email);
         //userObject.put("password",password);
         userObject.put("id",id);
         userObject.put("token",token);
+        userObject.put("reset",reset);
+        //userObject.put("active",active);
         return userObject;
     }
 }
