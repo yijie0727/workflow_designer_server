@@ -18,11 +18,11 @@ public class JobThread extends Thread {
         try {
             logger.info("Starting Job " + job.getId());
             job.execute();
-            onJobCompleted();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        onJobCompleted();
     }
 
     public void onJobCompleted(){

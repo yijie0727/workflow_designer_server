@@ -1,5 +1,7 @@
 ###### Email Server Configuration #####
 
+## Copy this as TOMCAT_PROJECT_ROOT/WEB-INF/classes/config.properties
+
 fromEmailAddress=
 mail.smtp.host=
 mail.smtp.port=
