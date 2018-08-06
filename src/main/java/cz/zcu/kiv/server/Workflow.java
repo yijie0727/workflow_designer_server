@@ -3,6 +3,7 @@ package cz.zcu.kiv.server;
 
 import cz.zcu.kiv.server.scheduler.Job;
 import cz.zcu.kiv.server.scheduler.Manager;
+import cz.zcu.kiv.server.sqlite.Jobs;
 import cz.zcu.kiv.server.sqlite.Model.Module;
 import cz.zcu.kiv.server.sqlite.Modules;
 import cz.zcu.kiv.server.sqlite.Users;
@@ -23,8 +24,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import static cz.zcu.kiv.server.scheduler.Manager.getJob;
-import static cz.zcu.kiv.server.scheduler.Manager.getJobs;
 
 /***********************************************************************************************************************
  *
@@ -106,10 +105,6 @@ public class Workflow {
     @Path("/initialize")
     @Produces(MediaType.TEXT_PLAIN)
     public Response initializeAtom(@Context HttpHeaders httpHeaders)  {
-        if (EmbeddedServer.manager==null){
-            EmbeddedServer.manager=new Manager();
-            EmbeddedServer.manager.start();
-        }
         try {
             createFolderIfNotExists(UPLOAD_FOLDER);
             createFolderIfNotExists(GENERATED_FILES_FOLDER);
@@ -381,7 +376,7 @@ public class Workflow {
                     ||!Users.checkAuthorized(email,token))
                 return Response.status(403).entity("Unauthorized").build();
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e);
             return Response.status(500).entity("Database Error").build();
         }
 
@@ -390,9 +385,14 @@ public class Workflow {
 
         Job job=new Job(workflowObject);
         job.setOwner(email);
-        long jobId = Manager.addJob(job);
+        try {
+            Manager.getInstance().addJob(job);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
         return Response.status(200)
-                .entity(jobId).build();
+                .entity(job.getId()).build();
     }
 
     /**
@@ -413,9 +413,16 @@ public class Workflow {
                 return Response.status(403).entity("Unauthorized").build();
         } catch (SQLException e) {
             logger.error(e);
+            return Response.status(500).entity("Database Error").build();
         }
 
-        JSONArray jobs = getJobs(email);
+        JSONArray jobs;
+        try {
+            jobs = Manager.getInstance().getJobs(email);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
         return Response.status(200)
                 .entity(jobs.toString(4)).build();
     }
@@ -430,7 +437,13 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response getJobById(@PathParam("jobId")long jobId)  {
 
-        JSONObject job = getJob(jobId);
+        JSONObject job = null;
+        try {
+            job = Manager.getInstance().getJob(jobId);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
         return Response.status(200)
                 .entity(job.toString(4)).build();
     }

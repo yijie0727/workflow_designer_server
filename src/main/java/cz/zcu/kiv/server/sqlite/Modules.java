@@ -198,6 +198,7 @@ public class Modules {
                 module.setPublicJar(resultSet.getBoolean("publicJar"));
                 module.setAuthor(resultSet.getString("author"));
                 module.setId(resultSet.getLong("id"));
+                module.setLastUpdate(new Date(resultSet.getLong("lastUpdate")));
                 modules.add(module);
             }
             return modules.isEmpty()?null:modules;

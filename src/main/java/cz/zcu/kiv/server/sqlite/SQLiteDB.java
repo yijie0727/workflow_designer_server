@@ -62,10 +62,21 @@ public class SQLiteDB {
                         + "	lastUpdate text NOT NULL"
                         + ");";
 
+                String createJobsTableSQL = "CREATE TABLE IF NOT EXISTS jobs ("
+                        + "	id integer PRIMARY KEY AUTOINCREMENT,"
+                        + "	owner text NOT NULL,"
+                        + "	status text NOT NULL,"
+                        + "	startTime text NULL,"
+                        + "	endTime text NULL,"
+                        + "	workflow text NOT NULL,"
+                        + "	workflowOutputFile text NULL"
+                        + ");";
+
                 stmt = conn.createStatement();
                 // create a new table
                 stmt.execute(createUsersTableSQL);
                 stmt.execute(createModulesTableSQL);
+                stmt.execute(createJobsTableSQL);
 
                 initialized=true;
             }
