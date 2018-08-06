@@ -1,0 +1,12 @@
+###### Email Server Configuration #####
+
+fromEmailAddress=
+mail.smtp.host=
+mail.smtp.port=
+mail.smtp.auth=
+mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
+emailUsername=
+emailPassword=
+
+
+

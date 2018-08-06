@@ -1,36 +1,34 @@
 package cz.zcu.kiv.server.utilties.email;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
 
 public class Email {
+    private static Log logger=LogFactory.getLog(Email.class);
 
     public static void sendMail(String to, String subject, String text) throws MessagingException {
 
-        String from = "no-reply@WorkflowDesigner.com";
-
-        String host = "smtp.mailtrap.io";
-
-        final String username = "a28d8dc4f95082";
-
-        final String password = "bf841a606d53e3";
-
         // Get system properties
-        Properties properties = System.getProperties();
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream("config.properties"));
+        } catch (IOException e) {
+            logger.error("Could not find config.properties file");
+            logger.fatal(e);
+        }
 
-        // Setup mail server
-        properties.setProperty("mail.smtp.host", host);
+        String from = properties.getProperty("fromEmailAddress");
 
-        // SSL Port
-        properties.put("mail.smtp.port", "2525");
+        final String username = properties.getProperty("emailUsername");
 
-        // enable authentication
-        properties.put("mail.smtp.auth", "true");
-
-        // SSL Factory
-        properties.put("mail.smtp.socketFactory.class",
-                "javax.net.ssl.SSLSocketFactory");
+        final String password = properties.getProperty("emailPassword");
 
         // creating Session instance referenced to 
         // Authenticator object to pass in 
