@@ -271,6 +271,7 @@ public class Workflow {
             else{
                 existingModule.setAuthor(email);
                 existingModule.setPublicJar(publicModule);
+                existingModule.setPackageName(packageName);
                 Modules.updateModule(existingModule);
             }
         }

@@ -20,7 +20,7 @@
             return decodeURI(results[1]) || 0;
         }
     }
-    $.get("rest/workflow/file/"+$.urlParam("graph"), function(data, status){
+    $.get("api/workflow/file/"+$.urlParam("graph"), function(data, status){
         data= JSON.parse(data);
         var traces=[];
         for(var p=0;p < data.traces.length ;p++){

@@ -625,7 +625,7 @@ function populateOutputs(data){
                         }
                     }
                     if(data[x].stdout || data[x].stderr){
-                        if(data[x].stderr)block.div[0].setAttribute("class","block block_error");
+                        if(data[x].error)block.div[0].setAttribute("class","block block_error");
                         var modal = document.getElementById("logModal");
                         var div = document.createElement('span');
                         div.innerHTML=modal.innerHTML;
