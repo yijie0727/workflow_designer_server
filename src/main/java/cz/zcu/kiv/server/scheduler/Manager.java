@@ -1,21 +1,19 @@
 package cz.zcu.kiv.server.scheduler;
 
-import cz.zcu.kiv.server.EmbeddedServer;
 import cz.zcu.kiv.server.sqlite.Jobs;
-import cz.zcu.kiv.server.sqlite.UserDoesNotExistException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
-public class Manager extends Thread{
+public class Manager {
     private static Log logger = LogFactory.getLog(Manager.class);
-    private static boolean running = false;
     private static Manager manager;
+    private static final int MAX_THREADS = 2;
+    private static int CURRENT_THREAD_COUNT=0;
 
     private Manager(){
 
@@ -29,44 +27,55 @@ public class Manager extends Thread{
             } catch (SQLException e) {
                 logger.error(e);
             }
-            manager.start();
         }
 
         return manager;
     }
 
+    //New Job arrives
     public long addJob(Job job) throws SQLException {
+        //Add job to database as a pending job
         job = Jobs.addJob(job);
-        if(!running){
-            manager=new Manager();
-            manager.start();
+
+        //Check for thread allocation
+        if(CURRENT_THREAD_COUNT<MAX_THREADS){
+            startJob(job);
         }
+
         return job.getId();
     }
 
-    @Override
-    public void run() {
-
-            running=true;
-            System.out.println("Starting thread");
-            try {
-
-                List<Job> pendingJobs = Jobs.getJobsByStatus(Status.WAITING.name());
-                while(!pendingJobs.isEmpty()) {
-
-                    for (Job job : pendingJobs) {
-                        logger.info("Starting Job " + job.getId());
-                        job.execute();
-                        logger.info("Job " + job.getId() + " Completed");
-                    }
-                    pendingJobs = Jobs.getJobsByStatus(Status.WAITING.name());
-                }
-            } catch (SQLException e) {
-                logger.fatal(e);
+    //Thread is available, start execution
+    public void startJob(Job job){
+        CURRENT_THREAD_COUNT++;
+        JobThread jobThread=new JobThread(job){
+            @Override
+            public void onJobCompleted(){
+                //Job execution is complete
+                super.onJobCompleted();
+                //Indicate thread is available
+                endJob();
             }
-            running=false;
-            System.out.println("Ending thread");
+        };
+        jobThread.start();
 
+    }
+
+    //Indicate thread is available and schedule pending job
+    public void endJob() {
+
+        CURRENT_THREAD_COUNT--;
+        try {
+            //Get list of pending jobs from database
+            List<Job> pendingJobs = Jobs.getJobsByStatus(Status.WAITING.name());
+            if(!pendingJobs.isEmpty()){
+
+                //check if thread is available and schedule job
+                startJob(pendingJobs.get(0));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
     }
 

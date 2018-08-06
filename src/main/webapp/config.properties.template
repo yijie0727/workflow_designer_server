@@ -3,7 +3,7 @@
 fromEmailAddress=
 mail.smtp.host=
 mail.smtp.port=
-mail.smtp.auth=
+mail.smtp.auth=true
 mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
 emailUsername=
 emailPassword=

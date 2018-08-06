@@ -154,6 +154,7 @@ public class Job {
             logger.error("No result was generated");
             setStatus(Status.FAILED);
         }
+        setEndTime(new Date());
         Jobs.updateJob(this);
 
     }

@@ -33,7 +33,7 @@ public class Jobs {
             else
                 preparedStatement.setString(3,"");
             if(job.getEndTime()!=null)
-                preparedStatement.setTimestamp(4,new Timestamp(job.getStartTime().getTime()));
+                preparedStatement.setTimestamp(4,new Timestamp(job.getEndTime().getTime()));
             else
                 preparedStatement.setString(4,"");
             preparedStatement.setString(5,job.getWorkflow().toString());
@@ -228,7 +228,7 @@ public class Jobs {
             else
                 preparedStatement.setString(3,null);
             if(job.getEndTime()!=null)
-                preparedStatement.setTimestamp(4,new Timestamp(job.getStartTime().getTime()));
+                preparedStatement.setTimestamp(4,new Timestamp(job.getEndTime().getTime()));
             else
                 preparedStatement.setString(4,null);
             preparedStatement.setString(5,job.getWorkflow().toString());
@@ -265,7 +265,7 @@ public class Jobs {
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("UPDATE jobs set status='FAILED' WHERE status='RUNNING';" );
+                    connection.prepareStatement("UPDATE jobs set status='FAILED' WHERE status='RUNNING' OR status='WAITING';" );
 
             preparedStatement.executeUpdate();
         }

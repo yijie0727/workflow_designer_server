@@ -18,7 +18,7 @@ public class Email {
         // Get system properties
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream("config.properties"));
+            properties.load(Email.class.getResourceAsStream("/config.properties"));
         } catch (IOException e) {
             logger.error("Could not find config.properties file");
             logger.fatal(e);
