@@ -129,7 +129,7 @@ public class UserAccounts {
 
     @GET
     @Path("/forgotReset/{email}/{token}")
-    @Produces(MediaType.TEXT_HTML)
+    @Produces(MediaType.TEXT_PLAIN)
     public Response resetRequest(@PathParam("email")String email,@PathParam("token")String token, @Context HttpHeaders headers) {
 
         try {
