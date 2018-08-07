@@ -3,7 +3,10 @@ package cz.zcu.kiv.server;
 
 import cz.zcu.kiv.server.scheduler.Job;
 import cz.zcu.kiv.server.scheduler.Manager;
-import org.apache.commons.io.FileUtils;
+import cz.zcu.kiv.server.sqlite.Jobs;
+import cz.zcu.kiv.server.sqlite.Model.Module;
+import cz.zcu.kiv.server.sqlite.Modules;
+import cz.zcu.kiv.server.sqlite.Users;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.*;
@@ -17,14 +20,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-
-import static cz.zcu.kiv.server.scheduler.Manager.getJob;
-import static cz.zcu.kiv.server.scheduler.Manager.getJobs;
-import static cz.zcu.kiv.server.scheduler.Manager.jobs;
 
 /***********************************************************************************************************************
  *
@@ -59,7 +58,7 @@ public class Workflow {
 
     /** The path to the folder where we want to store the uploaded files */
     //private static final String DATA_FOLDER = new File(Workflow.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getAbsolutePath();
-    private static final String DATA_FOLDER = System.getProperty("user.home")+"/.workflow_designer_files";
+    public static final String DATA_FOLDER = System.getProperty("user.home")+"/.workflow_designer_files";
     public static final String UPLOAD_FOLDER = DATA_FOLDER+"/uploadedFiles/";
     public static final String GENERATED_FILES_FOLDER = DATA_FOLDER+"/generatedFiles/";
     public static final String WORK_FOLDER = DATA_FOLDER+"/workFiles/";
@@ -105,11 +104,7 @@ public class Workflow {
     @POST
     @Path("/initialize")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response initializeAtom()  {
-        if (EmbeddedServer.manager==null){
-            EmbeddedServer.manager=new Manager();
-            EmbeddedServer.manager.start();
-        }
+    public Response initializeAtom(@Context HttpHeaders httpHeaders)  {
         try {
             createFolderIfNotExists(UPLOAD_FOLDER);
             createFolderIfNotExists(GENERATED_FILES_FOLDER);
@@ -123,10 +118,22 @@ public class Workflow {
                     .build();
         }
 
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        try {
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
+
         ClassLoader child;
         JSONArray result=new JSONArray();
         try {
-            for(String module: getModules()){
+            for(String module: getModulesList(email)){
                 String jarFileName=module.split(":")[0];
                 String packageName=module.split(":")[1];
                 File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);
@@ -178,17 +185,60 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response uploadJar(
             final FormDataMultiPart formData,
-            @FormDataParam("package") String packageName)  {
+            @FormDataParam("package") String packageName,
+            @FormDataParam("public") Boolean publicModule,
+            @Context HttpHeaders httpHeaders)  {
         // check if all form parameters are provided
-        if (formData == null || packageName == null )
+        if (formData == null || packageName == null)
             return Response.status(400).entity("Invalid form data").build();
 
+        if(publicModule==null)publicModule=false;
+        else publicModule=true;
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        try {
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
 
         ClassLoader child;
-        String module;
+        String jarName;
+        String moduleName;
+        Module existingModule;
+        jarName=getSingleJarFileName(formData);
+        moduleName=jarName+":"+packageName;
+        try {
+            existingModule=Modules.getModuleByJar(jarName);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
+
+        if(existingModule!=null){
+            boolean owner=existingModule.getAuthor().equals(email);
+            if(!owner ){
+                if(!existingModule.isPublicJar()){
+                    logger.error("Unauthorized to reupload jar");
+                    return Response.status(403).entity("A private Jar file with this name already exists by another user").build();
+                }
+
+
+            }
+            if(existingModule.isPublicJar()&&!publicModule){
+                logger.error("Unauthorized to reupload jar");
+                return Response.status(403).entity("An existing Public Jar cannot be made private").build();
+            }
+
+        }
+        //Save file
         try {
             File jarFile=getSingleJarFile(formData);
-            module=jarFile.getName()+":"+packageName;
             child = initializeJarClassLoader(packageName,jarFile);
 
         } catch (IOException e) {
@@ -199,6 +249,7 @@ public class Workflow {
         }
 
 
+
         JSONArray result=new JSONArray();
 
         try{
@@ -206,9 +257,23 @@ public class Workflow {
             Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
-            Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER,WORK_FOLDER);
+            Object instance = ctor.newInstance(child,moduleName,UPLOAD_FOLDER,WORK_FOLDER);
             result = (JSONArray)method.invoke(instance);
-            putModule(module);
+
+            if(existingModule==null){
+                existingModule = new Module();
+                existingModule.setAuthor(email);
+                existingModule.setPublicJar(publicModule);
+                existingModule.setJarName(jarName);
+                existingModule.setPackageName(packageName);
+                Modules.addModule(existingModule);
+            }
+            else{
+                existingModule.setAuthor(email);
+                existingModule.setPublicJar(publicModule);
+                existingModule.setPackageName(packageName);
+                Modules.updateModule(existingModule);
+            }
         }
         catch(Exception e){
             logger.error("Initializing blocks failed",e);
@@ -299,18 +364,36 @@ public class Workflow {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
     public Response schedule(
-            @FormDataParam("workflow") String workflow)  {
+            @FormDataParam("workflow") String workflow, @Context HttpHeaders httpHeaders)  {
 
         if (workflow == null)
             return Response.status(400).entity("Invalid form data").build();
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        try {
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
 
         JSONObject workflowObject = new JSONObject(workflow);
         // check if all form parameters are provided
 
         Job job=new Job(workflowObject);
-        long jobId = Manager.addJob(job);
+        job.setOwner(email);
+        try {
+            Manager.getInstance().addJob(job);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
         return Response.status(200)
-                .entity(jobId).build();
+                .entity(job.getId()).build();
     }
 
     /**
@@ -321,9 +404,26 @@ public class Workflow {
     @GET
     @Path("/schedule")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response schedule()  {
+    public Response schedule(@Context HttpHeaders httpHeaders)  {
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        try {
+            if(email==null||email.equals("undefined")
+                    ||token==null||token.equals("undefined")
+                    ||!Users.checkAuthorized(email,token))
+                return Response.status(403).entity("Unauthorized").build();
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
 
-        JSONArray jobs = getJobs();
+        JSONArray jobs;
+        try {
+            jobs = Manager.getInstance().getJobs(email);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
         return Response.status(200)
                 .entity(jobs.toString(4)).build();
     }
@@ -338,7 +438,13 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response getJobById(@PathParam("jobId")long jobId)  {
 
-        JSONObject job = getJob(jobId);
+        JSONObject job = null;
+        try {
+            job = Manager.getInstance().getJob(jobId);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
         return Response.status(200)
                 .entity(job.toString(4)).build();
     }
@@ -364,6 +470,21 @@ public class Workflow {
         String uploadedFileLocation = UPLOAD_FOLDER + meta.getFileName();
         File outputFile = saveToFile(is, uploadedFileLocation);
         return outputFile;
+    }
+
+    private String getSingleJarFileName(FormDataMultiPart multiPart) {
+        Map<String, List<FormDataBodyPart>> map = multiPart.getFields();
+
+        for (Map.Entry<String, List<FormDataBodyPart>> entry : map.entrySet()) {
+
+            for (FormDataBodyPart part : entry.getValue()) {
+                if(part.getName().equals("file")){
+                    return part.getContentDisposition().getFileName();
+                }
+
+            }
+        }
+       return null;
     }
 
     /**
@@ -397,7 +518,7 @@ public class Workflow {
      * @throws SecurityException
      *             - in case you don't have permission to create the folder
      */
-    private void createFolderIfNotExists(String dirName)
+    public static void createFolderIfNotExists(String dirName)
             throws SecurityException {
         File theDir = new File(dirName);
         if (!theDir.exists()) {
@@ -502,33 +623,18 @@ public class Workflow {
         }
     }
 
-    public static void putModule(String module) throws IOException {
-        List<String>modules=getModules();
-        if(!modules.contains(module)){
-            modules.add(module);
-        }
-        saveModules(modules);
-    }
-
-    public static List<String> getModules() throws IOException {
-        List<String>modules=new ArrayList<>();
-        File modulesFile = new File(UPLOAD_FOLDER+File.separator+"modules.json");
-        if(modulesFile.exists()){
-            JSONArray jsonArray =new JSONArray(FileUtils.readFileToString(modulesFile,Charset.defaultCharset()));
-            for(int i=0;i<jsonArray.length();i++){
-                modules.add(jsonArray.getString(i));
+    public static List<String> getModulesList(String userEmail){
+        List<Module> modules=Modules.getModulesForUser(userEmail);
+        List<String>list=new ArrayList<>();
+        if(modules!=null){
+            for(Module module:modules){
+                String [] packageNames =module.getPackageName().split(",");
+                for(String packageName:packageNames)
+                    list.add(module.getJarName()+":"+packageName);
             }
         }
-        return modules;
-    }
+        return list;
 
-    public static void saveModules(List<String>modules) throws IOException {
-        File modulesFile = new File(UPLOAD_FOLDER+File.separator+"modules.json");
-        JSONArray jsonArray =new JSONArray();
-        for(String module:modules){
-            jsonArray.put(module);
-        }
-        FileUtils.writeStringToFile(modulesFile,jsonArray.toString(4),Charset.defaultCharset());
 
     }
 }

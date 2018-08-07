@@ -26,7 +26,7 @@ public class LsCommandExecutor extends AbstractJsonCommandExecutor implements
 
 		Map<String, FsItemEx> files = new HashMap<String, FsItemEx>();
 		FsItemEx fsi = super.findItem(fsService, target);
-		super.addChildren(files, fsi, onlyMimes);
+		super.addChildren(files, fsi, onlyMimes,request.getHeader("email"));
 
 		json.put("list", files2JsonArray(request, files.values()));
 	}

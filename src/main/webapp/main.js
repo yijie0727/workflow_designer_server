@@ -97,7 +97,11 @@ var contex_menu = {
 };
 
 
+
 (function(){
+
+
+
 
 
     blocks = new Blocks();
@@ -231,19 +235,19 @@ var contex_menu = {
             // Create an FormData object
             var formData = new FormData(document.getElementById('fileUploadForm'));
 
-
-            // If you want to add an extra field for the FormData
-            //data.append("CustomField", "This is some extra data, testing");
-
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
-                url: "rest/workflow/upload",
+                url: "api/workflow/upload",
                 data: formData,
                 processData: false,
                 contentType: false,
                 cache: false,
                 timeout: 600000,
+                beforeSend: function(request) {
+                    request.setRequestHeader("email",  $.cookie("email"));
+                    request.setRequestHeader("token",  $.cookie("token"));
+                },
                 success: function (data) {
                     var newBlocks = JSON.parse(data);
                     blocks.register(newBlocks);
@@ -251,7 +255,10 @@ var contex_menu = {
                     alertify.notify(newBlocks.length + ' blocks registered', 'success', 5);
                 },
                 error: function (e) {
-                    alertify.notify('Error Registering blocks', 'error', 5);
+                    alertify.notify('Error Registering blocks', 'error', 3);
+                    if(e.status===403){
+                        alertify.notify(e.responseText, 'error', 10);
+                    }
                 }
             });
 
@@ -280,7 +287,7 @@ var contex_menu = {
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
-                url: "rest/workflow/execute",
+                url: "api/workflow/execute",
                 data: data,
                 processData: false,
                 contentType: false,
@@ -312,16 +319,21 @@ var contex_menu = {
 
             // If you want to add an extra field for the FormData
             data.append("workflow", JSON.stringify(blocks.export()));
+            data.append("email", $.cookie("email"));
 
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
-                url: "rest/workflow/schedule",
+                url: "api/workflow/schedule",
                 data: data,
                 processData: false,
                 contentType: false,
                 cache: false,
                 timeout: 600000,
+                beforeSend: function(request) {
+                    request.setRequestHeader("email",  $.cookie("email"));
+                    request.setRequestHeader("token",  $.cookie("token"));
+                },
                 success: function (data) {
                     tracking=data;
                     alertify.notify('Job ID '+data+' scheduled !', 'success', 3);
@@ -349,14 +361,29 @@ var contex_menu = {
 
         //Creating the tree
 
-
-        initializeTree();
+        if(!$.cookie("email")){
+            $('#loginModal').modal('show');
+        }
+        else {
+            $('#elfinder').elfinder({
+                url : 'elfinder/connector'
+            });
+            initializeTree();
+        }
 
     });
 
 
 
 })();
+
+$(document).ready(function() {
+
+    if($.cookie("email")){
+        document.getElementById("login").innerHTML='Logout '+$.cookie("email");
+        document.getElementById("login").onclick=logout;
+    }
+});
 
 function initializeTree() {
     tree = createTree('div_tree','white',contex_menu);
@@ -367,10 +394,14 @@ function initializeTree() {
     $.ajax({
         type: "POST",
         enctype: 'multipart/form-data',
-        url: "rest/workflow/initialize",
+        url: "api/workflow/initialize",
         processData: false,
         contentType: false,
         cache: false,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
         timeout: 600000,
         success: function (data) {
             var blockDefinitions = JSON.parse(data)
@@ -465,11 +496,15 @@ function updateJobsTable(){
 
     $.ajax({
         type: "GET",
-        url: "rest/workflow/schedule",
+        url: "api/workflow/schedule",
         processData: false,
         contentType: false,
         cache: false,
         timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
         success: function (data) {
             data=JSON.parse(data);
             var table=$("#jobTable");
@@ -498,11 +533,15 @@ function getWorkflow(jobId){
     if(jobId!=0);
     $.ajax({
         type: "GET",
-        url: "rest/workflow/jobs/"+jobId,
+        url: "api/workflow/jobs/"+jobId,
         processData: false,
         contentType: false,
         cache: false,
         timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
         success: function (data) {
             data=JSON.parse(data);
             blocks.clear();
@@ -524,11 +563,15 @@ function getWorkflowStatus(jobId,intervalId){
     }
     $.ajax({
         type: "GET",
-        url: "rest/workflow/jobs/"+jobId,
+        url: "api/workflow/jobs/"+jobId,
         processData: false,
         contentType: false,
         cache: false,
         timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
         success: function (data) {
             data=JSON.parse(data);
             var jobStatus= document.getElementById("jobStatus");
@@ -567,22 +610,22 @@ function populateOutputs(data){
                             output+=outputObj.value;
                         }
                         else if (outputObj.type==="FILE"){
-                            output+="<a href=\"rest/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
+                            output+="<a href=\"api/workflow/file/"+outputObj.value.filename+"\">"+outputObj.value.title+"</a>";
                         }
                         else if (outputObj.type==="TABLE"){
                             output+="<br/>"+
-                                '<a href="rest/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Table</button></a>'+
+                                '<a href="api/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Table</button></a>'+
                                 '<a href="csv.html?csv='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
 
                         }
                         else if (outputObj.type==="GRAPH"){
                             output+="<br/>"+
-                                '<a href="rest/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Graph Data</button></a>'+
+                                '<a href="api/workflow/file/'+outputObj.value.filename+'"><button class="btn btn-success btn-sm" >Download Graph Data</button></a>'+
                                 '<a href="graph.html?graph='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
                         }
                     }
                     if(data[x].stdout || data[x].stderr){
-                        if(data[x].stderr)block.div[0].setAttribute("class","block block_error");
+                        if(data[x].error)block.div[0].setAttribute("class","block block_error");
                         var modal = document.getElementById("logModal");
                         var div = document.createElement('span');
                         div.innerHTML=modal.innerHTML;
@@ -603,4 +646,245 @@ function populateOutputs(data){
     }
 
 }
-setInterval(function(){updateJobsTable()},3000);
+function selectFile(event,target){
+    event.preventDefault();
+
+    $('#browseModal').on('shown.bs.modal', function (e) {
+        $('#browseModal').css('z-index',9999);
+        $('#elfinderBrowse').elfinder({
+            url : 'elfinder/connector',
+            commandsOptions:{
+                getfile: {
+                    oncomplete: 'destroy'
+                }
+            },
+            getFileCallback : function(file)
+            {
+                $('#browseModal').modal('hide');
+                target.innerHTML=file.path;
+                target.nextSibling.value=file.path;
+            }
+        });
+    });
+    $('#browseModal').modal('show');
+
+}
+
+function logout(){
+    $.removeCookie("email");
+    $.removeCookie("name");
+    document.getElementById("login").innerHTML='Login/Register';
+    document.getElementById("login").onclick=showLogin;
+    clearTracking();
+    //Clearing blocks
+    blocks.clear();
+    //Clearing Tree
+    tree = createTree('div_tree','white',contex_menu);
+    tree.drawTree();
+
+    //Clearing elfinder
+    $('#elfinder').elfinder("destroy");
+}
+
+function showRegister() {
+    $("#loginDiv").hide();
+    $("#registerDiv").show();
+    document.getElementById("primarySubmit").onclick=register;
+
+    document.getElementById("switch").onclick=showLogin;
+    document.getElementById("switch").innerHTML="I already have an account"
+}
+
+function showLogin() {
+    $("#loginDiv").show();
+    $("#registerDiv").hide();
+    document.getElementById("primarySubmit").onclick=login;
+
+    document.getElementById("switch").onclick=showRegister;
+    document.getElementById("switch").innerHTML="Create an account"
+}
+
+function login(){
+    // Create an FormData object
+    var data = new FormData();
+    $("#loginError").html("");
+    if(!$("#loginEmail").val()||!$("#loginPassword").val()){
+        $("#loginError").html("Please fill both fields");
+        return;
+    }
+
+    // If you want to add an extra field for the FormData
+    data.append("email", $("#loginEmail").val());
+    data.append("password", $("#loginPassword").val());
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/login",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function (data) {
+            if(data.id){
+                $.cookie("email", data.email, { expires : 10 });
+                $.cookie("token", data.token, { expires : 10 });
+                document.getElementById("login").innerHTML='Logout '+$.cookie("email");
+                document.getElementById("login").onclick=logout;
+                $('#loginModal').modal('hide');
+                $("#loginEmail").val("");
+                $("#loginPassword").val("");
+
+                initializeTree();
+                $('#elfinder').elfinder({
+                    url : 'elfinder/connector'
+                });
+                if(data.reset)
+                    $("#resetModal").modal("show");
+
+            }
+            else{
+                alertify.notify(e.responseText, 'error', 3);
+            }
+        },
+        error: function (e) {
+            if(e.status===403)
+                alertify.notify("Unauthorized, Try again", 'error', 3);
+            else
+                alertify.notify("Some error occurred", 'error', 3);
+
+
+        }
+    });
+}
+
+function  forgot() {
+    $("#loginError").html("");
+    var data = new FormData();
+
+    if(!$("#loginEmail").val()){
+        $("#loginError").html("Please enter email");
+        return;
+    }
+
+    // If you want to add an extra field for the FormData
+    data.append("email", $("#loginEmail").val());
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/forgot",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function () {
+            alertify.notify("Reset link sent on Email", 'success', 3);
+        },
+        error: function (e) {
+            if(e.status===403)
+                alertify.notify("User does not exist", 'error', 3);
+            else
+                alertify.notify(e.responseText, 'error', 3);
+        }
+    });
+}
+
+function register(){
+    // Create an FormData object
+    var data = new FormData();
+
+    if(!$("#registerName").val()||!$("#registerEmail").val()){
+        $("#registerError").html("Please fill all fields");
+        return;
+    }
+
+    // If you want to add an extra field for the FormData
+    data.append("email", $("#registerEmail").val());
+    data.append("username", $("#registerName").val());
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/register",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        success: function () {
+            alertify.notify("Check your Email for Password", 'success', 3);
+            showLogin();
+            $("#loginEmail").val($("#registerEmail").val());
+            $("#registerEmail").val("");
+            $("#registerName").val("");
+        },
+        error: function (e) {
+            if(e.status===403)
+                alertify.notify("Account already exists", 'error', 3);
+            else
+                alertify.notify(e.responseText, 'error', 3);
+        }
+    });
+}
+
+function  reset() {
+    $("#resetError").html("");
+    var data = new FormData();
+
+    data.append("currentPassword", $("#resetCurrent").val());
+    data.append("newPassword", $("#resetNew").val());
+
+    if(!$("#resetCurrent").val()||!$("#resetNew").val()){
+        $("#resetError").html("Please fill both fields");
+        return;
+    }
+
+    if($("#resetNew").val().length<4){
+        $("#resetError").html("Please use a longer password");
+        return;
+    }
+
+    if($("#resetCurrent").val()===$("#resetNew").val()){
+        $("#resetError").html("Current and New Password cannot be same!");
+        return;
+    }
+
+    // If you want to add an extra field for the FormData
+
+    $.ajax({
+        type: "POST",
+        enctype: 'multipart/form-data',
+        url: "api/users/reset",
+        data: data,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function () {
+            $("#resetModal").modal('hide');
+            $("#resetCurrent").val("");
+            $("#resetNew").val("");
+            alertify.notify("Password has been reset", 'success', 3);
+        },
+        error: function (e) {
+            if(e.status===403){
+                $("#resetError").html("Current Password is incorrect!");
+            }
+            else{
+                alertify.notify("Sorry there was an error", 'error', 3);
+            }
+
+        }
+    });
+}
+setInterval(function(){
+    if($.cookie("email"))
+        updateJobsTable()
+},3000);

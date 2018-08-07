@@ -1,64 +1,101 @@
 package cz.zcu.kiv.server.scheduler;
 
+import cz.zcu.kiv.server.sqlite.Jobs;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.List;
 
-public class Manager extends Thread{
+public class Manager {
     private static Log logger = LogFactory.getLog(Manager.class);
+    private static Manager manager;
+    private static final int MAX_THREADS = 2;
+    private static int CURRENT_THREAD_COUNT=0;
 
-    public static long newJobId=1;
-    public static List<Job> jobs=new ArrayList();
+    private Manager(){
 
-    public static long addJob(Job job){
-        long jobId=newJobId++;
-        job.setId(jobId);
-        jobs.add(job);
-        return jobId;
     }
 
-    @Override
-    public void run() {
-        while(true){
-            Job[] pendingJobs=getPendingJobs();
-            for(Job job:pendingJobs){
-                logger.info("Starting Job "+job.getId());
-                job.execute();
-                logger.info("Job "+job.getId()+" Completed");
+    public static Manager getInstance(){
+        if(manager==null){
+            manager=new Manager();
+            try {
+                Jobs.terminateRunningJobs();
+            } catch (SQLException e) {
+                logger.error(e);
             }
         }
+
+        return manager;
     }
 
-    public static JSONArray getJobs(){
+    //New Job arrives
+    public long addJob(Job job) throws SQLException {
+        //Add job to database as a pending job
+        job = Jobs.addJob(job);
+
+        //Check for thread allocation
+        if(CURRENT_THREAD_COUNT<MAX_THREADS){
+            startJob(job);
+        }
+
+        return job.getId();
+    }
+
+    //Thread is available, start execution
+    public void startJob(Job job){
+        CURRENT_THREAD_COUNT++;
+        JobThread jobThread=new JobThread(job){
+            @Override
+            public void onJobCompleted(){
+                //Job execution is complete
+                super.onJobCompleted();
+                //Indicate thread is available
+                endJob();
+            }
+        };
+        jobThread.start();
+
+    }
+
+    //Indicate thread is available and schedule pending job
+    public void endJob() {
+
+        CURRENT_THREAD_COUNT--;
+        try {
+            //Get list of pending jobs from database
+            List<Job> pendingJobs = Jobs.getJobsByStatus(Status.WAITING.name());
+            if(!pendingJobs.isEmpty()){
+
+                //check if thread is available and schedule job
+                startJob(pendingJobs.get(0));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public JSONArray getJobs(String email) throws SQLException {
         JSONArray jsonArray=new JSONArray();
-        for(Job job:jobs) {
-            JSONObject jobObject=job.toJSON(false);
-            jsonArray.put(jobObject);
+        List<Job> jobsList = Jobs.getJobsByEmail(email);
+        for(Job job:jobsList) {
+            if(job.getOwner().equals(email)){
+                JSONObject jobObject=job.toJSON(false);
+                jsonArray.put(jobObject);
+            }
+
         }
         return jsonArray;
     }
 
-    public static JSONObject getJob(long jobId){
-        for(Job job:jobs) {
-            if(job.getId()==jobId)
-                return job.toJSON(true);
-        }
-        return null;
+    public JSONObject getJob(long jobId) throws SQLException {
+        return Jobs.getJob(jobId).toJSON(true);
     }
 
-    private static Job[] getPendingJobs(){
-        List<Job>pending=new ArrayList<>();
-        for(int i=0;i<jobs.size();i++){
-            Job job = jobs.get(i);
-            if(job.getStatus()==Status.WAITING)
-                pending.add(job);
-        }
-        Job[]jobs=new Job[pending.size()];
-        return pending.toArray(jobs);
-    }
+
 
 }

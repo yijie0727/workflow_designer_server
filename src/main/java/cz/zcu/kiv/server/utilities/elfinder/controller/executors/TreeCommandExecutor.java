@@ -22,7 +22,7 @@ public class TreeCommandExecutor extends AbstractJsonCommandExecutor implements
 
 		Map<String, FsItemEx> files = new HashMap<String, FsItemEx>();
 		FsItemEx fsi = super.findItem(fsService, target);
-		super.addSubfolders(files, fsi);
+		super.addSubfolders(files, fsi,request.getHeader("email"));
 
 		json.put("tree", files2JsonArray(request, files.values()));
 	}

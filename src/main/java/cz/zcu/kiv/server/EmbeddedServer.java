@@ -51,7 +51,6 @@ import org.glassfish.jersey.server.ServerProperties;
  **********************************************************************************************************************/
 
 public class EmbeddedServer{
-	public static Manager manager;
     private static Log logger = LogFactory.getLog(EmbeddedServer.class);
 
 	public static final int SERVER_PORT = 8680;
@@ -78,6 +77,7 @@ public class EmbeddedServer{
 
 		ResourceConfig config = new ResourceConfig();
 		config.register(Workflow.class);
+		config.register(UserAccounts.class);
 		config.register(Slf4jLog.class);
 		config.register(MultiPartFeature.class);
 
@@ -88,7 +88,7 @@ public class EmbeddedServer{
 				false);
 
 
-		ContextHandler contextHandler = new ContextHandler("/rest");
+		ContextHandler contextHandler = new ContextHandler("/api");
 		contextHandler.setHandler(server.getHandler());
 		contextHandler.setInitParameter(ServerProperties.PROVIDER_CLASSNAMES, MultiPartFeature.class.getCanonicalName());
 		ProtectionDomain protectionDomain = EmbeddedServer.class
@@ -129,8 +129,6 @@ public class EmbeddedServer{
 			}
 
 		});
-        manager=new Manager();
-        manager.start();
 		server.start();
 		server.join();
 

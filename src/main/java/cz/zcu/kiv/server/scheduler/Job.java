@@ -1,5 +1,6 @@
 package cz.zcu.kiv.server.scheduler;
 
+import cz.zcu.kiv.server.sqlite.Jobs;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -10,6 +11,8 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static cz.zcu.kiv.server.Workflow.*;
@@ -23,6 +26,9 @@ public class Job {
     private Date endTime;
     private Status status;
     private String workflowOutputFile;
+    private String owner;
+
+    public Job(){}
 
     public Job(JSONObject workflowObject) {
         this.workflow=workflowObject;
@@ -79,8 +85,17 @@ public class Job {
         this.workflowOutputFile = workflowOutputFile;
     }
 
-    public void execute(){
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public void execute() throws SQLException {
         setStatus(Status.RUNNING);
+        Jobs.updateJob(this);
         Set<String> modules=new HashSet<>();
         try {
 
@@ -93,6 +108,7 @@ public class Job {
         catch (JSONException e){
             logger.error("Error parsing workflow JSON",e);
             setStatus(Status.FAILED);
+            Jobs.updateJob(this);
             return;
         }
 
@@ -104,6 +120,7 @@ public class Job {
         } catch (IOException e) {
             logger.error("Cannot read jar from server",e);
             setStatus(Status.FAILED);
+            Jobs.updateJob(this);
             return;
         }
 
@@ -112,11 +129,13 @@ public class Job {
         try{
             File workflowOutputFile = File.createTempFile("job_"+getId(),".json",new File(WORKING_DIRECTORY));
             setWorkflowOutputFile(workflowOutputFile.getAbsolutePath());
+            Jobs.updateJob(this);
             result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath());
             for(int i=0;i<result.length();i++){
                 if(result.getJSONObject(i).getBoolean("error")){
                     logger.error("Executing jar failed");
                     setStatus(Status.FAILED);
+                    Jobs.updateJob(this);
                     return;
                 }
 
@@ -125,6 +144,7 @@ public class Job {
         catch(Exception e1){
             logger.error("Executing jar failed",e1);
             setStatus(Status.FAILED);
+            Jobs.updateJob(this);
             return;
         }
         if(result!=null){
@@ -135,13 +155,15 @@ public class Job {
             setStatus(Status.FAILED);
         }
         setEndTime(new Date());
+        Jobs.updateJob(this);
+
     }
 
     public JSONObject toJSON(boolean withWorkflow) {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put("id",getId());
-        jsonObject.put("startTime",getStartTime().toString());
-        jsonObject.put("endTime",getEndTime()!=null?getEndTime().toString():"");
+        jsonObject.put("startTime",getStartTime()!=null?new SimpleDateFormat().format(getStartTime()):"");
+        jsonObject.put("endTime",getEndTime()!=null?new SimpleDateFormat().format(getEndTime()):"");
         jsonObject.put("status",getStatus().name());
         if(withWorkflow){
             jsonObject.put("workflow",getWorkflow());

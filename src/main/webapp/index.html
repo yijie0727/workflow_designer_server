@@ -5,6 +5,7 @@
 
         <!-- Third party libraries -->
 	    <script type="text/javascript" src="blocks_js/jquery.js"></script>
+        <script type="text/javascript" src="js/jquery.cookie-1.4.1.min.js"></script>
         <script type="text/javascript" src="blocks_js/jquery.json.min.js"></script>
         <script type="text/javascript" src="blocks_js/jquery.mousewheel.min.js"></script>
         <script type="text/javascript" src="blocks_js/jquery.svg.min.js"></script>
@@ -36,7 +37,7 @@
         <script src="js/jquery-ui.min.js"></script>
         <link rel="stylesheet" type="text/css" href="css/elfinder.min.css">
         <link rel="stylesheet" type="text/css" href="css/elfinder-theme.css">
-        <script src="js/elfinder-min.js"></script>
+        <script src="js/elfinder.full.js"></script>
 
         <!-- block_definitions.js -->
 	    <script type="text/javascript" src="blocks_js/blocks.js"></script>
@@ -82,9 +83,17 @@
                         <li><a href="#" id="jobs" data-toggle="modal" data-target="#jobsModal">Jobs List</a></li>
                     </ul>
                 </li>
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">User Account
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" data-toggle="modal" data-target="#resetModal">Reset Password</a></li>
+                    </ul>
+                </li>
             </ul>
             <!--<button class="btn btn-success navbar-btn pull-right" id="execute">Execute</button>-->
             <button class="btn btn-primary navbar-btn pull-right" id="schedule">Schedule</button>
+            <button class="btn btn-primary navbar-btn pull-right" id="login" data-toggle="modal" data-target="#loginModal">Login/Register</button>
         </div>
     </nav>
     <!--sidebar-->
@@ -114,6 +123,89 @@
             <!--<button class="execute">Execute Workflow</button>-->
 		<!--</span>-->
 
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Login to Continue</h4>
+                </div>
+                <div class="modal-body">
+                        <div id="loginDiv">
+                            <form method="POST" id="loginForm">
+                                <div class="form-group">
+                                    <label for="loginEmail">Email:</label>
+                                    <input type="text" class="form-control" id="loginEmail" value="" name="email" placeholder="johndoe@gmail.com"/>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword">Password:</label>
+                                    <input type="password" class="form-control" id="loginPassword" value="" name="password" placeholder="4+ Character Alphanumeric "/>
+                                </div>
+                                <button type="button" class="btn btn-default" id="forgotSubmit" onclick="forgot()">Forgot Password</button>
+                                <span style="color: red;" id="loginError"></span>
+                            </form>
+                        </div>
+
+                        <div style="display:none" id="registerDiv">
+                            <h4>Register</h4>
+                            <form method="POST" id="registerForm">
+                                <div class="form-group">
+                                    <label for="registerName">Name:</label>
+                                    <input type="text" class="form-control" id="registerName" value="" name="name" placeholder="John Doe"/>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerEmail">Email:</label>
+                                    <input type="text" class="form-control" id="registerEmail" value="" name="email" placeholder="johndoe@gmail.com"/>
+                                </div>
+                                <span style="color: red;" id="registerError"></span>
+                            </form>
+                        </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="primarySubmit" onclick="login()">Submit</button>
+                    <button type="button" class="btn btn-default" id="switch" onclick="showRegister()">Create An Account</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="resetModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Reset Password</h4>
+                </div>
+                <div class="modal-body">
+
+                        <form method="POST" id="resetForm">
+                            <div class="form-group">
+                                <label for="resetCurrent">Current Password:</label>
+                                <input type="password" class="form-control" id="resetCurrent" value="" name="currentPassword" placeholder="johndoe@gmail.com"/>
+                            </div>
+                            <div class="form-group">
+                                <label for="resetNew">New Password:</label>
+                                <input type="password" class="form-control" id="resetNew" value="" name="newPassword" placeholder="4+ Character Alphanumeric "/>
+                            </div>
+                            <span style="color: red;" id="resetError"></span>
+                        </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="resetSubmit" onclick="reset()">Reset Password</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
 
     <!-- Import Modal -->
@@ -129,12 +221,17 @@
                 <div class="modal-body">
                     <form method="POST" enctype="multipart/form-data" id="fileUploadForm">
                         <div class="form-group">
-                            <label for="package">Package:</label>
+                            <label for="package">Package(s)(Comma-separated):</label>
                             <input type="text" class="form-control" id="package" value="" name="package"/>
                         </div>
                         <div class="form-group">
                             <label for="file">Jar File:</label>
                             <input type="file" class="form-control" id="file" name="file"/>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" id="public" name="public">Make this JAR public
+                            </label>
                         </div>
 
                     </form>
@@ -294,41 +391,6 @@
     <div id="modals"></div>
 
         <script>
-            $(document).ready(function() {
-
-                $('#elfinderModal').on('shown.bs.modal', function (e) {
-                     $('#elfinder').elfinder({
-                        url : 'elfinder/connector',
-                        // , lang: 'ru'                    // language (OPTIONAL)
-                    });
-                })
-            });
-
-            function selectFile(event,target){
-                event.preventDefault();
-
-                $('#browseModal').on('shown.bs.modal', function (e) {
-                    $('#browseModal').css('z-index',9999);
-                    $('#elfinderBrowse').elfinder({
-                        url : 'elfinder/connector',
-                        commandsOptions:{
-                            getfile: {
-                                oncomplete: 'destroy'
-                            }
-                        },
-                        getFileCallback : function(file)
-                        {
-                            $('#browseModal').modal('hide');
-                            target.innerHTML=file.path;
-                            target.nextSibling.value=file.path;
-                        }
-                    });
-                });
-                $('#browseModal').modal('show');
-
-            }
-
-
 
 
         </script>

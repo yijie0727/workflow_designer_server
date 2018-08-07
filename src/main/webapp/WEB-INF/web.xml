@@ -22,7 +22,7 @@
     </servlet>
 	<servlet-mapping>
 		<servlet-name>Workflow</servlet-name>
-		<url-pattern>/rest/*</url-pattern>
+		<url-pattern>/api/*</url-pattern>
 	</servlet-mapping>
 
 	<servlet-mapping>
