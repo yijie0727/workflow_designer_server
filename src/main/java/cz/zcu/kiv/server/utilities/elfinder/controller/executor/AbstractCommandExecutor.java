@@ -1,5 +1,6 @@
 package cz.zcu.kiv.server.utilities.elfinder.controller.executor;
 
+import cz.zcu.kiv.server.utilities.elfinder.localfs.RemoteHDFsItem;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsItemFilter;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsService;
 import cz.zcu.kiv.server.utilities.elfinder.util.FsItemFilterUtils;
@@ -37,7 +38,8 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 	private void addChildren(Map<String, FsItemEx> map, FsItemEx fsi,
 			FsItemFilter filter,String user) throws IOException
 	{
-		for (FsItemEx f : fsi.listChildren(filter))
+		boolean override=fsi.getVolumnName().startsWith("HDFS");
+		for (FsItemEx f : fsi.listChildren(filter,override))
 		{
             if(user!=null && fsi.getName().equals("MyFiles")){
                 if(f.getName().equals("user_dir_"+user)){

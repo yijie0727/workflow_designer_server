@@ -197,13 +197,13 @@ public class FsItemEx
 		_v.rename(_f, dst._f);
 	}
 
-	public List<FsItemEx> listChildren(FsItemFilter filter)
+	public List<FsItemEx> listChildren(FsItemFilter filter, boolean override)
 	{
 		List<FsItemEx> list = new ArrayList<FsItemEx>();
 		for (FsItem child : _v.listChildren(_f))
 		{
 			FsItemEx childEx = new FsItemEx(child, _s);
-			if (filter.accepts(childEx))
+			if (override||filter.accepts(childEx))
 			{
 				list.add(childEx);
 			}

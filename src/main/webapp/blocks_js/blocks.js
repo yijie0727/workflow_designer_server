@@ -1569,7 +1569,7 @@ Block.prototype.getHtml = function()
         }
     }
     html += '<div class="blockicon settings"></div></div>';
-    html += '<div class="infos"></div>';
+
     
     for (var k in self.fields.editables) {
         var field = self.fields.editables[k];
@@ -1623,6 +1623,7 @@ Block.prototype.getHtml = function()
     handle('input', this.fields.inputs);
     handle('output', this.fields.outputs);
 
+    html += '<div class="infos" style="width:52px; margin:10px;"></div>';
     return html;
 };
 
