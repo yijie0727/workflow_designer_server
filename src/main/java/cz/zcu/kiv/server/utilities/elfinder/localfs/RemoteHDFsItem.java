@@ -7,40 +7,40 @@ import java.io.File;
 
 public class RemoteHDFsItem implements FsItem
 {
-	File _file;
+	File file;
 
-	FsVolume _volume;
+	FsVolume volume;
 
 	public RemoteHDFsItem(RemoteHDFsVolume volume, File file)
 	{
 		super();
-		_volume = volume;
-		_file = file;
+		this.volume = volume;
+		this.file = file;
 	}
 
 	public File getFile()
 	{
-		return _file;
+		return file;
 	}
 
 	public FsVolume getVolume()
 	{
-		return _volume;
+		return volume;
 	}
 
 	public void setFile(File file)
 	{
-		_file = file;
+		this.file = file;
 	}
 
 	public void setVolume(FsVolume volume)
 	{
-		_volume = volume;
+		this.volume = volume;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "RemoteHDFsVolume [" + _file + "]";
+		return "RemoteHDFsVolume [" + file + "]";
 	}
 }

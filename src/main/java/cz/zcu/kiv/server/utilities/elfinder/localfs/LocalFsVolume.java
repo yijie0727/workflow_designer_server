@@ -42,9 +42,9 @@ public class LocalFsVolume implements FsVolume
 
 	}
 
-	String _name;
+	String name;
 
-	File _rootDir;
+	File rootDir;
 
 	private File asFile(FsItem fsi)
 	{
@@ -91,11 +91,11 @@ public class LocalFsVolume implements FsVolume
 
 	private LocalFsItem fromFile(File file)
 	{
-		if (!file.getAbsolutePath().startsWith(_rootDir.getAbsolutePath()))
+		if (!file.getAbsolutePath().startsWith(rootDir.getAbsolutePath()))
 		{
 			String message = String.format(
 					"Item (%s) can't be outside the root directory (%s)",
-					file.getAbsolutePath(), _rootDir.getAbsolutePath());
+					file.getAbsolutePath(), rootDir.getAbsolutePath());
 			throw new IllegalArgumentException(message);
 		}
 		return new LocalFsItem(this, file);
@@ -104,7 +104,7 @@ public class LocalFsVolume implements FsVolume
 	@Override
 	public FsItem fromPath(String relativePath)
 	{
-		return fromFile(new File(_rootDir, relativePath));
+		return fromFile(new File(rootDir, relativePath));
 	}
 
 	@Override
@@ -139,7 +139,7 @@ public class LocalFsVolume implements FsVolume
 
 	public String getName()
 	{
-		return _name;
+		return name;
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class LocalFsVolume implements FsVolume
 	public String getPath(FsItem fsi) throws IOException
 	{
 		String fullPath = asFile(fsi).getCanonicalPath();
-		String rootPath = _rootDir.getCanonicalPath();
+		String rootPath = rootDir.getCanonicalPath();
 		String relativePath = fullPath.substring(rootPath.length());
 		return relativePath.replace('\\', '/');
 	}
@@ -166,12 +166,12 @@ public class LocalFsVolume implements FsVolume
 	@Override
 	public FsItem getRoot()
 	{
-		return fromFile(_rootDir);
+		return fromFile(rootDir);
 	}
 
 	public File getRootDir()
 	{
-		return _rootDir;
+		return rootDir;
 	}
 
 	@Override
@@ -234,7 +234,7 @@ public class LocalFsVolume implements FsVolume
 	@Override
 	public boolean isRoot(FsItem fsi)
 	{
-		return _rootDir.equals(asFile(fsi));
+		return rootDir.equals(asFile(fsi));
 	}
 
 	@Override
@@ -269,7 +269,7 @@ public class LocalFsVolume implements FsVolume
 
 	public void setName(String name)
 	{
-		_name = name;
+		this.name = name;
 	}
 
 	public void setRootDir(File rootDir)
@@ -279,13 +279,13 @@ public class LocalFsVolume implements FsVolume
 			rootDir.mkdirs();
 		}
 
-		_rootDir = rootDir;
+		this.rootDir = rootDir;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "LocalFsVolume [" + _rootDir + "]";
+		return "LocalFsVolume [" + rootDir + "]";
 	}
 
 	@Override

@@ -4,13 +4,14 @@ import cz.zcu.kiv.server.utilities.elfinder.service.FsItem;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsVolume;
 import cz.zcu.kiv.server.utilities.elfinder.util.MimeTypesUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.*;
 
 import java.net.URI;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -18,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -26,6 +26,8 @@ import org.apache.hadoop.fs.RemoteIterator;
 
 public class RemoteHDFsVolume implements FsVolume
 {
+	Log logger = LogFactory.getLog(RemoteHDFsVolume.class);
+
     public static final String HDFS_URI = "hdfs://192.168.139.128:8020/";
 
     public static Configuration HDFS_CONF = new Configuration();
@@ -40,10 +42,8 @@ public class RemoteHDFsVolume implements FsVolume
         try {
             System.setProperty(HADOOP_USER_NAME_KEY,HADOOP_USER_NAME);
             fs= FileSystem.get(URI.create(HDFS_URI), HDFS_CONF);
-
-            System.out.println(fs.getStatus().getCapacity());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
     }
@@ -70,9 +70,9 @@ public class RemoteHDFsVolume implements FsVolume
 
 	}
 
-	String _name;
+	String name;
 
-	File _rootDir;
+	File rootDir;
 
 	private File asFile(FsItem fsi)
 	{
@@ -111,11 +111,11 @@ public class RemoteHDFsVolume implements FsVolume
 
 	private RemoteHDFsItem fromFile(File file)
 	{
-		if (!file.getAbsolutePath().startsWith(_rootDir.getAbsolutePath()))
+		if (!file.getAbsolutePath().startsWith(rootDir.getAbsolutePath()))
 		{
 			String message = String.format(
 					"Item (%s) can't be outside the root directory (%s)",
-					file.getAbsolutePath(), _rootDir.getAbsolutePath());
+					file.getAbsolutePath(), rootDir.getAbsolutePath());
 			throw new IllegalArgumentException(message);
 		}
 		return new RemoteHDFsItem(this, file);
@@ -124,7 +124,7 @@ public class RemoteHDFsVolume implements FsVolume
 	@Override
 	public FsItem fromPath(String relativePath)
 	{
-		return fromFile(new File(_rootDir, relativePath));
+		return fromFile(new File(rootDir, relativePath));
 	}
 
 	@Override
@@ -160,7 +160,7 @@ public class RemoteHDFsVolume implements FsVolume
 
 	public String getName()
 	{
-		return _name;
+		return name;
 	}
 
 	@Override
@@ -179,7 +179,7 @@ public class RemoteHDFsVolume implements FsVolume
 	public String getPath(FsItem fsi) throws IOException
 	{
 		String fullPath = asFile(fsi).getCanonicalPath();
-		String rootPath = _rootDir.getCanonicalPath();
+		String rootPath = rootDir.getCanonicalPath();
 		String relativePath = fullPath.substring(rootPath.length());
 		return relativePath.replace('\\', '/');
 	}
@@ -187,12 +187,12 @@ public class RemoteHDFsVolume implements FsVolume
 	@Override
 	public FsItem getRoot()
 	{
-		return fromFile(_rootDir);
+		return fromFile(rootDir);
 	}
 
 	public File getRootDir()
 	{
-		return _rootDir;
+		return rootDir;
 	}
 
 	@Override
@@ -252,7 +252,7 @@ public class RemoteHDFsVolume implements FsVolume
 	@Override
 	public boolean isRoot(FsItem fsi)
 	{
-		return _rootDir.equals(asFile(fsi));
+		return rootDir.equals(asFile(fsi));
 	}
 
 	@Override
@@ -273,7 +273,7 @@ public class RemoteHDFsVolume implements FsVolume
             }
         }
         catch (IOException e){
-		    e.printStackTrace();
+		    logger.error(e);
         }
         return list.toArray(new FsItem[0]);
 	}
@@ -292,7 +292,7 @@ public class RemoteHDFsVolume implements FsVolume
 
 	public void setName(String name)
 	{
-		_name = name;
+		this.name = name;
 	}
 
 	public void setRootDir(File rootDir)
@@ -302,13 +302,13 @@ public class RemoteHDFsVolume implements FsVolume
 			rootDir.mkdirs();
 		}
 
-		_rootDir = rootDir;
+		this.rootDir = rootDir;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "RemoteHDFsVolume [" + _rootDir + "]";
+		return "RemoteHDFsVolume [" + rootDir + "]";
 	}
 
 	@Override
