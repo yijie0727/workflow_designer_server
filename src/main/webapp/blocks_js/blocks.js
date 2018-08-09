@@ -176,7 +176,7 @@ Field.prototype.getSingleFieldHtml = function(value)
             field += '<option '+selected+' value="'+choice+'">'+choice+'</option>';
         }
         field += '</select>';
-    } else if (this.type == 'file'){
+    } else if (this.type == 'file' || this.type == 'file_location'){
         field += '<button class="btn btn-primary btn-sm" onclick="selectFile(event,this)" >Choose File: '+value+'</button>';
         field += '<input type="hidden" name="'+this.getFieldName()+'" value="'+value+'"/>';
         field += this.unit;
