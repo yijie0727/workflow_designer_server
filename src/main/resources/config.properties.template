@@ -1,6 +1,16 @@
+##### Basic Conf  #####
+AUTHEnabled=true
+HDFSenabled=false
+
+##### HDFS Confiugration
+
+##HDFS URI with trailing slash
+hdfs.uri=hdfs://localhost:8020/
+hdfs.username=hdfs
+
 ###### Email Server Configuration #####
 
-## Copy this as TOMCAT_PROJECT_ROOT/WEB-INF/classes/config.properties
+## Copy this as config.properties
 
 fromEmailAddress=
 mail.smtp.host=

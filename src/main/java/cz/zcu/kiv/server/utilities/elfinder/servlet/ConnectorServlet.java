@@ -1,5 +1,6 @@
 package cz.zcu.kiv.server.utilities.elfinder.servlet;
 
+import cz.zcu.kiv.server.utilities.config.Conf;
 import cz.zcu.kiv.server.utilities.elfinder.controller.ConnectorController;
 import cz.zcu.kiv.server.utilities.elfinder.controller.executor.CommandExecutorFactory;
 import cz.zcu.kiv.server.utilities.elfinder.controller.executor.DefaultCommandExecutorFactory;
@@ -9,6 +10,7 @@ import cz.zcu.kiv.server.utilities.elfinder.impl.DefaultFsServiceConfig;
 import cz.zcu.kiv.server.utilities.elfinder.impl.FsSecurityCheckForAll;
 import cz.zcu.kiv.server.utilities.elfinder.impl.StaticFsServiceFactory;
 import cz.zcu.kiv.server.utilities.elfinder.localfs.LocalFsVolume;
+import cz.zcu.kiv.server.utilities.elfinder.localfs.RemoteHDFsVolume;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -83,6 +85,8 @@ public class ConnectorServlet extends HttpServlet
 				createLocalFsVolume("My Files", new File(WORK_FOLDER+"MyFiles")));
 		fsService.addVolume("Shared",
 				createLocalFsVolume("Shared", new File(WORK_FOLDER+"Shared")));
+		if(Conf.getConf().getHDFSEnabled())
+			fsService.addVolume("HDFS",createRemoteHDFsVolume("HDFS", new File("HDFS")));
 
 
 		return fsService;
@@ -94,6 +98,14 @@ public class ConnectorServlet extends HttpServlet
 		localFsVolume.setName(name);
 		localFsVolume.setRootDir(rootDir);
 		return localFsVolume;
+	}
+
+	private RemoteHDFsVolume createRemoteHDFsVolume(String name, File rootDir)
+	{
+		RemoteHDFsVolume remoteHDFsVolume = new RemoteHDFsVolume();
+		remoteHDFsVolume.setName(name);
+		remoteHDFsVolume.setRootDir(rootDir);
+		return remoteHDFsVolume;
 	}
 
 	/**

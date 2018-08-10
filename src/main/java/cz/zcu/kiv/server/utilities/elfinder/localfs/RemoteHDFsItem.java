@@ -5,13 +5,13 @@ import cz.zcu.kiv.server.utilities.elfinder.service.FsVolume;
 
 import java.io.File;
 
-public class LocalFsItem implements FsItem
+public class RemoteHDFsItem implements FsItem
 {
 	File file;
 
 	FsVolume volume;
 
-	public LocalFsItem(LocalFsVolume volume, File file)
+	public RemoteHDFsItem(RemoteHDFsVolume volume, File file)
 	{
 		super();
 		this.volume = volume;
@@ -41,6 +41,6 @@ public class LocalFsItem implements FsItem
 	@Override
 	public String toString()
 	{
-		return "LocalFsVolume [" + file + "]";
+		return "RemoteHDFsVolume [" + file + "]";
 	}
 }

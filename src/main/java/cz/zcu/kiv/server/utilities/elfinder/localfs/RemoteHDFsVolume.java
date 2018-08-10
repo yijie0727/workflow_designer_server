@@ -1,15 +1,18 @@
 package cz.zcu.kiv.server.utilities.elfinder.localfs;
 
+import cz.zcu.kiv.server.utilities.config.Conf;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsItem;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsVolume;
 import cz.zcu.kiv.server.utilities.elfinder.util.MimeTypesUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 
 import java.io.*;
+
+import java.net.URI;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -17,8 +20,34 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class LocalFsVolume implements FsVolume
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
+
+
+public class RemoteHDFsVolume implements FsVolume
 {
+	Log logger = LogFactory.getLog(RemoteHDFsVolume.class);
+
+    public static final String HDFS_URI = Conf.getConf().getHDFsURI();
+
+    public static Configuration HDFS_CONF = new Configuration();
+
+    //Username of hadoop linux user with permission to write to HDFS
+    public static final String HADOOP_USER_NAME = Conf.getConf().getHDFsUsername();
+
+    public static final String HADOOP_USER_NAME_KEY = "HADOOP_USER_NAME";
+    FileSystem fs  ;
+
+    public RemoteHDFsVolume() {
+        try {
+            System.setProperty(HADOOP_USER_NAME_KEY,HADOOP_USER_NAME);
+            fs= FileSystem.get(URI.create(HDFS_URI), HDFS_CONF);
+        } catch (IOException e) {
+            logger.error(e);
+        }
+
+    }
 	/**
 	 * Used to calculate total file size when walking the tree.
 	 */
@@ -48,39 +77,31 @@ public class LocalFsVolume implements FsVolume
 
 	private File asFile(FsItem fsi)
 	{
-		return ((LocalFsItem) fsi).getFile();
+		return ((RemoteHDFsItem) fsi).getFile();
 	}
 
 	@Override
 	public void createFile(FsItem fsi) throws IOException
 	{
-		asFile(fsi).createNewFile();
+		throw new IOException("Unsupported Operation");
 	}
 
 	@Override
 	public void createFolder(FsItem fsi) throws IOException
 	{
-		asFile(fsi).mkdirs();
+        throw new IOException("Unsupported Operation");
 	}
 
 	@Override
 	public void deleteFile(FsItem fsi) throws IOException
 	{
-		File file = asFile(fsi);
-		if (!file.isDirectory())
-		{
-			file.delete();
-		}
+        throw new IOException("Unsupported Operation");
 	}
 
 	@Override
 	public void deleteFolder(FsItem fsi) throws IOException
 	{
-		File file = asFile(fsi);
-		if (file.isDirectory())
-		{
-			FileUtils.deleteDirectory(file);
-		}
+        throw new IOException("Unsupported Operation");
 	}
 
 	@Override
@@ -89,7 +110,7 @@ public class LocalFsVolume implements FsVolume
 		return asFile(newFile).exists();
 	}
 
-	private LocalFsItem fromFile(File file)
+	private RemoteHDFsItem fromFile(File file)
 	{
 		if (!file.getAbsolutePath().startsWith(rootDir.getAbsolutePath()))
 		{
@@ -98,7 +119,7 @@ public class LocalFsVolume implements FsVolume
 					file.getAbsolutePath(), rootDir.getAbsolutePath());
 			throw new IllegalArgumentException(message);
 		}
-		return new LocalFsItem(this, file);
+		return new RemoteHDFsItem(this, file);
 	}
 
 	@Override
@@ -122,9 +143,10 @@ public class LocalFsVolume implements FsVolume
 	@Override
 	public String getMimeType(FsItem fsi)
 	{
-		File file = asFile(fsi);
-		if (file.isDirectory())
+
+		if (isFolder(fsi))
 			return "directory";
+		File file = asFile(fsi);
 
 		String ext = FilenameUtils.getExtension(file.getName());
 		if (ext != null && !ext.isEmpty())
@@ -179,11 +201,7 @@ public class LocalFsVolume implements FsVolume
 	{
 		if (isFolder(fsi))
 		{
-			// This recursively walks down the tree
-			Path folder = asFile(fsi).toPath();
-			FileSizeFileVisitor visitor = new FileSizeFileVisitor();
-			Files.walkFileTree(folder, visitor);
-			return visitor.getTotalSize();
+			return 0;
 		}
 		else
 		{
@@ -228,7 +246,8 @@ public class LocalFsVolume implements FsVolume
 	@Override
 	public boolean isFolder(FsItem fsi)
 	{
-		return asFile(fsi).isDirectory();
+		boolean isFile =asFile(fsi).getName().contains(".");
+		return !isFile;
 	}
 
 	@Override
@@ -238,21 +257,26 @@ public class LocalFsVolume implements FsVolume
 	}
 
 	@Override
-	public FsItem[] listChildren(FsItem fsi)
-	{
+	public FsItem[] listChildren(FsItem fsi)  {
 		List<FsItem> list = new ArrayList<FsItem>();
-		File[] cs = asFile(fsi).listFiles();
-		if (cs == null)
-		{
-			return new FsItem[0];
-		}
 
-		for (File c : cs)
-		{
-			list.add(fromFile(c));
-		}
+        try {
 
-		return list.toArray(new FsItem[0]);
+            RemoteIterator<LocatedFileStatus> fileStatusListIterator = fs.listLocatedStatus(
+                    new org.apache.hadoop.fs.Path(HDFS_URI+getRelativePath(asFile(fsi).getAbsolutePath())));
+            while(fileStatusListIterator.hasNext()){
+                LocatedFileStatus fileStatus = fileStatusListIterator.next();
+                //do stuff with the file like ...
+                String path=fileStatus.getPath().toString();
+                path=path.replaceFirst(HDFS_URI,"/");
+                File file=new File(getRootDir().getAbsolutePath()+path);
+                list.add(fromFile(file));
+            }
+        }
+        catch (IOException e){
+		    logger.error(e);
+        }
+        return list.toArray(new FsItem[0]);
 	}
 
 	@Override
@@ -264,7 +288,7 @@ public class LocalFsVolume implements FsVolume
 	@Override
 	public void rename(FsItem src, FsItem dst) throws IOException
 	{
-		asFile(src).renameTo(asFile(dst));
+        throw new IOException("Unsupported Operation");
 	}
 
 	public void setName(String name)
@@ -285,28 +309,17 @@ public class LocalFsVolume implements FsVolume
 	@Override
 	public String toString()
 	{
-		return "LocalFsVolume [" + rootDir + "]";
+		return "RemoteHDFsVolume [" + rootDir + "]";
 	}
 
 	@Override
 	public void writeStream(FsItem fsi, InputStream is) throws IOException
 	{
-		OutputStream os = null;
-		try
-		{
-			os = new FileOutputStream(asFile(fsi));
-			IOUtils.copy(is, os);
-		}
-		finally
-		{
-			if (is != null)
-			{
-				is.close();
-			}
-			if (os != null)
-			{
-				os.close();
-			}
-		}
+        throw new IOException("Unsupported Operation");
 	}
+
+	public String getRelativePath(String absolutePath){
+	    String relativePath= absolutePath.substring(absolutePath.indexOf("/HDFS")+5);
+	    return relativePath;
+    }
 }
