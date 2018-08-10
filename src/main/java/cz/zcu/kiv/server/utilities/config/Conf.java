@@ -19,6 +19,11 @@ public class Conf {
         } catch (IOException e) {
             logger.error("Could not find config.properties file");
             logger.fatal(e);
+            try {
+                properties.load(Conf.class.getResourceAsStream("/config.properties.template"));
+            } catch (IOException e1) {
+                logger.error(e1);
+            }
         }
     }
     public static Conf getConf() {

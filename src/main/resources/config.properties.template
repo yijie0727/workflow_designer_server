@@ -1,7 +1,7 @@
 ##### Basic Conf  #####
 server.maxthreads=2
 server.port=8680
-AUTHEnabled=true
+AUTHEnabled=false
 HDFSenabled=false
 
 ##### HDFS Confiugration
