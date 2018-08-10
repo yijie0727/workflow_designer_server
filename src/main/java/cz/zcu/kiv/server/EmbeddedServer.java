@@ -7,6 +7,7 @@ import java.security.ProtectionDomain;
 import javax.ws.rs.core.UriBuilder;
 
 import cz.zcu.kiv.server.scheduler.Manager;
+import cz.zcu.kiv.server.utilities.config.Conf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Handler;
@@ -53,7 +54,7 @@ import org.glassfish.jersey.server.ServerProperties;
 public class EmbeddedServer{
     private static Log logger = LogFactory.getLog(EmbeddedServer.class);
 
-	public static final int SERVER_PORT = 8680;
+	public static final int SERVER_PORT = Conf.getConf().getServerPort();
 
 	private Server server;
 	public EmbeddedServer() {

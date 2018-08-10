@@ -75,4 +75,8 @@ public class Conf {
     public String getHDFsUsername() {
         return properties.getProperty("hdfs.username");
     }
+
+    public int getServerPort() {
+        return Integer.valueOf(properties.getProperty("server.port"));
+    }
 }

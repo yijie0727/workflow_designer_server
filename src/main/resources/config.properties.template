@@ -1,4 +1,5 @@
 ##### Basic Conf  #####
+server.port=8680
 AUTHEnabled=true
 HDFSenabled=false
 
