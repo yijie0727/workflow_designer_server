@@ -83,17 +83,19 @@
                         <li><a href="#" id="jobs" data-toggle="modal" data-target="#jobsModal">Jobs List</a></li>
                     </ul>
                 </li>
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">User Account
-                        <span class="caret"></span></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#" data-toggle="modal" data-target="#resetModal">Reset Password</a></li>
-                    </ul>
-                </li>
             </ul>
             <!--<button class="btn btn-success navbar-btn pull-right" id="execute">Execute</button>-->
-            <button class="btn btn-primary navbar-btn pull-right" id="schedule">Schedule</button>
+
             <button class="btn btn-primary navbar-btn pull-right" id="login" data-toggle="modal" data-target="#loginModal">Login/Register</button>
+            <div class="dropdown pull-right" id="myAccount" >
+                <button class="btn btn-primary navbar-btn dropdown-toggle" type="button" data-toggle="dropdown" ><span id="myAccountButton">My Account</span>
+                    <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                    <li><a href="#" onclick="logout()">Logout</a></li>
+                    <li><a href="#" data-toggle="modal" data-target="#resetModal">Reset Password</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-success navbar-btn pull-right" id="schedule">Schedule</button>
         </div>
     </nav>
     <!--sidebar-->

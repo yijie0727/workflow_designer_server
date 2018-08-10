@@ -374,7 +374,15 @@ var contex_menu = {
 
 
 
-        //Initializing Tree
+        if($.cookie("email")){
+            $("#myAccount").show();
+            $("#login").hide();
+            document.getElementById("myAccountButton").innerHTML="Hi, "+$.cookie("email");
+        }
+        else{
+            $("#myAccount").hide();
+            $("#login").show();
+        }
 
 
         //Creating the tree
@@ -395,13 +403,6 @@ var contex_menu = {
 
 })();
 
-$(document).ready(function() {
-
-    if($.cookie("email")){
-        document.getElementById("login").innerHTML='Logout '+$.cookie("email");
-        document.getElementById("login").onclick=logout;
-    }
-});
 
 function initializeTree() {
     tree = createTree('div_tree','white',contex_menu);
@@ -529,7 +530,7 @@ function updateJobsTable(){
             $("#jobTable tbody").empty();
             for(var i=0;i<data.length;i++){
                 var job=data[i];
-                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")'>Preview</button></td></tr>"
+                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")'>Load</button></td></tr>"
                 table.append(row);
             }
         }
@@ -548,7 +549,7 @@ function clearTracking() {
 }
 
 function getWorkflow(jobId){
-    if(jobId!=0);
+    if(jobId===0) return;
     $.ajax({
         type: "GET",
         url: "api/workflow/jobs/"+jobId,
@@ -570,6 +571,7 @@ function getWorkflow(jobId){
             if(data.status!=="COMPLETED"||data.status!=="FAILED"){
                 track(jobId);
             }
+            $('#jobsModal').modal('toggle');
         }
     });
 }
@@ -691,8 +693,6 @@ function selectFile(event,target){
 function logout(){
     $.removeCookie("email");
     $.removeCookie("name");
-    document.getElementById("login").innerHTML='Login/Register';
-    document.getElementById("login").onclick=showLogin;
     clearTracking();
     //Clearing blocks
     blocks.clear();
@@ -702,6 +702,8 @@ function logout(){
 
     //Clearing elfinder
     $('#elfinder').elfinder("destroy");
+    $('#myAccount').hide();
+    $('#login').show();
 }
 
 function showRegister() {
@@ -748,11 +750,13 @@ function login(){
             if(data.id){
                 $.cookie("email", data.email, { expires : 10 });
                 $.cookie("token", data.token, { expires : 10 });
-                document.getElementById("login").innerHTML='Logout '+$.cookie("email");
-                document.getElementById("login").onclick=logout;
+                document.getElementById("myAccountButton").innerHTML='Hi, '+$.cookie("email");
                 $('#loginModal').modal('hide');
                 $("#loginEmail").val("");
                 $("#loginPassword").val("");
+
+                $('#myAccount').show();
+                $('#login').hide();
 
                 initializeTree();
                 $('#elfinder').elfinder({
@@ -760,6 +764,8 @@ function login(){
                 });
                 if(data.reset)
                     $("#resetModal").modal("show");
+
+
 
             }
             else{
