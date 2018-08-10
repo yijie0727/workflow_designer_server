@@ -1,4 +1,4 @@
-package cz.zcu.kiv.server.utilties.email;
+package cz.zcu.kiv.server.utilities.email;
 
 import cz.zcu.kiv.server.utilities.config.Conf;
 import org.apache.commons.logging.Log;

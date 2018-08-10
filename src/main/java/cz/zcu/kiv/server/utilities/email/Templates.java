@@ -1,4 +1,4 @@
-package cz.zcu.kiv.server.utilties.email;
+package cz.zcu.kiv.server.utilities.email;
 
 public class Templates {
     private static final String getFooter(){

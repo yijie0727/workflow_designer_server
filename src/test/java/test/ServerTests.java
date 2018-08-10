@@ -1,10 +1,9 @@
 package test;
 
 import cz.zcu.kiv.server.EmbeddedServer;
-import cz.zcu.kiv.server.Workflow;
 import cz.zcu.kiv.server.utilities.config.Conf;
-import cz.zcu.kiv.server.utilties.email.Email;
-import cz.zcu.kiv.server.utilties.email.Templates;
+import cz.zcu.kiv.server.utilities.email.Email;
+import cz.zcu.kiv.server.utilities.email.Templates;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

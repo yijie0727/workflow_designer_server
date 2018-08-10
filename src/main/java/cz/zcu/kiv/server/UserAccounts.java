@@ -4,8 +4,8 @@ import cz.zcu.kiv.server.sqlite.Model.User;
 import cz.zcu.kiv.server.sqlite.UserAlreadyExistsException;
 import cz.zcu.kiv.server.sqlite.UserDoesNotExistException;
 import cz.zcu.kiv.server.sqlite.Users;
-import cz.zcu.kiv.server.utilties.email.Email;
-import cz.zcu.kiv.server.utilties.email.Templates;
+import cz.zcu.kiv.server.utilities.email.Email;
+import cz.zcu.kiv.server.utilities.email.Templates;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,7 +19,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.io.File;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
 import static cz.zcu.kiv.server.Workflow.WORK_FOLDER;
