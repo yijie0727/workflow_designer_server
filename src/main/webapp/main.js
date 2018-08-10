@@ -235,6 +235,8 @@ var contex_menu = {
             // Create an FormData object
             var formData = new FormData(document.getElementById('fileUploadForm'));
 
+            alertify.notify("Please Wait", 'success', 2);
+
             $.ajax({
                 type: "POST",
                 enctype: 'multipart/form-data',
@@ -787,6 +789,8 @@ function  forgot() {
     // If you want to add an extra field for the FormData
     data.append("email", $("#loginEmail").val());
 
+    alertify.notify("Please Wait", 'success', 2);
+
     $.ajax({
         type: "POST",
         enctype: 'multipart/form-data',
@@ -820,6 +824,8 @@ function register(){
     // If you want to add an extra field for the FormData
     data.append("email", $("#registerEmail").val());
     data.append("username", $("#registerName").val());
+
+    alertify.notify("Please Wait", 'success', 2);
 
     $.ajax({
         type: "POST",

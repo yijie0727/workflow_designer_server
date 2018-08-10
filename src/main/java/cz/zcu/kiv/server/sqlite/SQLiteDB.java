@@ -59,7 +59,8 @@ public class SQLiteDB {
                         + "	packageName text NOT NULL,"
                         + "	publicJar boolean NOT NULL,"
                         + "	author text NOT NULL,"
-                        + "	lastUpdate text NOT NULL"
+                        + "	lastUpdate text NOT NULL,"
+                        + " FOREIGN KEY(author) REFERENCES users(email) "
                         + ");";
 
                 String createJobsTableSQL = "CREATE TABLE IF NOT EXISTS jobs ("
@@ -69,7 +70,8 @@ public class SQLiteDB {
                         + "	startTime text NULL,"
                         + "	endTime text NULL,"
                         + "	workflow text NOT NULL,"
-                        + "	workflowOutputFile text NULL"
+                        + "	workflowOutputFile text NULL,"
+                        + " FOREIGN KEY(owner) REFERENCES users(email) "
                         + ");";
 
                 stmt = conn.createStatement();
