@@ -10,6 +10,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.mail.MessagingException;
@@ -24,6 +25,10 @@ public class ServerTests {
 
     private static Log logger = LogFactory.getLog(ServerTests.class);
 
+    @Before
+    public void disableAuthentication(){
+        Conf.getConf().getProperties().setProperty("AUTHEnabled","false");
+    }
     @Test
     public void testServer() throws Exception {
         final EmbeddedServer server = new EmbeddedServer(){
