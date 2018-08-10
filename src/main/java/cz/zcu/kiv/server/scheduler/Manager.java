@@ -1,6 +1,7 @@
 package cz.zcu.kiv.server.scheduler;
 
 import cz.zcu.kiv.server.sqlite.Jobs;
+import cz.zcu.kiv.server.utilities.config.Conf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -12,7 +13,7 @@ import java.util.List;
 public class Manager {
     private static Log logger = LogFactory.getLog(Manager.class);
     private static Manager manager;
-    private static final int MAX_THREADS = 2;
+    private static final int MAX_THREADS = Conf.getConf().getServerMaxThreads();
     private static int CURRENT_THREAD_COUNT=0;
 
     private Manager(){

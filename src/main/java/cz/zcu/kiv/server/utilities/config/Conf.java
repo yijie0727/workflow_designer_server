@@ -79,4 +79,8 @@ public class Conf {
     public int getServerPort() {
         return Integer.valueOf(properties.getProperty("server.port"));
     }
+
+    public int getServerMaxThreads() {
+        return Integer.valueOf(properties.getProperty("server.maxthreads"));
+    }
 }
