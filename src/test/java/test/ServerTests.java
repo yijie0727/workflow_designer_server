@@ -2,12 +2,17 @@ package test;
 
 import cz.zcu.kiv.server.EmbeddedServer;
 import cz.zcu.kiv.server.Workflow;
+import cz.zcu.kiv.server.utilities.config.Conf;
+import cz.zcu.kiv.server.utilties.email.Email;
+import cz.zcu.kiv.server.utilties.email.Templates;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
+
+import javax.mail.MessagingException;
 import java.io.File;
 import java.nio.charset.Charset;
 
@@ -118,6 +123,16 @@ public class ServerTests {
             }
         };
         server.startServer();
+
+    }
+
+    /**
+     * Test Sending email
+     * @throws MessagingException If configuration is improper
+     */
+    @Test
+    public void testEmail() throws MessagingException {
+        Email.sendMail(Conf.getConf().getFromEmailAddress(),"TestEmail",Templates.getNewAccountPasswordEmail("Test Email",Conf.getConf().getFromEmailAddress(),"12345"));
 
     }
 

@@ -3,10 +3,10 @@ package cz.zcu.kiv.server;
 
 import cz.zcu.kiv.server.scheduler.Job;
 import cz.zcu.kiv.server.scheduler.Manager;
-import cz.zcu.kiv.server.sqlite.Jobs;
 import cz.zcu.kiv.server.sqlite.Model.Module;
 import cz.zcu.kiv.server.sqlite.Modules;
 import cz.zcu.kiv.server.sqlite.Users;
+import cz.zcu.kiv.server.utilities.config.Conf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.*;
@@ -120,15 +120,21 @@ public class Workflow {
 
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
-        try {
-            if(email==null||email.equals("undefined")
-                    ||token==null||token.equals("undefined")
-                    ||!Users.checkAuthorized(email,token))
-                return Response.status(403).entity("Unauthorized").build();
-        } catch (SQLException e) {
-            logger.error(e);
-            return Response.status(500).entity("Database Error").build();
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
         }
+        else{
+            email="guest@guest.com";
+        }
+
 
         ClassLoader child;
         JSONArray result=new JSONArray();
@@ -197,14 +203,19 @@ public class Workflow {
 
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
-        try {
-            if(email==null||email.equals("undefined")
-                    ||token==null||token.equals("undefined")
-                    ||!Users.checkAuthorized(email,token))
-                return Response.status(403).entity("Unauthorized").build();
-        } catch (SQLException e) {
-            logger.error(e);
-            return Response.status(500).entity("Database Error").build();
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
         }
 
         ClassLoader child;
@@ -371,14 +382,19 @@ public class Workflow {
 
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
-        try {
-            if(email==null||email.equals("undefined")
-                    ||token==null||token.equals("undefined")
-                    ||!Users.checkAuthorized(email,token))
-                return Response.status(403).entity("Unauthorized").build();
-        } catch (SQLException e) {
-            logger.error(e);
-            return Response.status(500).entity("Database Error").build();
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
         }
 
         JSONObject workflowObject = new JSONObject(workflow);
@@ -407,14 +423,19 @@ public class Workflow {
     public Response schedule(@Context HttpHeaders httpHeaders)  {
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
-        try {
-            if(email==null||email.equals("undefined")
-                    ||token==null||token.equals("undefined")
-                    ||!Users.checkAuthorized(email,token))
-                return Response.status(403).entity("Unauthorized").build();
-        } catch (SQLException e) {
-            logger.error(e);
-            return Response.status(500).entity("Database Error").build();
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
         }
 
         JSONArray jobs;

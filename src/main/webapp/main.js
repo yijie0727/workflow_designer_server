@@ -353,6 +353,22 @@ var contex_menu = {
             $("#sidebar").toggleClass("collapsed");
             $("#content").toggleClass("col-md-12 col-md-9");
         });
+        var jobUpdater;
+        $('#jobsModal').on('shown.bs.modal', function (e) {
+            updateJobsTable();
+            jobUpdater=setInterval(function(){
+                try{
+                    updateJobsTable();
+                }
+                catch(e){
+                    //Unauthorized
+                }
+
+            },3000);
+        })
+        $('#jobsModal').on('hide.bs.modal', function (e) {
+            clearInterval(jobUpdater)
+        });
 
 
 
@@ -884,7 +900,5 @@ function  reset() {
         }
     });
 }
-setInterval(function(){
-    if($.cookie("email"))
-        updateJobsTable()
-},3000);
+
+

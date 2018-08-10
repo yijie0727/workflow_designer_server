@@ -1,5 +1,6 @@
 package cz.zcu.kiv.server.utilities.elfinder.localfs;
 
+import cz.zcu.kiv.server.utilities.config.Conf;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsItem;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsVolume;
 import cz.zcu.kiv.server.utilities.elfinder.util.MimeTypesUtils;
@@ -28,12 +29,12 @@ public class RemoteHDFsVolume implements FsVolume
 {
 	Log logger = LogFactory.getLog(RemoteHDFsVolume.class);
 
-    public static final String HDFS_URI = "hdfs://192.168.139.128:8020/";
+    public static final String HDFS_URI = Conf.getConf().getHDFsURI();
 
     public static Configuration HDFS_CONF = new Configuration();
 
     //Username of hadoop linux user with permission to write to HDFS
-    public static final String HADOOP_USER_NAME = "hdfs";
+    public static final String HADOOP_USER_NAME = Conf.getConf().getHDFsUsername();
 
     public static final String HADOOP_USER_NAME_KEY = "HADOOP_USER_NAME";
     FileSystem fs  ;

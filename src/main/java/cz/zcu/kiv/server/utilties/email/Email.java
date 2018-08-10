@@ -1,12 +1,9 @@
 package cz.zcu.kiv.server.utilties.email;
 
+import cz.zcu.kiv.server.utilities.config.Conf;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
 
@@ -15,25 +12,16 @@ public class Email {
 
     public static void sendMail(String to, String subject, String text) throws MessagingException {
 
-        // Get system properties
-        Properties properties = new Properties();
-        try {
-            properties.load(Email.class.getResourceAsStream("/config.properties"));
-        } catch (IOException e) {
-            logger.error("Could not find config.properties file");
-            logger.fatal(e);
-        }
+        String from = Conf.getConf().getFromEmailAddress();
 
-        String from = properties.getProperty("fromEmailAddress");
+        final String username = Conf.getConf().getEmailUsername();
 
-        final String username = properties.getProperty("emailUsername");
-
-        final String password = properties.getProperty("emailPassword");
+        final String password = Conf.getConf().getEmailPassword();
 
         // creating Session instance referenced to 
         // Authenticator object to pass in 
         // Session.getInstance argument
-        Session session = Session.getDefaultInstance(properties,
+        Session session = Session.getDefaultInstance(Conf.getConf().getProperties(),
                 new javax.mail.Authenticator() {
 
                     // override the getPasswordAuthentication
@@ -59,12 +47,5 @@ public class Email {
             Transport.send(message);
     }
 
-    public static void main(String[] args) {
-        try {
-            sendMail("pintojoey@gmail.com","New Account",Templates.getNewAccountPasswordEmail("Joey Pinto","pintojoey@gmail.com","12345"));
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
-    }
 }
 

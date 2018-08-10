@@ -1,5 +1,6 @@
 package cz.zcu.kiv.server.utilities.elfinder.servlet;
 
+import cz.zcu.kiv.server.utilities.config.Conf;
 import cz.zcu.kiv.server.utilities.elfinder.controller.ConnectorController;
 import cz.zcu.kiv.server.utilities.elfinder.controller.executor.CommandExecutorFactory;
 import cz.zcu.kiv.server.utilities.elfinder.controller.executor.DefaultCommandExecutorFactory;
@@ -84,7 +85,8 @@ public class ConnectorServlet extends HttpServlet
 				createLocalFsVolume("My Files", new File(WORK_FOLDER+"MyFiles")));
 		fsService.addVolume("Shared",
 				createLocalFsVolume("Shared", new File(WORK_FOLDER+"Shared")));
-		fsService.addVolume("HDFS",createRemoteHDFsVolume("HDFS", new File("HDFS")));
+		if(Conf.getConf().getHDFSEnabled())
+			fsService.addVolume("HDFS",createRemoteHDFsVolume("HDFS", new File("HDFS")));
 
 
 		return fsService;
