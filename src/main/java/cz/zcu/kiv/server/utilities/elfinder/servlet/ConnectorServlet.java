@@ -82,7 +82,7 @@ public class ConnectorServlet extends HttpServlet
 		fsService.setServiceConfig(serviceConfig);
 
 		fsService.addVolume("MyFiles",
-				createLocalFsVolume("My Files", new File(WORK_FOLDER+"MyFiles")));
+				createLocalFsVolume("MyFiles", new File(WORK_FOLDER+"MyFiles")));
 		fsService.addVolume("Shared",
 				createLocalFsVolume("Shared", new File(WORK_FOLDER+"Shared")));
 		if(Conf.getConf().getHDFSEnabled())
