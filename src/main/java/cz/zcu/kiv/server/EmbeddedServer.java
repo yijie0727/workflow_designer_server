@@ -20,6 +20,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.eclipse.jetty.util.log.Slf4jLog;
+import org.eclipse.jetty.util.resource.Resource;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -92,13 +93,10 @@ public class EmbeddedServer{
 		ContextHandler contextHandler = new ContextHandler("/api");
 		contextHandler.setHandler(server.getHandler());
 		contextHandler.setInitParameter(ServerProperties.PROVIDER_CLASSNAMES, MultiPartFeature.class.getCanonicalName());
-		ProtectionDomain protectionDomain = EmbeddedServer.class
-				.getProtectionDomain();
-		final URL location = protectionDomain.getCodeSource().getLocation();
-
 		ResourceHandler resourceHandler = new ResourceHandler();
 		resourceHandler.setWelcomeFiles(new String[] { "index.html" });
-		resourceHandler.setResourceBase(location.toExternalForm());
+		resourceHandler.setBaseResource(Resource.newClassPathResource("/"));
+
 		HandlerCollection handlerCollection = new HandlerCollection();
 		handlerCollection.setHandlers(new Handler[] { servletContextHandler,resourceHandler,
 				contextHandler, new DefaultHandler() });
