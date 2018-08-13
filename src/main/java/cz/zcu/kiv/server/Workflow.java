@@ -450,6 +450,43 @@ public class Workflow {
     }
 
     /**
+     * Removes completed jobs from the joblist
+     *
+     * @return job ID
+     */
+    @DELETE
+    @Path("/schedule")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response clearSchedule(@Context HttpHeaders httpHeaders)  {
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+        }
+
+
+        try {
+             Manager.getInstance().clearJobs(email);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
+        return Response.status(200)
+                .entity("Schedule Cleared").build();
+    }
+
+    /**
      * Returns text response to indicate job scheduling success
      *
      * @return job ID

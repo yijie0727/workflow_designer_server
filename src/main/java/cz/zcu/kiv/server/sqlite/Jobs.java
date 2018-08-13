@@ -71,7 +71,7 @@ public class Jobs {
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("SELECT * FROM jobs WHERE owner=?;" );
+                    connection.prepareStatement("SELECT * FROM jobs WHERE owner=? order by startTime DESC;" );
 
             preparedStatement.setString(1, email);
 
@@ -82,7 +82,7 @@ public class Jobs {
                 job.setId(resultSet.getLong("id"));
                 job.setOwner(resultSet.getString("owner"));
                 job.setStatus(Status.valueOf(resultSet.getString("status")));
-                if(resultSet.getString("startTIme")!=null)
+                if(resultSet.getString("startTime")!=null)
                     job.setStartTime(new Date(resultSet.getLong("startTime")));
                 if(resultSet.getString("endTime")!=null)
                     job.setEndTime(new Date(resultSet.getLong("endTime")));
@@ -268,6 +268,38 @@ public class Jobs {
                     connection.prepareStatement("UPDATE jobs set status='FAILED' WHERE status='RUNNING' OR status='WAITING';" );
 
             preparedStatement.executeUpdate();
+        }
+        finally {
+            if(preparedStatement!=null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e1) {
+                    logger.error(e1);
+                }
+            }
+            if(connection!=null){
+                try {
+                    connection.close();
+                } catch (SQLException e1) {
+                    logger.error(e1);
+                }
+            }
+
+        }
+    }
+
+    public static void clearJobs(String email) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = SQLiteDB.getInstance().connect();
+            preparedStatement =
+                    connection.prepareStatement("DELETE FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING';" );
+
+            preparedStatement.setString(1, email);
+
+            preparedStatement.executeUpdate();
+
         }
         finally {
             if(preparedStatement!=null) {

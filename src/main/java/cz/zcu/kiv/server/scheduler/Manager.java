@@ -98,5 +98,7 @@ public class Manager {
     }
 
 
-
+    public void clearJobs(String email) throws SQLException {
+        Jobs.clearJobs(email);
+    }
 }

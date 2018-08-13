@@ -285,7 +285,7 @@
 
     <!-- Jobs Modal -->
     <div class="modal fade " role="dialog" id="jobsModal" >
-        <div class="modal-dialog" style="max-width:100% !important;">
+        <div class="modal-dialog" style="max-width:100% !important; padding: 5px;">
 
             <!-- Modal content-->
             <div class="modal-content modal-fullscreen">
@@ -294,7 +294,7 @@
                     <h4 class="modal-title">Jobs</h4>
                 </div>
                 <div class="modal-body" style="overflow:auto;min-width: 400px;" align="center" >
-                    <table id="jobTable" class="table-bordered" >
+                    <table id="jobTable" class="table-bordered" style="text-align: center;" cellpadding=10>
                         <thead>
                             <tr>
                                 <th>JobID</th>
@@ -309,6 +309,7 @@
                     </table>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-default" onclick="clearSchedule()">Clear Workflow</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>

@@ -224,7 +224,7 @@ var contex_menu = {
         });
 
         $('#clear').click(function () {
-            alertify.confirm('Workflow Desginer','Clear Workflow?', function(){ clearTracking(); blocks.clear(); }, function(){});
+            alertify.confirm('Workflow Designer','Clear Workflow?', function(){ clearTracking(); blocks.clear(); }, function(){});
         });
 
         $("#importSubmit").click(function (event) {
@@ -534,7 +534,7 @@ function updateJobsTable(){
             $("#jobTable tbody").empty();
             for(var i=0;i<data.length;i++){
                 var job=data[i];
-                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")'>Load</button></td></tr>"
+                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")' class='btn btn-default'>Load</button></td></tr>"
                 table.append(row);
             }
         }
@@ -576,6 +576,25 @@ function getWorkflow(jobId){
                 track(jobId);
             }
             $('#jobsModal').modal('toggle');
+        }
+    });
+}
+
+function clearSchedule(jobId){
+    if(jobId===0) return;
+    $.ajax({
+        type: "DELETE",
+        url: "api/workflow/schedule",
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function () {
+            updateJobsTable();
         }
     });
 }
