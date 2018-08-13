@@ -377,11 +377,15 @@ var contex_menu = {
         if($.cookie("email")){
             $("#myAccount").show();
             $("#login").hide();
+            $("#mainMenu").show();
+            $("#schedule").show();
             document.getElementById("myAccountButton").innerHTML="Hi, "+$.cookie("email");
         }
         else{
             $("#myAccount").hide();
             $("#login").show();
+            $("#mainMenu").hide();
+            $("#schedule").hide();
         }
 
 
@@ -710,6 +714,8 @@ function logout(){
 
     $('#myAccount').hide();
     $('#login').show();
+    $('#mainMenu').hide();
+    $('#schedule').hide();
 }
 
 function showRegister() {
@@ -763,6 +769,9 @@ function login(){
 
                 $('#myAccount').show();
                 $('#login').hide();
+                $('#mainMenu').show();
+                $('#schedule').show();
+
 
                 initializeTree();
                 $('#elfinder').elfinder({
