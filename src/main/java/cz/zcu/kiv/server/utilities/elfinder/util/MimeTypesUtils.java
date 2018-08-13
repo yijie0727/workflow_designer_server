@@ -1,11 +1,15 @@
 package cz.zcu.kiv.server.utilities.elfinder.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class MimeTypesUtils
 {
+	static final Log logger = LogFactory.getLog(MimeTypesUtils.class);
 	private static Map<String, String> _map;
 
 	public static final String UNKNOWN_MIME_TYPE = "application/oct-stream";
@@ -19,7 +23,7 @@ public abstract class MimeTypesUtils
 		}
 		catch (Throwable e)
 		{
-			e.printStackTrace();
+			logger.error(e);
 		}
 	}
 

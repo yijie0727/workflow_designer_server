@@ -22,7 +22,7 @@ public class Conf {
             else
                 properties.load(Conf.class.getResourceAsStream("/config.properties.template"));
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
             logger.fatal("Configuration File could not be loaded");
         }
     }

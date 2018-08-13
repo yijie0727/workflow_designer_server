@@ -2,6 +2,8 @@ package cz.zcu.kiv.server.utilities.elfinder.controller.executor;
 
 import cz.zcu.kiv.server.utilities.elfinder.controller.ErrorException;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,6 +15,7 @@ import java.io.PrintWriter;
 public abstract class AbstractJsonCommandExecutor extends
 		AbstractCommandExecutor
 {
+	static final Log logger = LogFactory.getLog(AbstractJsonCommandExecutor.class);
 	@Override
 	final public void execute(FsService fsService, HttpServletRequest request,
 							  HttpServletResponse response, ServletContext servletContext)
@@ -42,7 +45,7 @@ public abstract class AbstractJsonCommandExecutor extends
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			logger.error(e);
 			json.put("error", e.getMessage());
 		}
 		finally

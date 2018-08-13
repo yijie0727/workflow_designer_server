@@ -20,7 +20,7 @@ public class JobThread extends Thread {
             job.execute();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
         onJobCompleted();
     }

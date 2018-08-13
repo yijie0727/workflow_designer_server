@@ -1,6 +1,9 @@
 package cz.zcu.kiv.server;
 
 import cz.zcu.kiv.server.utilities.elfinder.servlet.ConnectorServlet;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -9,12 +12,13 @@ import java.io.IOException;
 
 public class Servlet extends HttpServlet {
     static ConnectorServlet connectorServlet;
+    static final Log logger=LogFactory.getLog(HttpServlet.class);
     public Servlet(){
         connectorServlet = new ConnectorServlet();
         try {
             connectorServlet.init(this.getServletConfig());
         } catch (ServletException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

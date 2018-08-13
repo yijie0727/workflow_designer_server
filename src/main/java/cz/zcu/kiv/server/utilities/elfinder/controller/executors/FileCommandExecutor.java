@@ -6,6 +6,8 @@ import cz.zcu.kiv.server.utilities.elfinder.controller.executor.FsItemEx;
 import cz.zcu.kiv.server.utilities.elfinder.service.FsService;
 import cz.zcu.kiv.server.utilities.elfinder.util.MimeTypesUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.mail.internet.MimeUtility;
 import javax.servlet.ServletContext;
@@ -20,6 +22,7 @@ import java.net.URLEncoder;
 public class FileCommandExecutor extends AbstractCommandExecutor implements
         CommandExecutor
 {
+	static final Log logger = LogFactory.getLog(FileCommandExecutor.class);
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request,
                         HttpServletResponse response, ServletContext servletContext)
@@ -77,7 +80,7 @@ public class FileCommandExecutor extends AbstractCommandExecutor implements
 				}
 				catch (IOException e)
 				{
-					e.printStackTrace();
+					logger.error(e);
 				}
 			}
 		}
