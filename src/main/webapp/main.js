@@ -784,7 +784,7 @@ function login(){
 
             }
             else{
-                alertify.notify(e.responseText, 'error', 3);
+                alertify.notify("Server Error", 'error', 3);
             }
         },
         error: function (e) {

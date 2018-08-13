@@ -4,6 +4,7 @@ import cz.zcu.kiv.server.sqlite.Model.User;
 import cz.zcu.kiv.server.sqlite.UserAlreadyExistsException;
 import cz.zcu.kiv.server.sqlite.UserDoesNotExistException;
 import cz.zcu.kiv.server.sqlite.Users;
+import cz.zcu.kiv.server.utilities.config.Conf;
 import cz.zcu.kiv.server.utilities.email.Email;
 import cz.zcu.kiv.server.utilities.email.Templates;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -72,10 +73,10 @@ public class UserAccounts {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(@FormDataParam("email")String email, @FormDataParam("password")String password) {
-
+            User user;
         try {
-            User user = Users.getUserByEmail(email);
-            if(user.getActive() && user.getPassword().equals(MD5(password))){
+            user = Users.getUserByEmail(email);
+            if(Conf.getConf().getAuthEnabled() && user.getActive() && user.getPassword().equals(MD5(password))){
                 String generatedToken = RandomStringUtils.randomAlphanumeric(6);
                 user.setToken(generatedToken);
                 Users.updateUser(user);
@@ -87,7 +88,17 @@ public class UserAccounts {
             }
         }  catch (UserDoesNotExistException e) {
             logger.error(e);
-            return Response.status(403)
+            if (!Conf.getConf().getAuthEnabled()){
+                user = new User();
+                user.setActive(true);
+                user.setReset(false);
+                user.setEmail(email);
+                user.setId(-1l);
+                user.setToken("guest");
+                user.setUsername("Guest");
+                return Response.status(200).entity(user.toJSON().toString(4)).build();
+            }
+            else return Response.status(403)
                     .entity("Unauthorized!").build();
         }  catch (SQLException e) {
             logger.error(e);
