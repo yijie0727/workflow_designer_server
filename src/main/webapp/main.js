@@ -701,7 +701,13 @@ function logout(){
     tree.drawTree();
 
     //Clearing elfinder
-    $('#elfinder').elfinder("destroy");
+    try{
+        $('#elfinder').elfinder("destroy");
+    }
+    catch(e){
+       //Already destroyed
+    }
+
     $('#myAccount').hide();
     $('#login').show();
 }

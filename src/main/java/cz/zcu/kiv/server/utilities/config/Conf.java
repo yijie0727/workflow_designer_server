@@ -14,18 +14,19 @@ public class Conf {
 
     private Conf(){
         properties = new Properties();
+
         try {
-            properties.load(Conf.class.getResourceAsStream("/config.properties"));
-        } catch (IOException e) {
-            logger.error("Could not find config.properties file");
-            logger.fatal(e);
-            try {
-                properties.load(Conf.class.getResourceAsStream("/config.properties.template"));
-            } catch (IOException e1) {
-                logger.error(e1);
+            if(Conf.class.getResourceAsStream("/config.properties")!=null) {
+                properties.load(Conf.class.getResourceAsStream("/config.properties"));
             }
+            else
+                properties.load(Conf.class.getResourceAsStream("/config.properties.template"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            logger.fatal("Configuration File could not be loaded");
         }
     }
+    
     public static Conf getConf() {
         if(conf ==null){
             conf =new Conf();
