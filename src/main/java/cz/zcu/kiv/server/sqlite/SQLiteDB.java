@@ -1,15 +1,18 @@
 package cz.zcu.kiv.server.sqlite;
 
 
+import cz.zcu.kiv.server.Workflow;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import static cz.zcu.kiv.server.Workflow.DATA_FOLDER;
+import static cz.zcu.kiv.server.Workflow.UPLOAD_FOLDER;
 
 
 public class SQLiteDB {
@@ -40,8 +43,12 @@ public class SQLiteDB {
         try {
             Class.forName("org.sqlite.JDBC");
             String url = "jdbc:sqlite:"+database;
+            if(!new File(UPLOAD_FOLDER).exists()){
+                Workflow.createWorkDirectories();
+            }
             // create a connection to the database
             conn = DriverManager.getConnection(url);
+
             if(!initialized){
                 String createUsersTableSQL = "CREATE TABLE IF NOT EXISTS users ("
                         + "	id integer PRIMARY KEY AUTOINCREMENT,"

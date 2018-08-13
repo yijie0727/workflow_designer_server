@@ -106,11 +106,7 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response initializeAtom(@Context HttpHeaders httpHeaders)  {
         try {
-            createFolderIfNotExists(UPLOAD_FOLDER);
-            createFolderIfNotExists(GENERATED_FILES_FOLDER);
-            createFolderIfNotExists(WORK_FOLDER);
-            createFolderIfNotExists(TEMP_FOLDER);
-            createFolderIfNotExists(WORKING_DIRECTORY);
+            createWorkDirectories();
         } catch (SecurityException se) {
             logger.error("Error saving folder on server ",se);
             return Response.status(500)
@@ -175,6 +171,14 @@ public class Workflow {
 
         return Response.status(200)
                 .entity(result.toString(4)).build();
+    }
+
+    public static void createWorkDirectories() throws SecurityException{
+        createFolderIfNotExists(UPLOAD_FOLDER);
+        createFolderIfNotExists(GENERATED_FILES_FOLDER);
+        createFolderIfNotExists(WORK_FOLDER);
+        createFolderIfNotExists(TEMP_FOLDER);
+        createFolderIfNotExists(WORKING_DIRECTORY);
     }
 
 
