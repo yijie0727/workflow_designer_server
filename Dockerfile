@@ -9,7 +9,7 @@ COPY --from=clone /app/workflow_designer_server /app
 ADD config/* /app/src/main/resources/
 RUN mvn package
 
-FROM openjdk:8-jre-alpine
+FROM openjdk:8-jre
 ENV artifact workflow_designer_server-jar-with-dependencies.jar 
 WORKDIR /app
 COPY --from=build /app/target/${artifact} /app/${artifact}
