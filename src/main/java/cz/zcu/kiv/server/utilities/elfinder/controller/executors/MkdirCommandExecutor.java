@@ -20,6 +20,10 @@ public class MkdirCommandExecutor extends AbstractJsonCommandExecutor implements
 		String name = request.getParameter("name");
 
 		FsItemEx fsi = super.findItem(fsService, target);
+		if(fsi.getVolumnName().equals("MyFiles") && fsi.getName().equals("MyFiles")){
+			throw new Exception("Permission Denied");
+		}
+
 		FsItemEx dir = new FsItemEx(fsi, name);
 		dir.createFolder();
 

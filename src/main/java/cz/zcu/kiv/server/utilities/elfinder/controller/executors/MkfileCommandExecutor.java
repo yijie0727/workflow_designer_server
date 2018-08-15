@@ -21,6 +21,10 @@ public class MkfileCommandExecutor extends AbstractJsonCommandExecutor
 		String name = request.getParameter("name");
 
 		FsItemEx fsi = super.findItem(fsService, target);
+		if(fsi.getVolumnName().equals("MyFiles") && fsi.getName().equals("")){
+			throw new Exception("Permission Denied");
+		}
+
 		FsItemEx dir = new FsItemEx(fsi, name);
 		dir.createFile();
 

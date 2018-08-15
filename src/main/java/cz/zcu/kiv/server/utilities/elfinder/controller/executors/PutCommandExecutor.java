@@ -20,6 +20,9 @@ public class PutCommandExecutor extends AbstractJsonCommandExecutor implements
 		String target = request.getParameter("target");
 
 		FsItemEx fsi = super.findItem(fsService, target);
+		if(fsi.getName().equals("MyFiles")){
+			throw new Exception("Permission Denied");
+		}
 		fsi.writeStream(new ByteArrayInputStream(request
 				.getParameter("content").getBytes("utf-8")));
 		json.put("changed", new Object[] { super.getFsItemInfo(request, fsi) });

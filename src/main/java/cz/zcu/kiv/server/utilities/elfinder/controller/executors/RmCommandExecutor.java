@@ -25,6 +25,11 @@ public class RmCommandExecutor extends AbstractJsonCommandExecutor implements
 		for (String target : targets)
 		{
 			FsItemEx ftgt = super.findItem(fsService, target);
+			if(request.getHeader("email")!=null){
+				if(ftgt.getVolumnName().equals("MyFiles")&& ftgt.getName().equals("user_dir_"+request.getHeader("email"))){
+					throw new Exception("Permission Denied");
+				}
+			}
 			ftgt.delete();
 			removed.add(ftgt.getHash());
 		}

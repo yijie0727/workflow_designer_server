@@ -5099,7 +5099,7 @@ elFinder.prototype._options = {
 	 * @type Object
 	 * @default {}
 	 */
-	customHeaders : {},
+	customHeaders : {"email":$.cookie("email"),"token":$.cookie("token")},
 
 	/**
 	 * Any custom xhrFields to send across every ajax request

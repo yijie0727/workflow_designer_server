@@ -184,6 +184,12 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 
 		String target = request.getParameter("target");
 		final FsItemEx dir = super.findItem(fsService, target);
+		if(request.getHeader("email")!=null){
+			if(dir.getVolumnName().equals("MyFiles")&&dir.getPath().equals("")){
+
+				throw new Exception("Permission Denied");
+			}
+		}
 		final FsItemFilter filter = getRequestedFilter(request);
 
 		FileWriter fw = new FileWriter()

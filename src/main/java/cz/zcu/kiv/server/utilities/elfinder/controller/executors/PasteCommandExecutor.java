@@ -34,6 +34,9 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor implements
 			FsItemEx ftgt = super.findItem(fsService, target);
 			String name = ftgt.getName();
 			FsItemEx newFile = new FsItemEx(fdst, name);
+			if(ftgt.getVolumnName().equals("MyFiles") && ftgt.getParent().getPath().equals("")){
+				throw new Exception("Permission Denied");
+			}
 			super.createAndCopy(ftgt, newFile);
 			added.add(newFile);
 

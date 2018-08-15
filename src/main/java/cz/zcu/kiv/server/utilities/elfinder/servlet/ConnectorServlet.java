@@ -81,7 +81,8 @@ public class ConnectorServlet extends HttpServlet
 
 		fsService.setServiceConfig(serviceConfig);
 
-		fsService.addVolume("MyFiles",
+		if(Conf.getConf().getAuthEnabled())
+			fsService.addVolume("MyFiles",
 				createLocalFsVolume("MyFiles", new File(WORK_FOLDER+"MyFiles")));
 		fsService.addVolume("Shared",
 				createLocalFsVolume("Shared", new File(WORK_FOLDER+"Shared")));

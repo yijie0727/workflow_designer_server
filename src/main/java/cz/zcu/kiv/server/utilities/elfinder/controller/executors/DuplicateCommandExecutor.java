@@ -26,6 +26,13 @@ public class DuplicateCommandExecutor extends AbstractJsonCommandExecutor
 		for (String target : targets)
 		{
 			FsItemEx fsi = super.findItem(fsService, target);
+			if(request.getHeader("email")!=null){
+				if(fsi.getVolumnName().equals("MyFiles")&& fsi.getName().equals("user_dir_"+request.getHeader("email"))){
+
+					throw new Exception("Permission Denied");
+				}
+
+			}
 			String name = fsi.getName();
 			String baseName = FilenameUtils.getBaseName(name);
 			String extension = FilenameUtils.getExtension(name);
