@@ -709,6 +709,10 @@ function selectFile(event,target){
             }
         });
     });
+    $('#elfinderBrowse').on('hide.bs.modal', function (e) {
+        if($('#elfinderBrowse').html()!="")
+            $('#elfinderBrowse').elfinder('destroy');
+    });
     $('#browseModal').modal('show');
 
 }
@@ -725,10 +729,18 @@ function logout(){
 
     //Clearing elfinder
     try{
-        $('#elfinder').elfinder("destroy");
+        if($('#elfinder').html()!="")
+            $('#elfinder').elfinder("destroy");
     }
     catch(e){
        //Already destroyed
+    }
+    try{
+        if($('#elfinderBrowse').html()!="")
+        $('#elfinderBrowse').elfinder("destroy");
+    }
+    catch(e){
+        //Already destroyed
     }
 
     $('#myAccount').hide();
