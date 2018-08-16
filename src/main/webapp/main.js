@@ -691,6 +691,7 @@ function populateOutputs(data){
 }
 function selectFile(event,target){
     event.preventDefault();
+    button=target;
 
     $('#browseModal').on('shown.bs.modal', function (e) {
         $('#browseModal').css('z-index',9999);
@@ -704,8 +705,8 @@ function selectFile(event,target){
             getFileCallback : function(file)
             {
                 $('#browseModal').modal('hide');
-                target.innerHTML=file.path;
-                target.nextSibling.value=file.path;
+                button.innerHTML=file.path;
+                button.nextSibling.value=file.path;
             }
         });
     });
