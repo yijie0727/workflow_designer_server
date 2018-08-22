@@ -309,6 +309,7 @@ public class Workflow {
      *         exception or success response if file has been stored
      *         successfully
      */
+    /*
     @POST
     @Path("/execute")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -367,7 +368,7 @@ public class Workflow {
             logger.error("No result was generated");
             return Response.status(400).entity("No output").build();
         }
-    }
+    } */
 
     /**
      * Returns text response to indicate job scheduling success
@@ -604,7 +605,7 @@ public class Workflow {
             String module=iterator.next();
             String uploadedFileLocation = UPLOAD_FOLDER + module.split(":")[0];
                 outputFiles[i] = new File(uploadedFileLocation);
-                urls[i]=outputFiles[i].toURL();
+                urls[i]=outputFiles[i].toURI().toURL();
         }
         URLClassLoader child = new URLClassLoader(urls, Workflow.class.getClassLoader());
 

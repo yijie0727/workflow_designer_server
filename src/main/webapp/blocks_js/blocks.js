@@ -1219,7 +1219,7 @@ var BlocksMenu = function(blocks)
             self.show();
 
             self.menu.find('.type').click(function() {
-                blocks.addBlock($(this).attr('rel'), self.position.x, self.position.y);
+                blocks.addBlock($(this).attr('rel'),$(this).attr('module'), self.position.x, self.position.y);
                 self.hide();
             });
 
@@ -1560,12 +1560,12 @@ Block.prototype.getHtml = function()
     html += '<div class="blockicon info"></div>';
 
     if (this.description) {
-        html += '<div class="description">' + self.description + '</div>';
+        html += '<div class="description">' + this.meta.module+self.description + '</div>';
     } else {
         if (this.meta.description) {
-            html += '<div class="description">' + this.meta.description + '</div>';
+            html += '<div class="description">' + this.meta.module+this.meta.description + '</div>';
         } else {
-            html += '<div class="description">No description</div>';
+            html += '<div class="description"> '+this.meta.module+' </div>';
         }
     }
     html += '<div class="blockicon settings"></div></div>';
@@ -2268,11 +2268,11 @@ Blocks.prototype.getPosition = function()
 /**
  * Adds a block
  */
-Blocks.prototype.addBlock = function(name, x, y)
+Blocks.prototype.addBlock = function(name, module, x, y)
 {
     for (var k in this.metas) {
         var type = this.metas[k];
-        if (type.name == name) {
+        if (type.name === name && type.module === module) {
             var block = new Block(this, this.metas[k], this.id);
             block.x = x;
             block.y = y;
@@ -2294,7 +2294,9 @@ Blocks.prototype.register = function(meta)
             var exists =  false;
             for(var j=0;j<this.metas.length;j++){
                 var current = this.metas[j];
-                if(current.name===meta[i].name&&current.family===meta[i].family) {
+                if(current.name===meta[i].name
+                    && current.family===meta[i].family
+                    && current.module===meta[i].module) {
                     exists = true;
                     break;
                 }

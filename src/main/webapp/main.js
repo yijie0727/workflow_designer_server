@@ -487,9 +487,11 @@ function allowDrop(ev) {
 
 function drag(ev,node_id) {
     var rel = getBlockRel(tree,node_id);
+    var module = getBlockModule(tree,node_id);
     for(var meta in blocks.metas){
         if(blocks.metas[meta].name===rel){
             ev.dataTransfer.setData("rel", rel);
+            ev.dataTransfer.setData("module",module);
             return;
         }
     }
@@ -498,8 +500,9 @@ function drag(ev,node_id) {
 
 function drop(ev) {
     var rel = ev.dataTransfer.getData("rel");
+    var module = ev.dataTransfer.getData("module");
     var blocksPosition = $("#blocks").offset();
-    blocks.addBlock(rel, ev.clientX-blocksPosition.left-blocks.center.x, ev.clientY-blocksPosition.top-blocks.center.y);
+    blocks.addBlock(rel, module, ev.clientX-blocksPosition.left-blocks.center.x, ev.clientY-blocksPosition.top-blocks.center.y);
 }
 
 function getBlockRel(tree,node_id){
@@ -510,6 +513,19 @@ function getBlockRel(tree,node_id){
         }
         else{
             var inChildren = getBlockRel(node.childNodes[child],node_id);
+            if(inChildren)return inChildren;
+        }
+    }
+}
+
+function getBlockModule(tree,node_id){
+    var node=tree;
+    for(var child in node.childNodes){
+        if(node.childNodes[child].id==node_id){
+            return node.parent.parent.text+":"+node.parent.text;
+        }
+        else{
+            var inChildren = getBlockModule(node.childNodes[child],node_id);
             if(inChildren)return inChildren;
         }
     }
