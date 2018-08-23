@@ -49,47 +49,14 @@ var contex_menu = {
                                 node.collapseSubtree();
                             }
                         },
-                        {
-                            text : 'Delete Node',
-                            icon: 'animara/images/delete.png',
-                            action : function(node) {
-                                node.removeNode();
-                            }
-                        },
                     ]
                 }
             },
             {
-                text : 'Child Actions',
-                icon: 'animara/images/blue_key.png',
+                text : 'Remove Module',
+                icon: 'animara/images/delete.png',
                 action : function(node) {
-
-                },
-                submenu: {
-                    elements : [
-                        {
-                            text : 'Create Child Node',
-                            icon: 'animara/images/add1.png',
-                            action : function(node) {
-                                node.createChildNode('Created',false,'animara/images/folder.png',null,'context1');
-                            }
-                        },
-                        {
-                            text : 'Create 1000 Child Nodes',
-                            icon: 'animara/images/add1.png',
-                            action : function(node) {
-                                for (var i=0; i<1000; i++)
-                                    node.createChildNode('Created -' + i,false,'animara/images/folder.png',null,'context1');
-                            }
-                        },
-                        {
-                            text : 'Delete Child Nodes',
-                            icon: 'animara/images/delete.png',
-                            action : function(node) {
-                                node.removeChildNodes();
-                            }
-                        }
-                    ]
+                    node.removeModule();
                 }
             }
         ]
@@ -974,6 +941,42 @@ function  reset() {
 
         }
     });
+}
+
+function deleteModule(module){
+
+        // Create an FormData object
+        var formData = new FormData();
+
+        formData.append("jarName",module);
+
+        alertify.notify("Please Wait", 'success', 2);
+
+        $.ajax({
+            type: "POST",
+            enctype: 'multipart/form-data',
+            url: "api/workflow/deleteJar",
+            data: formData,
+            processData: false,
+            contentType: false,
+            cache: false,
+            timeout: 600000,
+            beforeSend: function(request) {
+                request.setRequestHeader("email",  $.cookie("email"));
+                request.setRequestHeader("token",  $.cookie("token"));
+            },
+            success: function (data) {
+                initializeTree();
+                alertify.notify(module+' deleted successfully!', 'success', 5);
+            },
+            error: function (e) {
+                alertify.notify('Error Deleting module', 'error', 3);
+                if(e.status===403){
+                    alertify.notify(e.responseText, 'error', 10);
+                }
+            }
+        });
+
 }
 
 

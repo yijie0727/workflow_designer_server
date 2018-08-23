@@ -225,4 +225,38 @@ public class Modules {
 
         }
     }
+
+    public static void removeModule(long id) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        try {
+            connection = SQLiteDB.getInstance().connect();
+            preparedStatement =
+                    connection.prepareStatement("DELETE from modules  WHERE id=?;" );
+
+            preparedStatement.setLong(1, id);
+
+            preparedStatement.executeUpdate();
+        }
+        catch (SQLException e){
+            logger.error(e);
+        }
+        finally {
+            if(preparedStatement!=null) {
+                try {
+                    preparedStatement.close();
+                } catch (SQLException e1) {
+                    logger.error(e1);
+                }
+            }
+            if(connection!=null){
+                try {
+                    connection.close();
+                } catch (SQLException e1) {
+                    logger.error(e1);
+                }
+            }
+
+        }
+    }
 }

@@ -50,6 +50,8 @@ function createTree(p_div,p_backColor,p_contextMenu) {
 				collapseSubtree: function() { v_tree.collapseSubtree(this); },
 				///// Deleting all child nodes
 				removeChildNodes: function() { v_tree.removeChildNodes(this); },
+                ///// Remove a Module from Library
+				removeModule: function() { v_tree.removeModule(this); },
 				///// Creating a new child node;
 				// p_text: Text displayed;
 				// p_expanded: True or false, indicating wether the node starts expanded or not;
@@ -331,6 +333,18 @@ function createTree(p_div,p_backColor,p_contextMenu) {
 				v_ul.innerHTML = "";
 			}
 		},
+
+        ///// Remove a Module from library
+        // p_node: Reference to the node;
+        removeModule: function(p_node) {
+			var parent=p_node;
+			while(parent.parent.name!=='tree'){
+				parent=parent.parent;
+			}
+
+            alertify.confirm('Caution!','Do you want to delete the module '+parent.text + " from the library? This cannot be undone.",
+				function(){ deleteModule(parent.text)}, function(){});
+        },
 		///// Rendering context menu when mouse right button is pressed over a node. This function should no be called directly
 		// p_event: Event triggered when right clicking;
 		// p_node: Reference to the node;

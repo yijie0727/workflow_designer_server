@@ -11,7 +11,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.*;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -299,6 +298,80 @@ public class Workflow {
                 .entity(result.toString(4)).build();
     }
 
+    /**
+     * Deletes a module from library
+     *
+     * @return error response in case of missing parameters an internal
+     *         exception or success response if file has been stored
+     *         successfully
+     */
+    @POST
+    @Path("/deleteJar")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response deleteJar(
+            @FormDataParam("jarName") String jarName,
+            @Context HttpHeaders httpHeaders)  {
+        // check if all form parameters are provided
+        if (jarName == null)
+            return Response.status(400).entity("Invalid form data").build();
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+        }
+
+
+        Module existingModule;
+
+        try {
+            existingModule=Modules.getModuleByJar(jarName);
+        } catch (SQLException e) {
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
+
+        if(existingModule!=null){
+            boolean owner=existingModule.getAuthor().equals(email);
+            if(!owner ){
+                return Response.status(403).entity("Not authorized to delete this Jar").build();
+            }
+
+        }
+        else{
+            return Response.status(404).entity("Could not find JarFile").build();
+        }
+        //Save file
+            File jarFile=new File(UPLOAD_FOLDER+jarName);
+            if(!jarFile.delete()){
+                return Response.status(500)
+                        .entity("Can not read destination folder on server")
+                        .build();
+            }
+            else{
+                Modules.removeModule(existingModule.getId());
+                return Response.status(200)
+                        .entity("JarFile deleted succesfully!").build();
+            }
+
+
+
+
+
+
+    }
 
 
 
