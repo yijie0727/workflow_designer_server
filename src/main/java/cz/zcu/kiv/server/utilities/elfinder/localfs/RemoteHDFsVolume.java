@@ -44,7 +44,7 @@ public class RemoteHDFsVolume implements FsVolume
             System.setProperty(HADOOP_USER_NAME_KEY,HADOOP_USER_NAME);
             fs= FileSystem.get(URI.create(HDFS_URI), HDFS_CONF);
         } catch (IOException e) {
-            logger.error(e);
+            logger.error("Error loading HDFS",e);
         }
 
     }
