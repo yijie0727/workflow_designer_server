@@ -182,6 +182,7 @@ public class Modules {
     public static List<Module> getModulesForUser(String userEmail ){
         Connection connection = null;
         PreparedStatement preparedStatement = null;
+        List<Module>modules=new ArrayList<>();
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
@@ -190,7 +191,7 @@ public class Modules {
             preparedStatement.setString(1, userEmail);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            List<Module>modules=new ArrayList<>();
+
             while(resultSet.next()){
                 Module module=new Module();
                 module.setJarName(resultSet.getString("jarName"));
@@ -201,11 +202,12 @@ public class Modules {
                 module.setLastUpdate(new Date(resultSet.getLong("lastUpdate")));
                 modules.add(module);
             }
-            return modules.isEmpty()?null:modules;
+            return modules;
+
         }
         catch (SQLException e){
             logger.error(e);
-            return null;
+            return modules;
         }
         finally {
             if(preparedStatement!=null) {
@@ -224,6 +226,7 @@ public class Modules {
             }
 
         }
+
     }
 
     public static void removeModule(long id) {

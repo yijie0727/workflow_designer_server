@@ -1339,6 +1339,12 @@ var Meta = function(meta)
     if (meta.description != undefined) {
         this.description = meta.description;
     }
+    if (meta.owner != undefined) {
+        this.owner = meta.owner;
+    }
+    if (meta.public != undefined) {
+        this.public = meta.public;
+    }
 }
 
 "use strict";
@@ -1559,15 +1565,9 @@ Block.prototype.getHtml = function()
     html += '<div class="blockTitle"><span class="titleText">'+title+'</span><div class="blockicon delete"></div>';
     html += '<div class="blockicon info"></div>';
 
-    if (this.description) {
-        html += '<div class="description">' + this.meta.module+self.description + '</div>';
-    } else {
-        if (this.meta.description) {
-            html += '<div class="description">' + this.meta.module+this.meta.description + '</div>';
-        } else {
-            html += '<div class="description"> '+this.meta.module+' </div>';
-        }
-    }
+    var metadata = this.meta.module + " <br>uploaded by "+this.meta.owner+"<br>"+this.meta.description;
+
+    html += '<div class="description">' + metadata + '</div>';
     html += '<div class="blockicon settings"></div></div>';
 
     
@@ -2272,7 +2272,7 @@ Blocks.prototype.addBlock = function(name, module, x, y)
 {
     for (var k in this.metas) {
         var type = this.metas[k];
-        if (type.name === name && type.module === module) {
+        if (type.name === name && (type.module === module||!module)) {
             var block = new Block(this, this.metas[k], this.id);
             block.x = x;
             block.y = y;

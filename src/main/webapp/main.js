@@ -221,7 +221,11 @@ var contex_menu = {
                     var newBlocks = JSON.parse(data);
                     blocks.register(newBlocks);
                     initializeTree();
-                    alertify.notify(newBlocks.length + ' blocks registered', 'success', 5);
+                    if(newBlocks.length!=0)
+                        alertify.notify(newBlocks.length + ' blocks registered', 'success', 5);
+                    else{
+                        alertify.notify('No blocks registered', 'error', 5);
+                    }
                 },
                 error: function (e) {
                     alertify.notify('Error Registering blocks', 'error', 3);
@@ -398,12 +402,14 @@ function initializeTree() {
             blocks.register(blockDefinitions);
 
             var library=[];
+            var permissions=[];
             for(i=0;i<blockDefinitions.length;i++){
 
                 var jar = blockDefinitions[i].module.split(":")[0];
                 var package = blockDefinitions[i].module.split(":")[1];
                 var family = blockDefinitions[i].family;
                 var name = blockDefinitions[i].name;
+                var public = (blockDefinitions[i].public==true);
 
                 if(!library[jar]){
                     library[jar]=[];
@@ -415,11 +421,17 @@ function initializeTree() {
                     library[jar][package][family]=[];
                 }
                 library[jar][package][family].push(name);
+                permissions[jar]=public;
+
             }
 
             //Loop to create test nodes
             for (var jar in library) {
-                node1 = tree.createNode(jar,false,'animara/images/star.png',null,null,'context1');
+                var node1;
+                if(permissions[jar]!==true)
+                    node1 = tree.createNode(jar,false,'animara/images/key.png',null,null,'context1');
+                else
+                    node1 = tree.createNode(jar,false,'animara/images/group.png',null,null,'context1');
                 for(var package in library[jar]){
                     var node2 = node1.createChildNode(package,false,'animara/images/leaf.png',null,null,'context1');
                     for(var family in library[jar][package]){

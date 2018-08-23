@@ -134,9 +134,10 @@ public class Workflow {
         ClassLoader child;
         JSONArray result=new JSONArray();
         try {
-            for(String module: getModulesList(email)){
-                String jarFileName=module.split(":")[0];
-                String packageName=module.split(":")[1];
+            List<Module> modules=Modules.getModulesForUser(email);
+            for(Module module: modules ){
+                String jarFileName=module.getJarName();
+                String packageName=module.getPackageName();
                 File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);
                 child = initializeJarClassLoader(packageName,jarFile);
 
@@ -146,10 +147,13 @@ public class Workflow {
                     Constructor<?> ctor = classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
                     Method method = classToLoad.getDeclaredMethod("initializeBlocks");
                     method.setAccessible(true);
-                    Object instance = ctor.newInstance(child,module,UPLOAD_FOLDER,WORK_FOLDER);
+                    Object instance = ctor.newInstance(child,module.getJarName()+":"+module.getPackageName(),UPLOAD_FOLDER,WORK_FOLDER);
                     JSONArray blocks = (JSONArray)method.invoke(instance);
                     for(int i=0;i<blocks.length();i++){
-                        result.put(blocks.getJSONObject(i));
+                        JSONObject block = blocks.getJSONObject(i);
+                        block.put("owner",module.getAuthor());
+                        block.put("public",module.isPublicJar());
+                        result.put(block);
                     }
 
                 }
@@ -273,6 +277,10 @@ public class Workflow {
             method.setAccessible(true);
             Object instance = ctor.newInstance(child,moduleName,UPLOAD_FOLDER,WORK_FOLDER);
             result = (JSONArray)method.invoke(instance);
+            if(result==null || result.length()==0){
+                return Response.status(500)
+                        .entity("No blocks found").build();
+            }
 
             if(existingModule==null){
                 existingModule = new Module();
@@ -291,7 +299,7 @@ public class Workflow {
         }
         catch(Exception e){
             logger.error("Initializing blocks failed",e);
-            Response.status(200)
+            return Response.status(200)
                     .entity("Execution failed with " + e.getMessage()).build();
         }
         return Response.status(200)
@@ -759,18 +767,4 @@ public class Workflow {
         }
     }
 
-    public static List<String> getModulesList(String userEmail){
-        List<Module> modules=Modules.getModulesForUser(userEmail);
-        List<String>list=new ArrayList<>();
-        if(modules!=null){
-            for(Module module:modules){
-                String [] packageNames =module.getPackageName().split(",");
-                for(String packageName:packageNames)
-                    list.add(module.getJarName()+":"+packageName);
-            }
-        }
-        return list;
-
-
-    }
 }
