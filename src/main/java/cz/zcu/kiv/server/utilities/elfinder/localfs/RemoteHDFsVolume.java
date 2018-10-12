@@ -23,11 +23,11 @@ import java.util.Map;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.security.UserGroupInformation;
 
 
-public class RemoteHDFsVolume implements FsVolume
-{
-	Log logger = LogFactory.getLog(RemoteHDFsVolume.class);
+public class RemoteHDFsVolume implements FsVolume {
+    Log logger = LogFactory.getLog(RemoteHDFsVolume.class);
 
     public static final String HDFS_URI = Conf.getConf().getHDFsURI();
 
@@ -35,299 +35,266 @@ public class RemoteHDFsVolume implements FsVolume
     public static final String HADOOP_USER_NAME = Conf.getConf().getHDFsUsername();
 
     public static final String HADOOP_USER_NAME_KEY = "HADOOP_USER_NAME";
-    FileSystem fs  ;
+    FileSystem fs;
 
     public RemoteHDFsVolume() {
         try {
-			Configuration hdfsConf = new Configuration();
-			hdfsConf.set("fs.hdfs.impl",
-					org.apache.hadoop.hdfs.DistributedFileSystem.class.getName()
-			);
-			hdfsConf.set("fs.file.impl",
-					org.apache.hadoop.fs.LocalFileSystem.class.getName()
-			);
-            System.setProperty(HADOOP_USER_NAME_KEY,HADOOP_USER_NAME);
-			System.setProperty("hadoop.home.dir", "/");
+            Configuration hdfsConf = new Configuration();
+
+
+            hdfsConf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+            hdfsConf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+            hdfsConf.set("fs.swebhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
+            hdfsConf.set("fs.webhdfs.impl", org.apache.hadoop.hdfs.web.WebHdfsFileSystem.class.getName());
+            hdfsConf.setBoolean("fs.automatic.close", true);
+
+            hdfsConf.set("hadoop.security.authentication", "kerberos");
+            hdfsConf.set("dfs.namenode.kerberos.principal.pattern", "hdfs/quickstart.cloudera@CLOUDERA");
+
+
+            UserGroupInformation.setConfiguration(hdfsConf);
+            UserGroupInformation.getLoginUser().checkTGTAndReloginFromKeytab();
+            System.setProperty(HADOOP_USER_NAME_KEY, HADOOP_USER_NAME);
+            System.setProperty("hadoop.home.dir", "/");
             logger.debug("HDFS_URI: " + HDFS_URI);
-			logger.debug("HADOOP_USER_NAME: " + HADOOP_USER_NAME);
-            fs= FileSystem.get(URI.create(HDFS_URI), hdfsConf);
+            logger.debug("HADOOP_USER_NAME: " + HADOOP_USER_NAME);
+            fs = FileSystem.get(URI.create(HDFS_URI), hdfsConf);
         } catch (IOException e) {
-            logger.error("Error loading HDFS",e);
+            logger.error("Error loading HDFS", e);
         }
 
     }
-	/**
-	 * Used to calculate total file size when walking the tree.
-	 */
-	private static class FileSizeFileVisitor extends SimpleFileVisitor<Path>
-	{
 
-		private long totalSize;
+    /**
+     * Used to calculate total file size when walking the tree.
+     */
+    private static class FileSizeFileVisitor extends SimpleFileVisitor<Path> {
 
-		public long getTotalSize()
-		{
-			return totalSize;
-		}
+        private long totalSize;
 
-		@Override
-		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-				throws IOException
-		{
-			totalSize += file.toFile().length();
-			return FileVisitResult.CONTINUE;
-		}
+        public long getTotalSize() {
+            return totalSize;
+        }
 
-	}
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+            totalSize += file.toFile().length();
+            return FileVisitResult.CONTINUE;
+        }
 
-	String name;
+    }
 
-	File rootDir;
+    String name;
 
-	private File asFile(FsItem fsi)
-	{
-		return ((RemoteHDFsItem) fsi).getFile();
-	}
+    File rootDir;
 
-	@Override
-	public void createFile(FsItem fsi) throws IOException
-	{
-		throw new IOException("Unsupported Operation");
-	}
+    private File asFile(FsItem fsi) {
+        return ((RemoteHDFsItem) fsi).getFile();
+    }
 
-	@Override
-	public void createFolder(FsItem fsi) throws IOException
-	{
+    @Override
+    public void createFile(FsItem fsi) throws IOException {
         throw new IOException("Unsupported Operation");
-	}
+    }
 
-	@Override
-	public void deleteFile(FsItem fsi) throws IOException
-	{
+    @Override
+    public void createFolder(FsItem fsi) throws IOException {
         throw new IOException("Unsupported Operation");
-	}
+    }
 
-	@Override
-	public void deleteFolder(FsItem fsi) throws IOException
-	{
+    @Override
+    public void deleteFile(FsItem fsi) throws IOException {
         throw new IOException("Unsupported Operation");
-	}
+    }
 
-	@Override
-	public boolean exists(FsItem newFile)
-	{
-		return asFile(newFile).exists();
-	}
+    @Override
+    public void deleteFolder(FsItem fsi) throws IOException {
+        throw new IOException("Unsupported Operation");
+    }
 
-	private RemoteHDFsItem fromFile(File file)
-	{
-		if (!file.getAbsolutePath().startsWith(rootDir.getAbsolutePath()))
-		{
-			String message = String.format(
-					"Item (%s) can't be outside the root directory (%s)",
-					file.getAbsolutePath(), rootDir.getAbsolutePath());
-			throw new IllegalArgumentException(message);
-		}
-		return new RemoteHDFsItem(this, file);
-	}
+    @Override
+    public boolean exists(FsItem newFile) {
+        return asFile(newFile).exists();
+    }
 
-	@Override
-	public FsItem fromPath(String relativePath)
-	{
-		return fromFile(new File(rootDir, relativePath));
-	}
+    private RemoteHDFsItem fromFile(File file) {
+        if (!file.getAbsolutePath().startsWith(rootDir.getAbsolutePath())) {
+            String message = String.format(
+                    "Item (%s) can't be outside the root directory (%s)",
+                    file.getAbsolutePath(), rootDir.getAbsolutePath());
+            throw new IllegalArgumentException(message);
+        }
+        return new RemoteHDFsItem(this, file);
+    }
 
-	@Override
-	public String getDimensions(FsItem fsi)
-	{
-		return null;
-	}
+    @Override
+    public FsItem fromPath(String relativePath) {
+        return fromFile(new File(rootDir, relativePath));
+    }
 
-	@Override
-	public long getLastModified(FsItem fsi)
-	{
-		return asFile(fsi).lastModified() / 1000;
-	}
+    @Override
+    public String getDimensions(FsItem fsi) {
+        return null;
+    }
 
-	@Override
-	public String getMimeType(FsItem fsi)
-	{
+    @Override
+    public long getLastModified(FsItem fsi) {
+        return asFile(fsi).lastModified() / 1000;
+    }
 
-		if (isFolder(fsi))
-			return "directory";
-		File file = asFile(fsi);
+    @Override
+    public String getMimeType(FsItem fsi) {
 
-		String ext = FilenameUtils.getExtension(file.getName());
-		if (ext != null && !ext.isEmpty())
-		{
-			String mimeType = MimeTypesUtils.getMimeType(ext);
-			return mimeType == null ? MimeTypesUtils.UNKNOWN_MIME_TYPE
-					: mimeType;
-		}
+        if (isFolder(fsi))
+            return "directory";
+        File file = asFile(fsi);
 
-		return MimeTypesUtils.UNKNOWN_MIME_TYPE;
-	}
+        String ext = FilenameUtils.getExtension(file.getName());
+        if (ext != null && !ext.isEmpty()) {
+            String mimeType = MimeTypesUtils.getMimeType(ext);
+            return mimeType == null ? MimeTypesUtils.UNKNOWN_MIME_TYPE
+                    : mimeType;
+        }
 
-	public String getName()
-	{
-		return name;
-	}
+        return MimeTypesUtils.UNKNOWN_MIME_TYPE;
+    }
 
-	@Override
-	public String getName(FsItem fsi)
-	{
-		return asFile(fsi).getName();
-	}
+    public String getName() {
+        return name;
+    }
 
-	@Override
-	public FsItem getParent(FsItem fsi)
-	{
-		return fromFile(asFile(fsi).getParentFile());
-	}
+    @Override
+    public String getName(FsItem fsi) {
+        return asFile(fsi).getName();
+    }
 
-	@Override
-	public String getPath(FsItem fsi) throws IOException
-	{
-		String fullPath = asFile(fsi).getCanonicalPath();
-		String rootPath = rootDir.getCanonicalPath();
-		String relativePath = fullPath.substring(rootPath.length());
-		return relativePath.replace('\\', '/');
-	}
+    @Override
+    public FsItem getParent(FsItem fsi) {
+        return fromFile(asFile(fsi).getParentFile());
+    }
 
-	@Override
-	public FsItem getRoot()
-	{
-		return fromFile(rootDir);
-	}
+    @Override
+    public String getPath(FsItem fsi) throws IOException {
+        String fullPath = asFile(fsi).getCanonicalPath();
+        String rootPath = rootDir.getCanonicalPath();
+        String relativePath = fullPath.substring(rootPath.length());
+        return relativePath.replace('\\', '/');
+    }
 
-	public File getRootDir()
-	{
-		return rootDir;
-	}
+    @Override
+    public FsItem getRoot() {
+        return fromFile(rootDir);
+    }
 
-	@Override
-	public long getSize(FsItem fsi) throws IOException
-	{
-		if (isFolder(fsi))
-		{
-			return 0;
-		}
-		else
-		{
-			return asFile(fsi).length();
-		}
-	}
+    public File getRootDir() {
+        return rootDir;
+    }
 
-	@Override
-	public String getThumbnailFileName(FsItem fsi)
-	{
-		return null;
-	}
+    @Override
+    public long getSize(FsItem fsi) throws IOException {
+        if (isFolder(fsi)) {
+            return 0;
+        } else {
+            return asFile(fsi).length();
+        }
+    }
 
-	@Override
-	public String getURL(FsItem f)
-	{
-		// We are just happy to not supply a custom URL.
-		return null;
-	}
+    @Override
+    public String getThumbnailFileName(FsItem fsi) {
+        return null;
+    }
 
-	@Override
-	public void filterOptions(FsItem f, Map<String, Object> map)
-	{
-		// Don't do anything
-	}
+    @Override
+    public String getURL(FsItem f) {
+        // We are just happy to not supply a custom URL.
+        return null;
+    }
 
-	@Override
-	public boolean hasChildFolder(FsItem fsi)
-	{
-		return asFile(fsi).isDirectory()
-				&& asFile(fsi).listFiles(new FileFilter()
-				{
+    @Override
+    public void filterOptions(FsItem f, Map<String, Object> map) {
+        // Don't do anything
+    }
 
-					@Override
-					public boolean accept(File arg0)
-					{
-						return arg0.isDirectory();
-					}
-				}).length > 0;
-	}
+    @Override
+    public boolean hasChildFolder(FsItem fsi) {
+        return asFile(fsi).isDirectory()
+                && asFile(fsi).listFiles(new FileFilter() {
 
-	@Override
-	public boolean isFolder(FsItem fsi)
-	{
-		boolean isFile =asFile(fsi).getName().contains(".");
-		return !isFile;
-	}
+            @Override
+            public boolean accept(File arg0) {
+                return arg0.isDirectory();
+            }
+        }).length > 0;
+    }
 
-	@Override
-	public boolean isRoot(FsItem fsi)
-	{
-		return rootDir.equals(asFile(fsi));
-	}
+    @Override
+    public boolean isFolder(FsItem fsi) {
+        boolean isFile = asFile(fsi).getName().contains(".");
+        return !isFile;
+    }
 
-	@Override
-	public FsItem[] listChildren(FsItem fsi)  {
-		List<FsItem> list = new ArrayList<FsItem>();
+    @Override
+    public boolean isRoot(FsItem fsi) {
+        return rootDir.equals(asFile(fsi));
+    }
+
+    @Override
+    public FsItem[] listChildren(FsItem fsi) {
+        List<FsItem> list = new ArrayList<FsItem>();
 
         try {
 
             RemoteIterator<LocatedFileStatus> fileStatusListIterator = fs.listLocatedStatus(
-                    new org.apache.hadoop.fs.Path(HDFS_URI+getRelativePath(asFile(fsi).getAbsolutePath())));
-            while(fileStatusListIterator.hasNext()){
+                    new org.apache.hadoop.fs.Path(HDFS_URI + getRelativePath(asFile(fsi).getAbsolutePath())));
+            while (fileStatusListIterator.hasNext()) {
                 LocatedFileStatus fileStatus = fileStatusListIterator.next();
                 //do stuff with the file like ...
-                String path=fileStatus.getPath().toString();
-                path=path.replaceFirst(HDFS_URI,"/");
-                File file=new File(getRootDir().getAbsolutePath()+path);
+                String path = fileStatus.getPath().toString();
+                path = path.replaceFirst(HDFS_URI, "/");
+                File file = new File(getRootDir().getAbsolutePath() + path);
                 list.add(fromFile(file));
             }
-        }
-        catch (IOException e){
-		    logger.error(e);
+        } catch (IOException e) {
+            logger.error(e);
         }
         return list.toArray(new FsItem[0]);
-	}
+    }
 
-	@Override
-	public InputStream openInputStream(FsItem fsi) throws IOException
-	{
-		return new FileInputStream(asFile(fsi));
-	}
+    @Override
+    public InputStream openInputStream(FsItem fsi) throws IOException {
+        return new FileInputStream(asFile(fsi));
+    }
 
-	@Override
-	public void rename(FsItem src, FsItem dst) throws IOException
-	{
+    @Override
+    public void rename(FsItem src, FsItem dst) throws IOException {
         throw new IOException("Unsupported Operation");
-	}
+    }
 
-	public void setName(String name)
-	{
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setRootDir(File rootDir)
-	{
-		if (!rootDir.exists())
-		{
-			rootDir.mkdirs();
-		}
+    public void setRootDir(File rootDir) {
+        if (!rootDir.exists()) {
+            rootDir.mkdirs();
+        }
 
-		this.rootDir = rootDir;
-	}
+        this.rootDir = rootDir;
+    }
 
-	@Override
-	public String toString()
-	{
-		return "RemoteHDFsVolume [" + rootDir + "]";
-	}
+    @Override
+    public String toString() {
+        return "RemoteHDFsVolume [" + rootDir + "]";
+    }
 
-	@Override
-	public void writeStream(FsItem fsi, InputStream is) throws IOException
-	{
+    @Override
+    public void writeStream(FsItem fsi, InputStream is) throws IOException {
         throw new IOException("Unsupported Operation");
-	}
+    }
 
-	public String getRelativePath(String absolutePath){
-	    String relativePath= absolutePath.substring(absolutePath.indexOf("/HDFS")+5);
-	    return relativePath;
+    public String getRelativePath(String absolutePath) {
+        String relativePath = absolutePath.substring(absolutePath.indexOf("/HDFS") + 5);
+        return relativePath;
     }
 }
