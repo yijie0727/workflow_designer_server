@@ -31,8 +31,6 @@ public class RemoteHDFsVolume implements FsVolume
 
     public static final String HDFS_URI = Conf.getConf().getHDFsURI();
 
-    public static Configuration HDFS_CONF = new Configuration();
-
     //Username of hadoop linux user with permission to write to HDFS
     public static final String HADOOP_USER_NAME = Conf.getConf().getHDFsUsername();
 
@@ -41,8 +39,18 @@ public class RemoteHDFsVolume implements FsVolume
 
     public RemoteHDFsVolume() {
         try {
+			Configuration hdfsConf = new Configuration();
+			hdfsConf.set("fs.hdfs.impl",
+					org.apache.hadoop.hdfs.DistributedFileSystem.class.getName()
+			);
+			hdfsConf.set("fs.file.impl",
+					org.apache.hadoop.fs.LocalFileSystem.class.getName()
+			);
             System.setProperty(HADOOP_USER_NAME_KEY,HADOOP_USER_NAME);
-            fs= FileSystem.get(URI.create(HDFS_URI), HDFS_CONF);
+			System.setProperty("hadoop.home.dir", "/");
+            logger.debug("HDFS_URI: " + HDFS_URI);
+			logger.debug("HADOOP_USER_NAME: " + HADOOP_USER_NAME);
+            fs= FileSystem.get(URI.create(HDFS_URI), hdfsConf);
         } catch (IOException e) {
             logger.error("Error loading HDFS",e);
         }

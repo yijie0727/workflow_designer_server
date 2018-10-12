@@ -12,57 +12,56 @@ public class Conf {
     Log logger = LogFactory.getLog(Conf.class);
     public static Conf conf;
 
-    private Conf(){
+    private Conf() {
         properties = new Properties();
 
         try {
-            if(Conf.class.getResourceAsStream("/config.properties")!=null) {
+            if (Conf.class.getResourceAsStream("/config.properties") != null) {
                 properties.load(Conf.class.getResourceAsStream("/config.properties"));
-            }
-            else
+            } else
                 properties.load(Conf.class.getResourceAsStream("/config.properties.template"));
         } catch (IOException e) {
             logger.error(e);
             logger.fatal("Configuration File could not be loaded");
         }
     }
-    
+
     public static Conf getConf() {
-        if(conf ==null){
-            conf =new Conf();
+        if (conf == null) {
+            conf = new Conf();
         }
         return conf;
     }
 
-    public String getFromEmailAddress(){
+    public String getFromEmailAddress() {
         return properties.getProperty("fromEmailAddress");
     }
 
-    public boolean getAuthEnabled(){
+    public boolean getAuthEnabled() {
         return properties.getProperty("AUTHEnabled").equalsIgnoreCase("true");
     }
 
-    public boolean getHDFSEnabled(){
+    public boolean getHDFSEnabled() {
         return properties.getProperty("HDFSenabled").equalsIgnoreCase("true");
     }
 
-    public String getPort(){
+    public String getPort() {
         return properties.getProperty("mail.smtp.port");
     }
 
-    public String getHost(){
+    public String getHost() {
         return properties.getProperty("mail.smtp.host");
     }
 
-    public String getSocketClass(){
+    public String getSocketClass() {
         return properties.getProperty("mail.smtp.socketFactory.class");
     }
 
-    public String getEmailUsername(){
+    public String getEmailUsername() {
         return properties.getProperty("emailUsername");
     }
 
-    public String getEmailPassword(){
+    public String getEmailPassword() {
         return properties.getProperty("emailPassword");
     }
 
