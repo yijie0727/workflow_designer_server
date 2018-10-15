@@ -2,6 +2,7 @@ FROM alpine/git as clone
 ENV HOME=/app
 WORKDIR /app
 RUN git clone https://github.com/NEUROINFORMATICS-GROUP-FAV-KIV-ZCU/workflow_designer_server
+RUN ["apk", "add", "--update", "bash", "libc6-compat"]
 
 FROM maven:3.5-jdk-8-alpine as build
 WORKDIR /app
