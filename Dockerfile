@@ -1,7 +1,7 @@
 FROM alpine/git as clone
 ENV HOME=/app
 WORKDIR /app
-RUN git clone https://github.com/pintojoey/workflow_designer_server.git 
+RUN git clone https://github.com/NEUROINFORMATICS-GROUP-FAV-KIV-ZCU/workflow_designer_server
 
 FROM maven:3.5-jdk-8-alpine as build
 WORKDIR /app
