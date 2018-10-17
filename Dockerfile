@@ -10,10 +10,13 @@ COPY --from=clone /app/workflow_designer_server /app
 ADD config/* /app/src/main/resources/
 RUN mvn package
 
-FROM openjdk:8-jre
+FROM java:8
 ENV artifact workflow_designer_server-jar-with-dependencies.jar 
 WORKDIR /app
 COPY --from=build /app/target/${artifact} /app/${artifact}
+ADD krb5.conf /etc
+ADD hdfs.keytab /
+RUN apt-get update && apt-get -y install  krb5-user
 EXPOSE 8680
-ENTRYPOINT ["sh", "-c"]
-CMD ["java -jar ${artifact}"]
+#If there were a problem with ticket expiration add kinit also to crontab
+ENTRYPOINT ["sh", "-c", " echo 147.228.63.46  quickstart.cloudera >> /etc/hosts && /usr/bin/kinit -kt /hdfs.keytab hdfs@CLOUDERA && exec java -jar ${artifact}"]
