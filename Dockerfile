@@ -19,4 +19,6 @@ ADD hdfs.keytab /
 RUN apt-get update && apt-get -y install  krb5-user
 EXPOSE 8680
 #If there were a problem with ticket expiration add kinit also to crontab
-ENTRYPOINT ["sh", "-c", " echo 147.228.63.46  quickstart.cloudera >> /etc/hosts && /usr/bin/kinit -kt /hdfs.keytab hdfs@CLOUDERA && exec java -jar ${artifact}"]
+#IP must be an ip of a docker containter running cloudera get by sdocker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' [container-id]
+ENTRYPOINT ["sh", "-c", " echo 172.17.0.3  quickstart.cloudera >> /etc/hosts && /usr/bin/kinit -kt /hdfs.keytab hdfs@CLOUDERA && exec java -jar ${artifact}"]
+
