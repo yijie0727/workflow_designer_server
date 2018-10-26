@@ -22,5 +22,8 @@ mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory
 emailUsername=
 emailPassword=
 
+#properties for the workflow designer - must start with the prefix workflow.designer!
+workflow.designer.vm.args=-Xmx4G
+
 
 

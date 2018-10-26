@@ -14,12 +14,20 @@ public class Conf {
 
     private Conf() {
         properties = new Properties();
-
         try {
             if (Conf.class.getResourceAsStream("/config.properties") != null) {
                 properties.load(Conf.class.getResourceAsStream("/config.properties"));
             } else
                 properties.load(Conf.class.getResourceAsStream("/config.properties.template"));
+
+            //Properties starting with workflow.designer became system properties to be available by
+            // the workflow blocks
+            for (String name : properties.stringPropertyNames()) {
+                if(name.startsWith("workflow.designer")) {
+                    String value = properties.getProperty(name);
+                    System.setProperty(name, value);
+                }
+            }
         } catch (IOException e) {
             logger.error(e);
             logger.fatal("Configuration File could not be loaded");
