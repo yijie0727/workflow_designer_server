@@ -14,11 +14,11 @@ FROM java:8
 ENV artifact workflow_designer_server-jar-with-dependencies.jar 
 WORKDIR /app
 COPY --from=build /app/target/${artifact} /app/${artifact}
+#Next two lines are specific for integration with cloudera. If not required remove these next two lines and modify entrypoint
 ADD krb5.conf /etc
 ADD hdfs.keytab /
 RUN apt-get update && apt-get -y install  krb5-user
 EXPOSE 8680
-#If there were a problem with ticket expiration add kinit also to crontab
-#IP must be an ip of a docker containter running cloudera get by sdocker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' [container-id]
+#IP must be an ip of a docker containter running cloudera get by docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' [container-id]
 ENTRYPOINT ["sh", "-c", " echo 172.17.0.2  quickstart.cloudera >> /etc/hosts && /usr/bin/kinit -kt /hdfs.keytab hdfs@CLOUDERA && exec java -Xmx1G -jar ${artifact}"]
 
