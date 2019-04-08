@@ -254,19 +254,19 @@ public class Workflow {
             }
 
         }
+
+        existingModule.setPackageName(packageName);
+
         //Save file
         try {
             File jarFile=getSingleJarFile(formData);
             child = initializeJarClassLoader(packageName,jarFile);
-
         } catch (IOException e) {
             logger.error("Cannot read folder on server",e);
             return Response.status(500)
                     .entity("Can not read destination folder on server")
                     .build();
         }
-
-
 
         JSONArray result=new JSONArray();
 

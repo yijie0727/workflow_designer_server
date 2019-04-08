@@ -135,23 +135,21 @@ public class Modules {
         }
     }
 
-
-
     public static Module updateModule(Module module){
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("UPDATE modules SET publicJar=?,author=?,lastUpdate=?  WHERE id=?;" );
+                    connection.prepareStatement("UPDATE modules SET publicJar=?,author=?,lastUpdate=?,packageName=?  WHERE id=?;" );
 
             preparedStatement.setBoolean(1, module.isPublicJar());
             preparedStatement.setString(2, module.getAuthor());
             Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
             module.setLastUpdate(currentTimestamp);
             preparedStatement.setTimestamp(3,currentTimestamp);
-            preparedStatement.setLong(4, module.getId());
-
+            preparedStatement.setString(4, module.getPackageName());
+            preparedStatement.setLong(5, module.getId());
 
             preparedStatement.executeUpdate();
             return module;
