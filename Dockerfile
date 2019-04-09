@@ -10,15 +10,17 @@ COPY --from=clone /app/workflow_designer_server /app
 ADD config/* /app/src/main/resources/
 RUN mvn package
 
-FROM java:8
+FROM pwittchen/alpine-java8
 ENV artifact workflow_designer_server-jar-with-dependencies.jar 
 WORKDIR /app
 COPY --from=build /app/target/${artifact} /app/${artifact}
-#Next two lines are specific for integration with cloudera. If not required remove these next two lines and modify entrypoint
 ADD krb5.conf /etc
 ADD hdfs.keytab /
-RUN apt-get update && apt-get -y install  krb5-user
+RUN apk add --update krb5 apk-cron
+ADD crontab /etc/cron.d/kerberos-cron
+RUN chmod 0644 /etc/cron.d/kerberos-cron
+RUN crontab /etc/cron.d/kerberos-cron
+RUN touch /var/log/cron.log
 EXPOSE 8680
-#IP must be an ip of a docker containter running cloudera get by docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' [container-id]
-ENTRYPOINT ["sh", "-c", " echo 172.17.0.2  quickstart.cloudera >> /etc/hosts && /usr/bin/kinit -kt /hdfs.keytab hdfs@CLOUDERA && exec java -Xmx1G -jar ${artifact}"]
-
+#IP must be an ip of a docker containter running cloudera get by sdocker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' [container-id]
+ENTRYPOINT ["sh", "-c", "echo 172.17.0.3  quickstart.cloudera >> /etc/hosts && /usr/bin/kinit -kt /hdfs.keytab hdfs@CLOUDERA && exec java -Xmx1G -jar ${artifact}"]
