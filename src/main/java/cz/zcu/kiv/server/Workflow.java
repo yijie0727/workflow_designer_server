@@ -253,9 +253,8 @@ public class Workflow {
                 return Response.status(403).entity("An existing Public Jar cannot be made private").build();
             }
 
+            existingModule.setPackageName(packageName);
         }
-
-        existingModule.setPackageName(packageName);
 
         //Save file
         try {
