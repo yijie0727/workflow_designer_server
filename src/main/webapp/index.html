@@ -77,6 +77,16 @@
                     </ul>
                 </li>
                 <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">Settings
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <input type="checkbox" class="form-check-input" style="margin-left: 20px" id="logLevel" onclick="saveDebugLogEnabled()">
+                            <label class="form-check-label" for="logLevel">Debug logs</label>
+                        </li>
+                    </ul>
+                </li>
+                <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">Scheduler
                         <span class="caret"></span></a>
                     <ul class="dropdown-menu">
@@ -330,7 +340,7 @@
                     </div>
                     <div class="modal-body" style="overflow:auto">
 
-                        <div class="stdout">
+                        <div class="stdout" >
                         </div>
                         <div style="color:red" class="stderr">
 
@@ -394,8 +404,33 @@
     <div id="modals"></div>
 
         <script>
+            var cookieName = "wf-designer-debugLogEnabled";
 
+            function saveDebugLogEnabled() {
+                var value = $( "#logLevel" ).prop("checked");
+                $.cookie(cookieName, value);
 
+                if(!value)
+                    $( ".stdout" ).hide();
+                else
+                    $( ".stdout" ).show();
+            }
+
+            function loadDebugLogEnabled() {
+                var value = $.cookie(cookieName);
+                
+                if(value == null)
+                    return false;
+
+                return value === 'true';
+            }
+            
+            $(document).ready(function () {
+                var checked = loadDebugLogEnabled();
+                $( "#logLevel" ).prop("checked", checked);
+                if(!checked)
+                    $( ".stdout" ).hide();
+            })
         </script>
     </body>
 </html>
