@@ -662,11 +662,15 @@ function populateOutputs(data){
                                 '<a href="graph.html?graph='+outputObj.value.filename+'" target="_blank"><button class="btn btn-success btn-sm" >Open</button></a>';
                         }
                     }
-                    if(data[x].stdout || data[x].stderr){
+
+                    var showDebug = $( "#logLevel" ).prop("checked");
+
+                    if((data[x].stdout && showDebug) || data[x].stderr){
                         if(data[x].error)block.div[0].setAttribute("class","block block_error");
                         var modal = document.getElementById("logModal");
                         var div = document.createElement('span');
                         div.innerHTML=modal.innerHTML;
+
                         div.getElementsByClassName("stdout")[0].innerHTML="<h5 class=\"modal-title\">Output Stream:</h5>"+data[x].stdout.replace(new RegExp('\r?\n','g'), '<br />');
                         div.getElementsByClassName("stderr")[0].innerHTML="<h5 class=\"modal-title\">Error Stream:</h5>"+data[x].stderr.replace(new RegExp('\r?\n','g'), '<br />');
                         div.getElementsByClassName("modal fade")[0].setAttribute("id", "logModal"+block.id);
