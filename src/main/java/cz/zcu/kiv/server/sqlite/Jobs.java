@@ -11,6 +11,8 @@ import org.json.JSONObject;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Jobs {
    public static Log logger= LogFactory.getLog(Jobs.class);
@@ -294,6 +296,7 @@ public class Jobs {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         String query = "FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING'";
+        List<File> filesToDelete = new LinkedList<>();
 
         try {
             connection = SQLiteDB.getInstance().connect();
@@ -306,7 +309,7 @@ public class Jobs {
             while (resultSet.next()) {
                 String file = resultSet.getString("workflowOutputFile");
                 if(file != null) {
-                    FileUtils.deleteQuietly(new File(file));
+                    filesToDelete.add(new File(file));
                 }
             }
 
@@ -347,6 +350,9 @@ public class Jobs {
                 }
             }
 
+        }
+        for(File item : filesToDelete) {
+            FileUtils.deleteQuietly(item);
         }
     }
 }
