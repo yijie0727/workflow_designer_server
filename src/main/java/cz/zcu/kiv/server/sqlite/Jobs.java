@@ -3,10 +3,12 @@ package cz.zcu.kiv.server.sqlite;
 
 import cz.zcu.kiv.server.scheduler.Job;
 import cz.zcu.kiv.server.scheduler.Status;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -291,10 +293,38 @@ public class Jobs {
     public static void clearJobs(String email) throws SQLException {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
+        String query = "FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING'";
+
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("DELETE FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING';" );
+                    connection.prepareStatement("SELECT workflowOutputFile " + query);
+
+            preparedStatement.setString(1, email);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String file = resultSet.getString("workflowOutputFile");
+                if(file != null) {
+                    FileUtils.deleteQuietly(new File(file));
+                }
+            }
+
+        } finally {
+            if(preparedStatement != null) {
+                try {
+                    preparedStatement.close();
+                } catch (Exception e) {
+                    logger.error(e);
+                }
+
+            }
+        }
+
+        try {
+            connection = SQLiteDB.getInstance().connect();
+            preparedStatement =
+                    connection.prepareStatement("DELETE " + query);
 
             preparedStatement.setString(1, email);
 
