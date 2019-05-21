@@ -7,6 +7,7 @@ import cz.zcu.kiv.server.sqlite.Model.Module;
 import cz.zcu.kiv.server.sqlite.Modules;
 import cz.zcu.kiv.server.sqlite.Users;
 import cz.zcu.kiv.server.utilities.config.Conf;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.*;
@@ -63,6 +64,8 @@ public class Workflow {
     public static final String WORK_FOLDER = DATA_FOLDER+"/workFiles/";
     public static final String TEMP_FOLDER = DATA_FOLDER+"/tmp/";
     public static final String WORKING_DIRECTORY = DATA_FOLDER+"/workingDirectory/";
+    //public static final String TEMPLATES_FOLDER = DATA_FOLDER+"/storedTemplates/";
+
 
     public Workflow() {
     }
@@ -113,6 +116,7 @@ public class Workflow {
                     .build();
         }
 
+        //identity verification
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
         if(Conf.getConf().getAuthEnabled()){
@@ -138,8 +142,8 @@ public class Workflow {
             for(Module module: modules ){
                 String jarFileName=module.getJarName();
                 String packageName=module.getPackageName();
-                File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);
-                child = initializeJarClassLoader(packageName,jarFile);
+                File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);//TODO 1: 将这个用户email下所属的所有jar文件（samples）全部导入到新的path, 这些jar包是什么时候导入到这个路径的？
+                child = initializeJarClassLoader(packageName,jarFile);//initial classLoader and addJarToClassLoader
 
 
                 try{
@@ -153,7 +157,7 @@ public class Workflow {
                         JSONObject block = blocks.getJSONObject(i);
                         block.put("owner",module.getAuthor());
                         block.put("public",module.isPublicJar());
-                        result.put(block);
+                        result.put(block);//TODO 2： result里的放上初始化后的block有什么用？ 而且这个初始化后的block 还是通过类加载器加载了designer那边的workflow 调用了它的方法才得出的
                     }
 
                 }
@@ -173,7 +177,7 @@ public class Workflow {
         }
 
         return Response.status(200)
-                .entity(result.toString(4)).build();
+                .entity(result.toString(4)).build(); //return the JSONArray initialized in method initializeBlocks from Designer's Workflow
     }
 
     public static void createWorkDirectories() throws SecurityException{
@@ -182,6 +186,7 @@ public class Workflow {
         createFolderIfNotExists(WORK_FOLDER);
         createFolderIfNotExists(TEMP_FOLDER);
         createFolderIfNotExists(WORKING_DIRECTORY);
+        //createFolderIfNotExists(TEMPLATES_FOLDER);
     }
 
 
@@ -197,7 +202,7 @@ public class Workflow {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
     public Response uploadJar(
-            final FormDataMultiPart formData,
+            final FormDataMultiPart formData,   //TODO 3: 这个FormDataMultiPart里面是什么东西？ 什么的data?
             @FormDataParam("package") String packageName,
             @FormDataParam("public") Boolean publicModule,
             @Context HttpHeaders httpHeaders)  {
@@ -229,7 +234,7 @@ public class Workflow {
         String jarName;
         String moduleName;
         Module existingModule;
-        jarName=getSingleJarFileName(formData);
+        jarName=getSingleJarFileName(formData); //TODO 4： 这个getSingleJarFileName（formData）是用来做什么的
         moduleName=jarName+":"+packageName;
         try {
             existingModule=Modules.getModuleByJar(jarName);
@@ -488,7 +493,7 @@ public class Workflow {
         Job job=new Job(workflowObject);
         job.setOwner(email);
         try {
-            Manager.getInstance().addJob(job);
+            Manager.getInstance().addJob(job); //TODO 4: why we need manager ? Threaddd?  Then how can we know job scheduling success since it can end before threads end?
         } catch (SQLException e) {
             logger.error(e);
             return Response.status(500).entity("Database Error").build();
@@ -591,6 +596,84 @@ public class Workflow {
         return Response.status(200)
                 .entity(job.toString(4)).build();
     }
+
+    /**
+     * called in main.js
+     * @return all Templates JSONObjects
+     */
+    @GET
+    @Path("/templates")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response scheduleTemplates(@Context HttpHeaders httpHeaders)  {
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+        }
+
+        String pathStr = "src/main/java/cz/zcu/kiv/server/templates";
+        File templatesFiles = new File(pathStr);
+        String[] tempNames= templatesFiles.list();
+        JSONArray templates = new JSONArray();
+
+        for(String file: tempNames){
+            String[] temps = file.split("/");
+            String fileName = temps[temps.length - 1];
+            fileName = fileName.split("\\.")[0];
+            JSONObject tempObj = new JSONObject();
+            tempObj.put("name", fileName);
+            templates.put(tempObj);
+        }
+
+        return Response.status(200)
+                .entity( templates.toString(4) ).build();
+    }
+
+    /**
+     * called in main.js
+     * @return Particular Template JSONObject
+     */
+    @GET
+    @Path("/getTemplate/{templateID}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getTemplateById(@PathParam("templateID")int templateID)  {
+
+        JSONObject template = null;
+
+        String pathStr1 = "src/main/java/cz/zcu/kiv/server/templates";
+        File templatesFiles = new File(pathStr1);
+        String[] tempNames= templatesFiles.list();
+
+        String fileName = tempNames[templateID-1];
+        String[] temps = fileName.split("/");
+        fileName = temps[temps.length - 1];
+
+        String pathStr2 = "src/main/java/cz/zcu/kiv/server/templates/"+ fileName;
+        File jsonFile = new File(pathStr2);
+        try{
+            String jsonString = FileUtils.readFileToString(jsonFile, "UTF-8");
+            template = new JSONObject(jsonString);
+
+        }catch (IOException e){
+            logger.error(e);
+            return Response.status(500).entity("readFileToString IO Error").build();
+        }
+
+        return Response.status(200)
+                .entity(template.toString(4)).build();
+    }
+
 
     private File getSingleJarFile(FormDataMultiPart multiPart) throws IOException {
         Map<String, List<FormDataBodyPart>> map = multiPart.getFields();
@@ -756,7 +839,7 @@ public class Workflow {
                 continue;
             }
             String className = je.getName().substring(0,je.getName().length()-6);
-            className = className.replace('/', '.');
+            className = className.replace('/', '.');//eg: cz.zcu.kiv.commons.IOUtils.FileToString
             try {
                 child.loadClass(className);
             }

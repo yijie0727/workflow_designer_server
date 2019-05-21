@@ -344,6 +344,11 @@ var contex_menu = {
         });
 
 
+        $('#workFlowTemplatesModal').on('shown.bs.modal', function (e) {
+            showTemplatesTable();
+        })
+
+
 
         if($.cookie("email")){
             $("#myAccount").show();
@@ -536,6 +541,35 @@ function updateJobsTable(){
     });
 }
 
+function showTemplatesTable() {
+
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/templates",
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (templatesNames) {
+            templatesNames=JSON.parse(templatesNames);
+            var table=$("#templatesTable");
+            $("#templatesTable tbody").empty();
+            var index=1;
+            for(var i=0;i<templatesNames.length;i++){
+                var template=templatesNames[i];
+                var row="<tr><td>"+index+"</td><td>"+template.name+"</td><td><button onclick='getTemplate("+index+")' class='btn btn-default'>Select</button></td></tr>"
+                table.append(row);
+                index++;
+            }
+        }
+    });
+}
+
+
 function track(jobId){
     tracking=jobId;
     var intervalID=setInterval(function(){getWorkflowStatus(tracking,intervalID)},1000);
@@ -574,6 +608,30 @@ function getWorkflow(jobId){
         }
     });
 }
+
+function getTemplate(templateID){
+    if(templateID===0) return;
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/getTemplate/"+templateID,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (template) {
+            template=JSON.parse(template);
+            blocks.clear();
+            blocks.load(template);
+
+            $('#workFlowTemplatesModal').modal('toggle');
+        }
+    });
+}
+
 
 function clearSchedule(jobId){
     if(jobId===0) return;
