@@ -93,12 +93,15 @@ public class Job {
         this.owner = owner;
     }
 
+    //will be used by JobThread.java run function
     public void execute() throws SQLException {
         setStatus(Status.RUNNING);
         Jobs.updateJob(this);
         Set<String> modules=new HashSet<>();
         try {
 
+            // get all the blocks in JSONArray in the workflow JSONObject
+            // workflow is an input JSONObject
             JSONArray blocksArray = workflow.getJSONArray("blocks");
             for(int i=0;i<blocksArray.length();i++){
                 modules.add(blocksArray.getJSONObject(i).getString("module"));
@@ -112,11 +115,12 @@ public class Job {
             return;
         }
 
+        //load all the classes that the modules in the JSONObject represent
         ClassLoader child;
         Map<Class,String> moduleSource = new HashMap<>();
 
         try {
-            child = initializeClassLoader(modules,moduleSource);
+            child = initializeClassLoader(modules,moduleSource);//classloader for the input workflow' s class, and put the value of the modules into moduleSource
         } catch (IOException e) {
             logger.error("Cannot read jar from server",e);
             setStatus(Status.FAILED);
@@ -124,13 +128,14 @@ public class Job {
             return;
         }
 
+        //get the output JSONArray (output file in JSONArray format)
         JSONArray result;
 
         try{
             File workflowOutputFile = File.createTempFile("job_"+getId(),".json",new File(WORKING_DIRECTORY));
-            setWorkflowOutputFile(workflowOutputFile.getAbsolutePath());
+            setWorkflowOutputFile(workflowOutputFile.getAbsolutePath());//set file name
             Jobs.updateJob(this);
-            result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath());
+            result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath());//get the 的output file named by job_jobID.json
             for(int i=0;i<result.length();i++){
                 if(result.getJSONObject(i).getBoolean("error")){
                     logger.error("Executing jar failed");
@@ -159,6 +164,8 @@ public class Job {
 
     }
 
+    //will be used in Manager.java
+    //put id, time, status, output JSONArray into JSONObject
     public JSONObject toJSON(boolean withWorkflow) {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put("id",getId());

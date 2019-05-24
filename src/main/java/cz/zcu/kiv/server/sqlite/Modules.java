@@ -12,7 +12,10 @@ import java.util.List;
 public class Modules {
     private static Log logger = LogFactory.getLog(Modules.class);
 
+    //insert module info into SQLite, and set ID of the module
     public static Module addModule(Module module) throws SQLException {
+
+        //insert this module when its jar does not exist in the SQLite
         if(!jarExists(module.getJarName())){
             Connection connection = null;
             PreparedStatement preparedStatement = null;

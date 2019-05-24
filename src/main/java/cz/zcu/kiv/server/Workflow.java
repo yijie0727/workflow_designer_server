@@ -142,7 +142,7 @@ public class Workflow {
             for(Module module: modules ){
                 String jarFileName=module.getJarName();
                 String packageName=module.getPackageName();
-                File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);//TODO 1: 将这个用户email下所属的所有jar文件（samples）全部导入到新的path, 这些jar包是什么时候导入到这个路径的？
+                File jarFile=new File(UPLOAD_FOLDER+File.separator+jarFileName);//All the jar files (samples) belonging to this user's email imported into this path before.
                 child = initializeJarClassLoader(packageName,jarFile);//initial classLoader and addJarToClassLoader
 
 
@@ -157,7 +157,7 @@ public class Workflow {
                         JSONObject block = blocks.getJSONObject(i);
                         block.put("owner",module.getAuthor());
                         block.put("public",module.isPublicJar());
-                        result.put(block);//TODO 2： result里的放上初始化后的block有什么用？ 而且这个初始化后的block 还是通过类加载器加载了designer那边的workflow 调用了它的方法才得出的
+                        result.put(block);//result is all the initialized Blocks info in a JSONArray, classloader load the Designer's workflow and invoke its method
                     }
 
                 }
@@ -202,7 +202,7 @@ public class Workflow {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
     public Response uploadJar(
-            final FormDataMultiPart formData,   //TODO 3: 这个FormDataMultiPart里面是什么东西？ 什么的data?
+            final FormDataMultiPart formData,   // FormDataMultiPart
             @FormDataParam("package") String packageName,
             @FormDataParam("public") Boolean publicModule,
             @Context HttpHeaders httpHeaders)  {
@@ -234,7 +234,7 @@ public class Workflow {
         String jarName;
         String moduleName;
         Module existingModule;
-        jarName=getSingleJarFileName(formData); //TODO 4： 这个getSingleJarFileName（formData）是用来做什么的
+        jarName=getSingleJarFileName(formData); //  getSingleJarFileName（formData） get jar
         moduleName=jarName+":"+packageName;
         try {
             existingModule=Modules.getModuleByJar(jarName);
@@ -493,7 +493,7 @@ public class Workflow {
         Job job=new Job(workflowObject);
         job.setOwner(email);
         try {
-            Manager.getInstance().addJob(job); //TODO 4: why we need manager ? Threaddd?  Then how can we know job scheduling success since it can end before threads end?
+            Manager.getInstance().addJob(job); //Manager schedule job successfully in its own thread(max threads = 2)
         } catch (SQLException e) {
             logger.error(e);
             return Response.status(500).entity("Database Error").build();

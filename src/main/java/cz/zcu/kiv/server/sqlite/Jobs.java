@@ -14,6 +14,7 @@ public class Jobs {
    public static Log logger= LogFactory.getLog(Jobs.class);
 
 
+   //put the Job job into the SQLite and get the auto-generated key, set the job id and return job
     public static Job addJob(Job job) throws SQLException {
 
         Connection connection = null;
@@ -65,6 +66,7 @@ public class Jobs {
         }
     }
 
+    //set all the job attributes(id, owner, ……， workflow, )under the specific owner and return the job lists
     public static ArrayList<Job> getJobsByEmail(String email) throws SQLException{
         Connection connection = null;
         PreparedStatement preparedStatement = null;
