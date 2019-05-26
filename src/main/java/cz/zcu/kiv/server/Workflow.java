@@ -450,6 +450,102 @@ public class Workflow {
         }
     } */
 
+
+    /**
+     * Save the Template that the user creates in his/her own data base: table templates
+     *
+     */
+    @POST
+    @Path("/template")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response saveTemplate(
+            @FormDataParam("template") String template,
+            @FormDataParam("templateName") String templateName,
+            @Context HttpHeaders httpHeaders)  {
+
+        if (template == null)
+            return Response.status(400).entity("Invalid form data").build();
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+        }
+
+        //JSONObject templateObject = new JSONObject(template);
+        Manager.getInstance().addTemplateToMyFiles(template, templateName);
+
+
+        return Response.status(200)
+                .entity( templateName+" saved to MyTemplates" ).build();
+    }
+
+    /**
+     * show WorkFlow Table
+     */
+    @GET
+    @Path("/workFlowsTable")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response showWorkFlowsTable(@Context HttpHeaders httpHeaders)  {
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+        }
+
+        JSONArray workFlows;
+
+        workFlows = Manager.getInstance().showWorkFlowsTable();
+
+        return Response.status(200)
+                .entity(workFlows.toString(4)).build();
+    }
+
+    /**
+     * called in main.js
+     * @return Particular workflow(nodata) JSONObject
+     */
+    @GET
+    @Path("/templates/{workFlowIndex}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getWorkFlowNoData(@PathParam("workFlowIndex")int workFlowIndex)  {
+        logger.info("@PathParam workFlowIndex = "+ workFlowIndex);
+
+        JSONObject workFlow = null;
+
+        workFlow = Manager.getInstance().getWorkFlow(workFlowIndex);
+
+        return Response.status(200)
+                .entity(workFlow.toString()).build();
+
+    }
+
+
+
+
     /**
      * Returns text response to indicate job scheduling success
      *

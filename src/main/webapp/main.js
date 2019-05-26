@@ -318,6 +318,43 @@ var contex_menu = {
             });
         });
 
+
+        $("#inputNameSubmit").click(function() {
+
+            // Create an FormData object
+            var formData = new FormData(document.getElementById('inputTemplateNameForm'));
+
+            // If you want to add an extra field for the FormData
+            formData.append("template", JSON.stringify(blocks.export()));
+            formData.append("email", $.cookie("email"));
+
+
+            $.ajax({
+                type: "POST",
+                enctype: 'multipart/form-data',
+                url: "api/workflow/template",
+                data: formData,
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 600000,
+                beforeSend: function(request) {
+                    request.setRequestHeader("email",  $.cookie("email"));
+                    request.setRequestHeader("token",  $.cookie("token"));
+                },
+                success: function (data) {
+                    tracking=data;
+                    alertify.notify('Template '+data+'!', 'success', 3);
+                    track(tracking);
+                },
+                error: function (e) {
+                    alertify.notify(e.responseText, 'error', 3);
+                }
+            });
+        });
+
+
+
     });
 
     $(document).ready(function () {
@@ -343,7 +380,9 @@ var contex_menu = {
             clearInterval(jobUpdater)
         });
 
-
+        $('#openWorkFlowsModal').on('shown.bs.modal', function (e) {
+            showWorkFlowsTable();
+        });
 
         if($.cookie("email")){
             $("#myAccount").show();
@@ -529,12 +568,42 @@ function updateJobsTable(){
             $("#jobTable tbody").empty();
             for(var i=0;i<data.length;i++){
                 var job=data[i];
-                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")' class='btn btn-default'>Load</button></td></tr>"
+                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")' class='btn btn-default'>Load</button></td></tr>";
                 table.append(row);
             }
         }
     });
 }
+
+function showWorkFlowsTable(){
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/workFlowsTable",
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (data) {
+            data=JSON.parse(data);
+            var table=$("#workFlowsTable");
+            $("#workFlowsTable tbody").empty();
+            for(var i=0;i<data.length;i++){
+                var workflow=data[i];
+                var row="<tr><td>"+workflow.index+"</td><td>"+workflow.time+"</td><td>"+workflow.name+"</td><td><button onclick='getTemplateWorkFlow("+workflow.index+")' class='btn btn-default'>Load</button></td></tr>";
+                table.append(row);
+            }
+        }
+    });
+
+}
+
+
+
+
 
 function track(jobId){
     tracking=jobId;
@@ -574,6 +643,37 @@ function getWorkflow(jobId){
         }
     });
 }
+
+
+
+
+function getTemplateWorkFlow(workFlowIndex){
+    if(workFlowIndex===0) return;
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/templates/"+workFlowIndex,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (data) {
+            data=JSON.parse(data);
+            blocks.clear();
+            blocks.load(data);
+
+            $('#openWorkFlowsModal').modal('toggle');
+        }
+    });
+
+}
+
+
+
+
 
 function clearSchedule(jobId){
     if(jobId===0) return;
