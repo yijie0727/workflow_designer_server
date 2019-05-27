@@ -485,7 +485,7 @@ public class Workflow {
         }
 
         //JSONObject templateObject = new JSONObject(template);
-        Manager.getInstance().addTemplateToMyFiles(template, templateName);
+        Manager.getInstance().addTemplateToMyTemplates(template, templateName);
 
 
         return Response.status(200)
@@ -493,12 +493,12 @@ public class Workflow {
     }
 
     /**
-     * show WorkFlow Table
+     * show Templates Table(no data)
      */
     @GET
-    @Path("/workFlowsTable")
+    @Path("/templatesTable")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response showWorkFlowsTable(@Context HttpHeaders httpHeaders)  {
+    public Response showTemplatesTable(@Context HttpHeaders httpHeaders)  {
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
         if(Conf.getConf().getAuthEnabled()){
@@ -516,30 +516,30 @@ public class Workflow {
             email="guest@guest.com";
         }
 
-        JSONArray workFlows;
+        JSONArray templates;
 
-        workFlows = Manager.getInstance().showWorkFlowsTable();
+        templates = Manager.getInstance().showTemplatesTable();
 
         return Response.status(200)
-                .entity(workFlows.toString(4)).build();
+                .entity(templates.toString(4)).build();
     }
 
     /**
      * called in main.js
-     * @return Particular workflow(nodata) JSONObject
+     * @return Particular template(nodata) JSONObject
      */
     @GET
-    @Path("/templates/{workFlowIndex}")
+    @Path("/templatesTable/{templateIndex}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response getWorkFlowNoData(@PathParam("workFlowIndex")int workFlowIndex)  {
-        logger.info("@PathParam workFlowIndex = "+ workFlowIndex);
+    public Response loadTemplateNoData(@PathParam("templateIndex")int templateIndex)  {
+        logger.info("@PathParam templateIndex = "+ templateIndex);
 
-        JSONObject workFlow = null;
+        JSONObject template= null;
 
-        workFlow = Manager.getInstance().getWorkFlow(workFlowIndex);
+        template = Manager.getInstance().loadTemplate(templateIndex);
 
         return Response.status(200)
-                .entity(workFlow.toString()).build();
+                .entity(template.toString()).build();
 
     }
 
