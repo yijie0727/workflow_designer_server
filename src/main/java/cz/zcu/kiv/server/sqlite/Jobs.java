@@ -18,7 +18,7 @@ public class Jobs {
    public static Log logger= LogFactory.getLog(Jobs.class);
 
 
-    public static Job addJob(Job job) throws SQLException {
+    public synchronized static Job addJob(Job job) throws SQLException {
 
         Connection connection = null;
         PreparedStatement preparedStatement = null;
@@ -69,7 +69,7 @@ public class Jobs {
         }
     }
 
-    public static ArrayList<Job> getJobsByEmail(String email) throws SQLException{
+    public synchronized static ArrayList<Job> getJobsByEmail(String email) throws SQLException{
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -117,7 +117,7 @@ public class Jobs {
         }
     }
 
-    public static ArrayList<Job> getJobsByStatus(String status) throws SQLException{
+    public synchronized static ArrayList<Job> getJobsByStatus(String status) throws SQLException{
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -165,7 +165,7 @@ public class Jobs {
         }
     }
 
-    public static Job getJob(Long id) throws SQLException{
+    public synchronized static Job getJob(Long id) throws SQLException{
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -213,7 +213,7 @@ public class Jobs {
         }
     }
 
-    public static Job updateJob(Job job) throws SQLException {
+    public synchronized static Job updateJob(Job job) throws SQLException {
 
         Connection connection = null;
         PreparedStatement preparedStatement = null;
@@ -263,7 +263,7 @@ public class Jobs {
     }
 
 
-    public static void terminateRunningJobs() throws SQLException {
+    public synchronized static void terminateRunningJobs() throws SQLException {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
@@ -292,7 +292,7 @@ public class Jobs {
         }
     }
 
-    public static void clearJobs(String email) throws SQLException {
+    public synchronized static void clearJobs(String email) throws SQLException {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         String query = "FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING'";
@@ -351,8 +351,10 @@ public class Jobs {
             }
 
         }
+        logger.debug("Files to delete: " + filesToDelete.size());
         for(File item : filesToDelete) {
-            FileUtils.deleteQuietly(item);
+            boolean res = FileUtils.deleteQuietly(item);
+            logger.debug("Deleted file: " + item + ", result: " + res);
         }
     }
 }
