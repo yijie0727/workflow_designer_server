@@ -97,9 +97,11 @@
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">Templates
                         <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="#" id="saveTemplate" data-toggle="modal" data-target="#inputTemplateNameModal">Save</a></li>
-                        <li><a href="#" id="openWorkFlows" data-toggle="modal" data-target="#openWorkFlowsModal">Open WorkFlows (no data)</a></li>
-                        <li><a href="#" id="openTemplates" data-toggle="modal" data-target="#elfinderModal">Open Templates (with data)</a></li>
+                        <li><a href="#" id="saveTemplate" data-toggle="modal" data-target="#inputTemplateNameModal">Save Template without data</a></li>
+                        <li><a href="#" id="openTemplates" data-toggle="modal" data-target="#openTemplatesModal">Open Templates (no data)</a></li>
+
+                        <li><a href="#" id="saveWorkFlow" data-toggle="modal" data-target="#inputWorkFlowNameModal">Save Workflow with results</a></li>
+                        <li><a href="#" id="openW" data-toggle="modal" data-target="#elfinderModal">Open WorkFlows (with results)</a></li>
                         <li></li>
                     </ul>
                 </li>
@@ -275,19 +277,19 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Save the Template</h4>
+                    <h4 class="modal-title">Save the Template before inputs are set</h4>
                 </div>
                 <div class="modal-body">
                     <form method="POST" enctype="multipart/form-data" id="inputTemplateNameForm">
                         <div class="form-group">
-                            <label for="templateName">Name:</label>
+                            <label for="templateName">Template Name:</label>
                             <input type="text" class="form-control" id="templateName" value="" name="templateName"/>
                         </div>
 
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="inputNameSubmit" data-dismiss="modal">Submit</button>
+                    <button type="button" class="btn btn-primary" id="inputTemplateNameSubmit" data-dismiss="modal">Submit</button>
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -295,6 +297,34 @@
         </div>
     </div>
 
+
+    <!--Input WorkFlow Name Modal-->
+    <div class="modal fade" id="inputWorkFlowNameModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Save the WorkFlow after Schedule is finished</h4>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" enctype="multipart/form-data" id="inputWorkFlowNameForm">
+                        <div class="form-group">
+                            <label for="workFlowName">WorkFlow Name:</label>
+                            <input type="text" class="form-control" id="workFlowName" value="" name="workFlowName"/>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="inputWorkFlowNameSubmit" data-dismiss="modal">Submit</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <!-- Elfinder Modal -->
     <div class="modal fade" id="elfinderModal" role="dialog">
@@ -367,19 +397,19 @@
     </div>
 
 
-    <!--open WorkFlows Modal-->
-    <div class="modal fade" role="dialog" id="openWorkFlowsModal" >
+    <!--open Template Table Modal-->
+    <div class="modal fade" role="dialog" id="openTemplatesModal">
         <div class="modal-dialog" style="max-width: 100% !important; padding: 5px;">
 
             <!--Modal content-->
             <div class="modal-content modal-fullscreen">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">x</button>
-                    <h4 class="modal-title">open WorkFlows with no data</h4>
+                    <h4 class="modal-title">Open Templates Table (with no data)</h4>
                 </div>
 
                 <div class="modal-body" style="overflow:auto;min-width: 400px;" align="center">
-                    <table id="workFlowsTable" class="table-bordered" style="text-align: center" cellpadding=10>
+                    <table id="templatesTable" class="table-bordered" style="text-align: center" cellpadding=10>
                         <thead>
                         <tr>
                             <th>No.</th>

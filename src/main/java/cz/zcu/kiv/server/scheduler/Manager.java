@@ -114,11 +114,19 @@ public class Manager {
 
 
 
+
+
+
+
+
+
+
+
     /**
-     * add Template to MyFiles
+     * add Template to MyTemplates Folder
      *
      */
-    public void addTemplateToMyFiles(String template, String templateName){
+    public void addTemplateToMyTemplates(String template, String templateName){
         createFolderIfNotExists(WORK_FOLDER+"MyTemplates");
         Date date = new Date();
         String currentTime = date.toString();
@@ -135,10 +143,10 @@ public class Manager {
     }
 
     /**
-     * return WorkFlows id, name, createdTime in JSONArray
+     * return Templates Table contains index, name, createdTime in JSONArray
      *
      */
-    public JSONArray showWorkFlowsTable(){
+    public JSONArray showTemplatesTable(){
 
 
         String pathStr = WORK_FOLDER+"MyTemplates";
@@ -162,7 +170,7 @@ public class Manager {
 
             String createdTime = fileName.substring(0, i);      //Sun May 26 20:35:48 CST 2019
             String showedFileName = fileName.substring(i+1, j); //Add
-            String uniqueID = fileName.substring(j+1); //_12345
+            String uniqueID = fileName.substring(j+1);          //_12345
 
 
             JSONObject tempObj = new JSONObject();
@@ -180,12 +188,12 @@ public class Manager {
 
 
     /**
-     * return particular WorkFlow in JSONObject
+     * return particular Template in JSONObject
      *
      */
-    public JSONObject getWorkFlow(int workFlowIndex){
+    public JSONObject loadTemplate(int templateIndex){
 
-        logger.info("workFlowIndex = "+workFlowIndex);
+        logger.info("templateIndex = "+templateIndex);
 
         String pathStr1 = WORK_FOLDER+"MyTemplates";
         logger.info("pathStr1  = "+pathStr1);
@@ -197,20 +205,21 @@ public class Manager {
         if(tempNames == null)
             return template;
 
-        int index = workFlowIndex - 1;
+        //avoid ".DS_Store" in Folder
+        int index = templateIndex - 1;
         int dot = 0;
         for(int i = 0; i<tempNames.length; i++){
             if(tempNames[i].startsWith(".DS")){
-                dot = i; //avoid ".DS_Store"
+                dot = i;
                 break;
             }
         }
 
         String fileName;
         if(index >= dot){
-            fileName = tempNames[workFlowIndex];
+            fileName = tempNames[templateIndex];
         } else {
-            fileName = tempNames[workFlowIndex-1];
+            fileName = tempNames[templateIndex-1];
         }
 
         String[] temps = fileName.split("/");

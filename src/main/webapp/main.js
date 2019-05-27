@@ -319,7 +319,7 @@ var contex_menu = {
         });
 
 
-        $("#inputNameSubmit").click(function() {
+        $("#inputTemplateNameSubmit").click(function() {
 
             // Create an FormData object
             var formData = new FormData(document.getElementById('inputTemplateNameForm'));
@@ -380,8 +380,8 @@ var contex_menu = {
             clearInterval(jobUpdater)
         });
 
-        $('#openWorkFlowsModal').on('shown.bs.modal', function (e) {
-            showWorkFlowsTable();
+        $('#openTemplatesModal').on('shown.bs.modal', function (e) {
+            showTemplatesTable();
         });
 
         if($.cookie("email")){
@@ -575,10 +575,10 @@ function updateJobsTable(){
     });
 }
 
-function showWorkFlowsTable(){
+function showTemplatesTable(){
     $.ajax({
         type: "GET",
-        url: "api/workflow/workFlowsTable",
+        url: "api/workflow/templatesTable",
         processData: false,
         contentType: false,
         cache: false,
@@ -589,11 +589,11 @@ function showWorkFlowsTable(){
         },
         success: function (data) {
             data=JSON.parse(data);
-            var table=$("#workFlowsTable");
-            $("#workFlowsTable tbody").empty();
+            var table=$("#templatesTable");
+            $("#templatesTable tbody").empty();
             for(var i=0;i<data.length;i++){
-                var workflow=data[i];
-                var row="<tr><td>"+workflow.index+"</td><td>"+workflow.time+"</td><td>"+workflow.name+"</td><td><button onclick='getTemplateWorkFlow("+workflow.index+")' class='btn btn-default'>Load</button></td></tr>";
+                var template=data[i];
+                var row="<tr><td>"+template.index+"</td><td>"+template.time+"</td><td>"+template.name+"</td><td><button onclick='loadTemplate("+template.index+")' class='btn btn-default'>Load</button></td></tr>";
                 table.append(row);
             }
         }
@@ -647,11 +647,11 @@ function getWorkflow(jobId){
 
 
 
-function getTemplateWorkFlow(workFlowIndex){
-    if(workFlowIndex===0) return;
+function loadTemplate(templateIndex){
+    if(templateIndex===0) return;
     $.ajax({
         type: "GET",
-        url: "api/workflow/templates/"+workFlowIndex,
+        url: "api/workflow/templatesTable/"+templateIndex,
         processData: false,
         contentType: false,
         cache: false,
@@ -665,7 +665,7 @@ function getTemplateWorkFlow(workFlowIndex){
             blocks.clear();
             blocks.load(data);
 
-            $('#openWorkFlowsModal').modal('toggle');
+            $('#openTemplatesModal').modal('toggle');
         }
     });
 
