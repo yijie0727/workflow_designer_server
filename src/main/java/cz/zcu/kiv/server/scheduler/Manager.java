@@ -113,18 +113,30 @@ public class Manager {
     }
 
 
+    /**
+     * add WorkFlow to MyWorkFlows Folder
+     */
+    public void addWorkFlowToMyWorkFlows(long jobID, String workFlowName) throws SQLException{
+        createFolderIfNotExists(WORK_FOLDER+"MyWorkFlows");
 
+        Date date = new Date();
+        String currentTime = date.toString();
 
+        JSONObject work = getJob(jobID);
 
+        try{
+            File workFlowOutputFile = File.createTempFile(currentTime+"_"+workFlowName+"_",".json",
+                    new File(WORK_FOLDER+File.separator+"MyWorkFlows"));
+            File workFlowOutput=new File(workFlowOutputFile.getAbsolutePath());
+            FileUtils.writeStringToFile(workFlowOutput, work.toString(4), Charset.defaultCharset());
 
-
-
-
-
+        } catch(IOException e){
+            logger.error(e);
+        }
+    }
 
     /**
      * add Template to MyTemplates Folder
-     *
      */
     public void addTemplateToMyTemplates(String template, String templateName){
         createFolderIfNotExists(WORK_FOLDER+"MyTemplates");
@@ -133,7 +145,8 @@ public class Manager {
         JSONObject temp = new JSONObject(template);
         try{
 
-            File templateOutputFile = File.createTempFile(currentTime+"_"+templateName+"_",".json", new File(WORK_FOLDER+File.separator+"MyTemplates"));
+            File templateOutputFile = File.createTempFile(currentTime+"_"+templateName+"_",".json",
+                    new File(WORK_FOLDER+File.separator+"MyTemplates"));
             File templateOutput=new File(templateOutputFile.getAbsolutePath());
             FileUtils.writeStringToFile(templateOutput, temp.toString(4), Charset.defaultCharset());
 
@@ -143,13 +156,13 @@ public class Manager {
     }
 
     /**
-     * return Templates Table contains index, name, createdTime in JSONArray
-     *
+     * return Templates Table(no data)  or  WorkFlows Table(with results)
+     *  which contains index, name, createdTime in JSONArray
      */
-    public JSONArray showTemplatesTable(){
+    public JSONArray showTable(String tableDestinationName){
 
 
-        String pathStr = WORK_FOLDER+"MyTemplates";
+        String pathStr = WORK_FOLDER+tableDestinationName;
         File templatesFiles = new File(pathStr);
         String[] tempNames= templatesFiles.list();
         JSONArray templates = new JSONArray();
@@ -159,7 +172,7 @@ public class Manager {
 
         int index = 1;
         for(String fileStr: tempNames){
-            if(fileStr.startsWith(".")) continue;
+            if(fileStr.startsWith(".")) continue;//avoid ".DS_Store" in Folder
 
             String[] temps = fileStr.split("/");
             String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add_12345.json
@@ -172,7 +185,6 @@ public class Manager {
             String showedFileName = fileName.substring(i+1, j); //Add
             String uniqueID = fileName.substring(j+1);          //_12345
 
-
             JSONObject tempObj = new JSONObject();
             tempObj.put("index", index);
             tempObj.put("name", showedFileName);
@@ -183,51 +195,35 @@ public class Manager {
             index++;
         }
         return templates;
-
     }
 
-
     /**
-     * return particular Template in JSONObject
-     *
+     * return particular Template/WorkFlow in JSONObject
      */
-    public JSONObject loadTemplate(int templateIndex){
+    public JSONObject loadTemplateWorkFlow(String tableDestinationName, int templateIndex){
 
-        logger.info("templateIndex = "+templateIndex);
+        //logger.info("templateIndex = "+templateIndex);
 
-        String pathStr1 = WORK_FOLDER+"MyTemplates";
-        logger.info("pathStr1  = "+pathStr1);
-
+        String pathStr1 = WORK_FOLDER+tableDestinationName;
         File templatesFiles = new File(pathStr1);
         String[] tempNames= templatesFiles.list();
         JSONObject template =  new JSONObject();
 
-        if(tempNames == null)
-            return template;
+        if(tempNames == null) return template;
 
         //avoid ".DS_Store" in Folder
-        int index = templateIndex - 1;
+        int fileIndex = templateIndex - 1;
         int dot = 0;
         for(int i = 0; i<tempNames.length; i++){
             if(tempNames[i].startsWith(".DS")){
-                dot = i;
-                break;
+                dot = i; break;
             }
         }
-
-        String fileName;
-        if(index >= dot){
-            fileName = tempNames[templateIndex];
-        } else {
-            fileName = tempNames[templateIndex-1];
-        }
+        String fileName = fileIndex >= dot? tempNames[templateIndex]:tempNames[templateIndex-1];
 
         String[] temps = fileName.split("/");
         fileName = temps[temps.length - 1];
-
-
-        String pathStr2 = WORK_FOLDER+"MyTemplates"+File.separator+fileName;
-        logger.info("pathStr2  = "+pathStr2);
+        String pathStr2 = WORK_FOLDER+tableDestinationName+File.separator+fileName;
         File jsonFile = new File(pathStr2);
 
         String jsonString = null;
@@ -240,15 +236,7 @@ public class Manager {
         template = new JSONObject(jsonString);
 
         return template;
-
     }
-
-
-
-
-
-
-
 
 
 

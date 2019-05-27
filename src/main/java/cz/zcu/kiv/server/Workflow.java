@@ -452,7 +452,51 @@ public class Workflow {
 
 
     /**
-     * Save the Template that the user creates in his/her own data base: table templates
+     * Save the WorkFlow with particular jobID with the result data in the MyWorkFlows Folder
+     *
+     */
+    @POST
+    @Path("/saveWorkFlow")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response saveTemplate(
+            @FormDataParam("jobID") long jobID,
+            @FormDataParam("workFlowName") String workFlowName,
+            @Context HttpHeaders httpHeaders)  {
+
+        if (jobID == 0)
+            return Response.status(400).entity("Invalid form data").build();
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+        }
+
+        try{
+            Manager.getInstance().addWorkFlowToMyWorkFlows(jobID, workFlowName);
+        } catch (SQLException e){
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
+
+        return Response.status(200)
+                .entity( workFlowName + " (Job ID "+jobID+") saved to MyWorkFlows" ).build();
+    }
+
+    /**
+     * Save the Template that the user creates in the MyTemplates Folder
      *
      */
     @POST
@@ -493,12 +537,13 @@ public class Workflow {
     }
 
     /**
-     * show Templates Table(no data)
+     * show Templates Table(no data) or WorkFlows Table(with results) according to the input @tableName
      */
     @GET
-    @Path("/templatesTable")
+    @Path("/Tables/{tableDestinationName}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response showTemplatesTable(@Context HttpHeaders httpHeaders)  {
+    public Response showTemplatesTable(@PathParam("tableDestinationName")String tableDestinationName,
+                                       @Context HttpHeaders httpHeaders)  {
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
         if(Conf.getConf().getAuthEnabled()){
@@ -516,35 +561,30 @@ public class Workflow {
             email="guest@guest.com";
         }
 
-        JSONArray templates;
-
-        templates = Manager.getInstance().showTemplatesTable();
+        JSONArray table = Manager.getInstance().showTable(tableDestinationName);
 
         return Response.status(200)
-                .entity(templates.toString(4)).build();
+                .entity(table.toString(4)).build();
     }
 
     /**
      * called in main.js
-     * @return Particular template(nodata) JSONObject
+     * @return Particular template(no data) in MyTemplates or
+     *         Particular workFlow(with result) in MyWorkFlows
+     *        in JSONObject format
      */
     @GET
-    @Path("/templatesTable/{templateIndex}")
+    @Path("/myTables/{tableDestinationName}/{index}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response loadTemplateNoData(@PathParam("templateIndex")int templateIndex)  {
-        logger.info("@PathParam templateIndex = "+ templateIndex);
+    public Response loadTemplateNoData(@PathParam("tableDestinationName") String tableDestinationName,
+                                       @PathParam("index")int index)  {
 
-        JSONObject template= null;
-
-        template = Manager.getInstance().loadTemplate(templateIndex);
+        JSONObject template = Manager.getInstance().loadTemplateWorkFlow(tableDestinationName, index);
 
         return Response.status(200)
-                .entity(template.toString()).build();
+                .entity(template.toString(4)).build();
 
     }
-
-
-
 
     /**
      * Returns text response to indicate job scheduling success
