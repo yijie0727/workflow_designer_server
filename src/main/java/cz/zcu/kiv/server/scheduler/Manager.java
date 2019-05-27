@@ -9,6 +9,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -161,10 +163,9 @@ public class Manager {
      */
     public JSONArray showTable(String tableDestinationName){
 
-
         String pathStr = WORK_FOLDER+tableDestinationName;
         File templatesFiles = new File(pathStr);
-        String[] tempNames= templatesFiles.list();
+        String[] tempNames= templatesFiles.list(new MyFilter());
         JSONArray templates = new JSONArray();
 
         if(tempNames == null)
@@ -172,7 +173,6 @@ public class Manager {
 
         int index = 1;
         for(String fileStr: tempNames){
-            if(fileStr.startsWith(".")) continue;//avoid ".DS_Store" in Folder
 
             String[] temps = fileStr.split("/");
             String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add_12345.json
@@ -206,20 +206,12 @@ public class Manager {
 
         String pathStr1 = WORK_FOLDER+tableDestinationName;
         File templatesFiles = new File(pathStr1);
-        String[] tempNames= templatesFiles.list();
+        String[] tempNames= templatesFiles.list(new MyFilter());
         JSONObject template =  new JSONObject();
 
         if(tempNames == null) return template;
 
-        //avoid ".DS_Store" in Folder
-        int fileIndex = templateIndex - 1;
-        int dot = 0;
-        for(int i = 0; i<tempNames.length; i++){
-            if(tempNames[i].startsWith(".DS")){
-                dot = i; break;
-            }
-        }
-        String fileName = fileIndex >= dot? tempNames[templateIndex]:tempNames[templateIndex-1];
+        String fileName = tempNames[templateIndex-1];
 
         String[] temps = fileName.split("/");
         fileName = temps[temps.length - 1];
@@ -236,6 +228,15 @@ public class Manager {
         template = new JSONObject(jsonString);
 
         return template;
+    }
+
+
+    //inner class for FileFilter
+    class MyFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            return name.endsWith(".json");
+        }
     }
 
 
