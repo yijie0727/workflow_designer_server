@@ -111,7 +111,11 @@ public class Manager {
 
 
     public void clearJobs(String email) throws SQLException {
+        List<Job> jobs = Jobs.getNotRunningOrWaitingJobs(email);
         Jobs.clearJobs(email);
+        for(Job item : jobs) {
+            FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
+        }
     }
 
 

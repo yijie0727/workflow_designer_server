@@ -69,52 +69,9 @@ public class Jobs {
         }
     }
 
-    public synchronized static ArrayList<Job> getJobsByEmail(String email) throws SQLException{
-        Connection connection = null;
-        PreparedStatement preparedStatement = null;
-        try {
-            connection = SQLiteDB.getInstance().connect();
-            preparedStatement =
-                    connection.prepareStatement("SELECT * FROM jobs WHERE owner=? order by startTime DESC;" );
-
-            preparedStatement.setString(1, email);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-            ArrayList<Job>jobs=new ArrayList<>();
-            while(resultSet.next()){
-                Job job=new Job();
-                job.setId(resultSet.getLong("id"));
-                job.setOwner(resultSet.getString("owner"));
-                job.setStatus(Status.valueOf(resultSet.getString("status")));
-                if(resultSet.getString("startTime")!=null)
-                    job.setStartTime(new Date(resultSet.getLong("startTime")));
-                if(resultSet.getString("endTime")!=null)
-                    job.setEndTime(new Date(resultSet.getLong("endTime")));
-                job.setWorkflow(new JSONObject(resultSet.getString("workflow")));
-                job.setWorkflowOutputFile(resultSet.getString("workflowOutputFile"));
-
-                jobs.add(job);
-            }
-            return jobs;
-
-        }
-        finally {
-            if(preparedStatement!=null) {
-                try {
-                    preparedStatement.close();
-                } catch (SQLException e1) {
-                    logger.error(e1);
-                }
-            }
-            if(connection!=null){
-                try {
-                    connection.close();
-                } catch (SQLException e1) {
-                    logger.error(e1);
-                }
-            }
-
-        }
+    public synchronized static List<Job> getJobsByEmail(String email) throws SQLException{
+        String query = "SELECT * FROM jobs WHERE owner=? order by startTime DESC;";
+       return getJobs(query, email);
     }
 
     public synchronized static ArrayList<Job> getJobsByStatus(String status) throws SQLException{
@@ -292,42 +249,67 @@ public class Jobs {
         }
     }
 
-    public synchronized static void clearJobs(String email) throws SQLException {
+    public synchronized static List<Job> getNotRunningOrWaitingJobs(String email) throws SQLException {
+        String query = "SELECT * FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING'";
+        return getJobs(query, email);
+    }
+
+    private static List<Job> getJobs(String query, String email) throws SQLException {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
-        String query = "FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING'";
-        List<File> filesToDelete = new LinkedList<>();
-
+        List<Job>jobs=new ArrayList<>();
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("SELECT workflowOutputFile " + query);
-
+                    connection.prepareStatement(query);
             preparedStatement.setString(1, email);
 
             ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                String file = resultSet.getString("workflowOutputFile");
-                if(file != null) {
-                    filesToDelete.add(new File(file));
-                }
+
+            while(resultSet.next()){
+                Job job=new Job();
+                job.setId(resultSet.getLong("id"));
+                job.setOwner(resultSet.getString("owner"));
+                job.setStatus(Status.valueOf(resultSet.getString("status")));
+                if(resultSet.getString("startTime")!=null)
+                    job.setStartTime(new Date(resultSet.getLong("startTime")));
+                if(resultSet.getString("endTime")!=null)
+                    job.setEndTime(new Date(resultSet.getLong("endTime")));
+                job.setWorkflow(new JSONObject(resultSet.getString("workflow")));
+                job.setWorkflowOutputFile(resultSet.getString("workflowOutputFile"));
+
+                jobs.add(job);
             }
 
-        } finally {
-            if(preparedStatement != null) {
+        }
+        finally {
+            if(preparedStatement!=null) {
                 try {
                     preparedStatement.close();
-                } catch (Exception e) {
-                    logger.error(e);
+                } catch (SQLException e1) {
+                    logger.error(e1);
                 }
-
             }
-        }
+            if(connection!=null){
+                try {
+                    connection.close();
+                } catch (SQLException e1) {
+                    logger.error(e1);
+                }
+            }
 
+        }
+        return jobs;
+    }
+
+    public synchronized static void clearJobs(String email) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        String query = "DELETE FROM jobs WHERE owner=? AND status!='RUNNING' AND status !='WAITING'";
         try {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
-                    connection.prepareStatement("DELETE " + query);
+                    connection.prepareStatement(query);
 
             preparedStatement.setString(1, email);
 
@@ -350,11 +332,6 @@ public class Jobs {
                 }
             }
 
-        }
-        logger.debug("Files to delete: " + filesToDelete.size());
-        for(File item : filesToDelete) {
-            boolean res = FileUtils.deleteQuietly(item);
-            logger.debug("Deleted file: " + item + ", result: " + res);
         }
     }
 }
