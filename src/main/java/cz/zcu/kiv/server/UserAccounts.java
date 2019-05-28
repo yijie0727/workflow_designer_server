@@ -51,6 +51,11 @@ public class UserAccounts {
             Email.sendMail(email,"New Account has been created",
                     Templates.getNewAccountPasswordEmail(user.getUsername(),user.getEmail(),generatedPassword));
             createFolderIfNotExists(WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail());
+            String myTemplates = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail()+File.separator+"MyTemplates";
+            String myWorkFlows = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail()+File.separator+"MyWorkFlows";
+            createFolderIfNotExists(myTemplates);
+            createFolderIfNotExists(myWorkFlows);
+
             return Response.status(200)
                     .entity(user.toJSON().toString(4)).build();
         } catch (SQLException e) {
@@ -80,6 +85,12 @@ public class UserAccounts {
                 String generatedToken = RandomStringUtils.randomAlphanumeric(6);
                 user.setToken(generatedToken);
                 Users.updateUser(user);
+
+                String myTemplates = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail()+File.separator+"MyTemplates";
+                String myWorkFlows = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail()+File.separator+"MyWorkFlows";
+                createFolderIfNotExists(myTemplates);
+                createFolderIfNotExists(myWorkFlows);
+
                 return Response.status(200).entity(user.toJSON().toString(4)).build();
             }
             else{
