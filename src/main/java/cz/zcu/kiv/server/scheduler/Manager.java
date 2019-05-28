@@ -215,6 +215,7 @@ public class Manager {
 
         String[] temps = fileName.split("/");
         fileName = temps[temps.length - 1];
+        //fileName = temps[1000];
         String pathStr2 = myFolder+File.separator+fileName;
         File jsonFile = new File(pathStr2);
 

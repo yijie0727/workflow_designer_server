@@ -365,7 +365,7 @@ var contex_menu = {
 
             event.preventDefault();
             // Get form
-            alertify.notify("Hint: save it after Schedule.", 'success', 3);
+
             var jobStatus= document.getElementById("jobStatus").innerHTML;
             if(jobStatus === undefined || jobStatus === null || jobStatus === ""){
                alertify.notify("WorkFlow can't be saved.", 'error', 3);
@@ -448,6 +448,16 @@ var contex_menu = {
         $('#openWorkFlowsModal').on('hide.bs.modal', function (e) {
             clearInterval(workFlowUpdater)
         });
+
+        $('#inputTemplateNameModal').on('shown.bs.modal', function (e) {
+            alertify.notify("Please save it before inputs are set.", 'success', 3);
+        });
+
+        $('#inputWorkFlowNameModal').on('shown.bs.modal', function (e) {
+            alertify.notify("Please save it after Schedule is finished.", 'success', 3);
+            //alert("Hint: Save after Schedule is finished")
+        });
+
 
         if($.cookie("email")){
             $("#myAccount").show();
