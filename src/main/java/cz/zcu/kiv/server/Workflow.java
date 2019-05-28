@@ -450,6 +450,187 @@ public class Workflow {
         }
     } */
 
+
+    /**
+     * Save the WorkFlow with particular jobID with the result data in the MyWorkFlows Folder
+     *
+     */
+    @POST
+    @Path("/saveWorkFlow")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response saveTemplate(
+            @FormDataParam("jobID") long jobID,
+            @FormDataParam("workFlowName") String workFlowName,
+            @Context HttpHeaders httpHeaders)  {
+
+        if (jobID == 0)
+            return Response.status(400).entity("Invalid form data").build();
+        if (workFlowName.equals(""))
+            return Response.status(403).entity("Empty workFlowName").build();
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        //location where workFlows stored
+        String myWorkFlowsFolder = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+email+File.separator+"MyWorkFlows";
+
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+            return Response.status(403)
+                    .entity( "WorkFlow can't be saved. Please login first" ).build();
+        }
+
+        createFolderIfNotExists(myWorkFlowsFolder);
+        try{
+            Manager.getInstance().addWorkFlowToMyWorkFlows(jobID, workFlowName, myWorkFlowsFolder);
+        } catch (SQLException e){
+            logger.error(e);
+            return Response.status(500).entity("Database Error").build();
+        }
+
+        return Response.status(200)
+                .entity( workFlowName + " (Job ID "+jobID+") saved to MyWorkFlows" ).build();
+    }
+
+    /**
+     * Save the Template that the user creates in the MyTemplates Folder
+     *
+     */
+    @POST
+    @Path("/saveTemplate")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response saveTemplate(
+            @FormDataParam("template") String template,
+            @FormDataParam("templateName") String templateName,
+            @Context HttpHeaders httpHeaders)  {
+
+        if (template == null)
+            return Response.status(400).entity("Invalid form data").build();
+
+        if (templateName.equals(""))
+            return Response.status(403).entity("Empty templateName").build();
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+        //location where templates stored
+        String myTemplatesFolder = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+email+File.separator+"MyTemplates";
+
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+            return Response.status(403)
+                    .entity( "Template can't be saved. Please login first" ).build();
+        }
+
+        createFolderIfNotExists(myTemplatesFolder);
+        Manager.getInstance().addTemplateToMyTemplates(template, templateName, myTemplatesFolder);
+
+        return Response.status(200)
+                .entity( templateName+" saved to MyTemplates" ).build();
+    }
+
+    /**
+     * show Templates Table(no data) or WorkFlows Table(with results) according to the input @tableName
+     */
+    @GET
+    @Path("/Tables/{tableDestinationName}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response showTemplatesOrWorkFlowTable(@PathParam("tableDestinationName")String tableDestinationName,
+                                       @Context HttpHeaders httpHeaders)  {
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+
+        //location where templates/WorkFlows stored
+        String myFolder = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+email+File.separator+tableDestinationName;
+
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+            return Response.status(403)
+                    .entity( "Please login first" ).build();
+        }
+
+        JSONArray table = Manager.getInstance().showTable(myFolder);
+
+        return Response.status(200)
+                .entity(table.toString(4)).build();
+    }
+
+    /**
+     * called in main.js
+     * @return Particular template(no data) in MyTemplates or
+     *         Particular workFlow(with result) in MyWorkFlows
+     *        in JSONObject format
+     */
+    @GET
+    @Path("/myTables/{tableDestinationName}/{index}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response loadTemplateOrWorkFlow(@PathParam("tableDestinationName") String tableDestinationName,
+                                           @PathParam("index")int index,
+                                           @Context HttpHeaders httpHeaders)  {
+
+        String email = httpHeaders.getHeaderString("email");
+        String token = httpHeaders.getHeaderString("token");
+
+        //location where templates or workFlows stored
+        String myFolder = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+email+File.separator+tableDestinationName;
+
+        if(Conf.getConf().getAuthEnabled()){
+            try {
+                if(email==null||email.equals("undefined")
+                        ||token==null||token.equals("undefined")
+                        ||!Users.checkAuthorized(email,token))
+                    return Response.status(403).entity("Unauthorized").build();
+            } catch (SQLException e) {
+                logger.error(e);
+                return Response.status(500).entity("Database Error").build();
+            }
+        }
+        else{
+            email="guest@guest.com";
+            return Response.status(403)
+                    .entity( "Please login first" ).build();
+        }
+
+        JSONObject template = Manager.getInstance().loadTemplateWorkFlow(myFolder, index);
+
+        return Response.status(200)
+                .entity(template.toString(4)).build();
+
+    }
+
     /**
      * Returns text response to indicate job scheduling success
      *
