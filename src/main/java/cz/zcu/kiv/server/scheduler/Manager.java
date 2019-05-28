@@ -59,7 +59,7 @@ public class Manager {
     }
 
     //Thread is available, start execution
-    public void startJob(Job job){
+    public synchronized void startJob(Job job){
         CURRENT_THREAD_COUNT++;
         JobThread jobThread=new JobThread(job){
             @Override
