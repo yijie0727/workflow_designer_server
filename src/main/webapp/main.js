@@ -318,6 +318,91 @@ var contex_menu = {
             });
         });
 
+
+        $("#inputTemplateNameSubmit").click(function() {
+
+            event.preventDefault();
+
+            if(JSON.stringify(blocks.export().blocks)  === "[]"){
+                alertify.notify("Template can't be saved.", 'error', 3);
+                alertify.notify("No Blocks.", 'error', 3);
+                return;
+            }
+
+            // Create an FormData object
+            var formData = new FormData(document.getElementById('inputTemplateNameForm'));
+            // If you want to add an extra field for the FormData
+            formData.append("template", JSON.stringify(blocks.export()));
+            formData.append("email", $.cookie("email"));
+
+
+            $.ajax({
+                type: "POST",
+                enctype: 'multipart/form-data',
+                url: "api/workflow/saveTemplate",
+                data: formData,
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 600000,
+                beforeSend: function(request) {
+                    request.setRequestHeader("email",  $.cookie("email"));
+                    request.setRequestHeader("token",  $.cookie("token"));
+                },
+                success: function (data) {
+                    tracking=data;
+                    alertify.notify('Template '+data+'!', 'success', 3);
+                    track(tracking);
+                },
+                error: function (e) {
+                    alertify.notify(e.responseText, 'error', 3);
+                }
+            });
+        });
+
+
+        $("#inputWorkFlowNameSubmit").click(function (event) {
+
+            event.preventDefault();
+            // Get form
+
+            var jobStatus= document.getElementById("jobStatus").innerHTML;
+            if(jobStatus === undefined || jobStatus === null || jobStatus === ""){
+               alertify.notify("WorkFlow can't be saved.", 'error', 3);
+               alertify.notify("Not Login or No scheduled WorkFlow.", 'error', 3);
+               return;
+            }
+            var jobStatusArray = jobStatus.split(" ");
+            var jobID = jobStatusArray[2]; //get jobID from innerHTML
+
+            // Create an FormData object
+            var formData = new FormData(document.getElementById('inputWorkFlowNameForm'));
+
+            formData.append("jobID", jobID);
+
+            $.ajax({
+                type: "POST",
+                enctype: 'multipart/form-data',
+                url: "api/workflow/saveWorkFlow",
+                data: formData,
+                processData: false,
+                contentType: false,
+                cache: false,
+                timeout: 600000,
+                beforeSend: function(request) {
+                    request.setRequestHeader("email",  $.cookie("email"));
+                    request.setRequestHeader("token",  $.cookie("token"));
+                },
+                success: function (data) {
+                    tracking=data;
+                    alertify.notify('WorkFlow '+data+'!', 'success', 3);
+                    track(tracking);
+                },
+                error: function (e) {
+                    alertify.notify(e.responseText, 'error', 3);
+                }
+            });
+        });
     });
 
     $(document).ready(function () {
@@ -343,6 +428,35 @@ var contex_menu = {
             clearInterval(jobUpdater)
         });
 
+        $('#openTemplatesModal').on('shown.bs.modal', function (e) {
+            showTemplatesTable();
+        });
+
+        var workFlowUpdater;
+        $('#openWorkFlowsModal').on('shown.bs.modal', function (e) {
+            showWorkFlowsTable();
+            workFlowUpdater=setInterval(function(){
+                try{
+                    showWorkFlowsTable();
+                }
+                catch(e){
+                    //Unauthorized
+                }
+
+            },3000);
+        });
+        $('#openWorkFlowsModal').on('hide.bs.modal', function (e) {
+            clearInterval(workFlowUpdater)
+        });
+
+        $('#inputTemplateNameModal').on('shown.bs.modal', function (e) {
+            alertify.notify("Please save it before inputs are set.", 'success', 3);
+        });
+
+        $('#inputWorkFlowNameModal').on('shown.bs.modal', function (e) {
+            alertify.notify("Please save it after Schedule is finished.", 'success', 3);
+            //alert("Hint: Save after Schedule is finished")
+        });
 
 
         if($.cookie("email")){
@@ -529,9 +643,66 @@ function updateJobsTable(){
             $("#jobTable tbody").empty();
             for(var i=0;i<data.length;i++){
                 var job=data[i];
-                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")' class='btn btn-default'>Load</button></td></tr>"
+                var row="<tr><td>"+job.id+"</td><td>"+job.startTime+"</td><td>"+job.endTime+"</td><td>"+job.status+"</td><td><button onclick='getWorkflow("+job.id+")' class='btn btn-default'>Load</button></td></tr>";
                 table.append(row);
             }
+        }
+    });
+}
+
+function showTemplatesTable(){
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/Tables/"+"MyTemplates",
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (data) {
+            data=JSON.parse(data);
+            var table=$("#templatesTable");
+            $("#templatesTable tbody").empty();
+            for(var i=0;i<data.length;i++){
+                var template=data[i];
+                var row="<tr><td>"+template.index+"</td><td>"+template.time+"</td><td>"+template.name+"</td><td><button onclick='loadTemplate("+template.index+")' class='btn btn-default'>Load</button></td></tr>";
+                table.append(row);
+            }
+        },
+        error: function (e) {
+            alertify.notify(e.responseText, 'error', 3);
+        }
+    });
+
+}
+
+function showWorkFlowsTable(){
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/Tables/"+"MyWorkFlows",
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (data) {
+            data=JSON.parse(data);
+            var table=$("#workFlowsTable");
+            $("#workFlowsTable tbody").empty();
+            for(var i=0;i<data.length;i++){
+                var workFlow=data[i];
+                var row="<tr><td>"+workFlow.index+"</td><td>"+workFlow.time+"</td><td>"+workFlow.name+"</td><td><button onclick='loadWorkFlow("+workFlow.index+")' class='btn btn-default'>Load</button></td></tr>";
+                table.append(row);
+            }
+        },
+        error: function (e) {
+            alertify.notify(e.responseText, 'error', 3);
         }
     });
 }
@@ -565,12 +736,69 @@ function getWorkflow(jobId){
             blocks.clear();
             blocks.load(data.workflow);
             var jobStatus= document.getElementById("jobStatus");
-            jobStatus.innerHTML="Job ID:"+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
+            jobStatus.innerHTML="Job ID: "+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
                 " End Time:"+data.endTime;
             if(data.status!=="COMPLETED"||data.status!=="FAILED"){
                 track(jobId);
             }
             $('#jobsModal').modal('toggle');
+        }
+    });
+}
+
+function loadTemplate(templateIndex){
+    if(templateIndex===0) return;
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/myTables/"+"MyTemplates/"+templateIndex,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (data) {
+            data=JSON.parse(data);
+            blocks.clear();
+            blocks.load(data);
+
+            $('#openTemplatesModal').modal('toggle');
+        },
+        error: function (e) {
+            alertify.notify(e.responseText, 'error', 3);
+        }
+    });
+}
+
+function loadWorkFlow(workFlowIndex){
+    if(workFlowIndex===0) return;
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/myTables/"+"MyWorkFlows/"+workFlowIndex,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (data) {
+            data=JSON.parse(data);
+            blocks.clear();
+            blocks.load(data.workflow);
+            var jobStatus= document.getElementById("jobStatus");
+            jobStatus.innerHTML="Job ID: "+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
+                " End Time:"+data.endTime;
+            if(data.status!=="COMPLETED"||data.status!=="FAILED"){
+                track(data.id);
+            }
+            $('#openWorkFlowsModal').modal('toggle');
+        },
+        error: function (e) {
+            alertify.notify(e.responseText, 'error', 3);
         }
     });
 }
@@ -613,7 +841,7 @@ function getWorkflowStatus(jobId,intervalId){
         success: function (data) {
             data=JSON.parse(data);
             var jobStatus= document.getElementById("jobStatus");
-            jobStatus.innerHTML="Job ID:"+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
+            jobStatus.innerHTML="Job ID: "+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
                 " End Time:"+data.endTime;
             if(data.executionStatus)
                 populateOutputs(data.executionStatus);
