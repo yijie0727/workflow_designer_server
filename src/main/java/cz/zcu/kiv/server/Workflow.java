@@ -494,12 +494,15 @@ public class Workflow {
         createFolderIfNotExists(myWorkFlowsFolder);
         try{
             Manager.getInstance().saveTemplateOrWorkFlow(jobID, workFlowName, "MyWorkFlows", myWorkFlowsFolder);
-        } catch (SQLException e){
-            logger.error(e);
+        } catch (SQLException e1){
+            logger.error(e1);
             return Response.status(500).entity("Database Error").build();
+        } catch (IOException e2){
+            logger.error(e2);
+            return Response.status(500).entity("File creation Error").build();
         }
 
-        return Response.status(200).entity( workFlowName + ". Save to MyWorkFlows. ").build();
+        return Response.status(200).entity( workFlowName + " save to MyWorkFlows").build();
     }
 
     /**
@@ -546,12 +549,15 @@ public class Workflow {
         createFolderIfNotExists(myTemplatesFolder);
         try{
             Manager.getInstance().saveTemplateOrWorkFlow(template, templateName, "MyTemplates", myTemplatesFolder);
-        } catch (SQLException e){
-            logger.error(e);
+        } catch (SQLException e1){
+            logger.error(e1);
             return Response.status(500).entity("Database Error").build();
+        } catch (IOException e2){
+            logger.error(e2);
+            return Response.status(500).entity("File creation Error").build();
         }
 
-        return Response.status(200).entity( templateName + ". Save to MyTemplates. ").build();
+        return Response.status(200).entity( templateName + " save to MyTemplates").build();
     }
 
     /**
@@ -627,8 +633,13 @@ public class Workflow {
                     .entity( "Please login first" ).build();
         }
 
-        JSONObject template = Manager.getInstance().loadTemplateWorkFlow(myFolder, index);
-
+        JSONObject template = null;
+        try{
+            template = Manager.getInstance().loadTemplateWorkFlow(myFolder, index);
+        } catch (IOException e){
+            logger.error(e);
+            return Response.status(500).entity("Read File Error").build();
+        }
         return Response.status(200)
                 .entity(template.toString(4)).build();
 
