@@ -9,18 +9,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import static cz.zcu.kiv.server.Workflow.WORK_FOLDER;
-import static cz.zcu.kiv.server.Workflow.createFolderIfNotExists;
 
 public class Manager {
     private static Log logger = LogFactory.getLog(Manager.class);
@@ -119,47 +114,39 @@ public class Manager {
     }
 
 
+
     /**
-     * add WorkFlow to MyWorkFlows Folder
+     * save Template or WorkFlow to MyTemplates Or MyWorkFlow Folder
+     * @param obj is either the template jsonString or the workflow jodID
+     * @param name is either the templateName or the WorkFlowName
+     * @param table is either "MyTemplates" or "MyWorkFlows"
+     * @param folderName is the whole path either where we store the templates or the workFlows
      */
-    public void addWorkFlowToMyWorkFlows(long jobID, String workFlowName, String myWorkFlowsFolder) throws SQLException{
-        //createFolderIfNotExists(myWorkFlowsFolder);
+    public void saveTemplateOrWorkFlow(String obj, String name, String table, String folderName) throws SQLException{
 
         Date date = new Date();
         String currentTime = date.toString();
 
-        JSONObject work = getJob(jobID);
+        JSONObject tempJSON = null;
+        if(table.equals("MyTemplates")){
+            tempJSON = new JSONObject(obj);
+        } else if(table.equals("MyWorkFlows")){
+            long jobID = Long.parseLong(obj);
+            tempJSON = getJob(jobID);
+        }
+
+        String path = folderName + File.separator+ currentTime + "_" + name + ".json";
+        File templateFile=new File(path);
 
         try{
-            File workFlowOutputFile = File.createTempFile(currentTime+"_"+workFlowName+"_",".json",
-                    new File(myWorkFlowsFolder));
-            File workFlowOutput=new File(workFlowOutputFile.getAbsolutePath());
-            FileUtils.writeStringToFile(workFlowOutput, work.toString(4), Charset.defaultCharset());
+            boolean flag = templateFile.createNewFile();
+            FileUtils.writeStringToFile(templateFile, tempJSON.toString(4), Charset.defaultCharset());
 
         } catch(IOException e){
             logger.error(e);
         }
     }
 
-    /**
-     * add Template to MyTemplates Folder(must user login, otherwise cannot be saved)
-     */
-    public void addTemplateToMyTemplates(String template, String templateName, String myTemplatesFolder){
-        //createFolderIfNotExists(myTemplatesFolder);
-        Date date = new Date();
-        String currentTime = date.toString();
-        JSONObject temp = new JSONObject(template);
-        try{
-
-            File templateOutputFile = File.createTempFile(currentTime+"_"+templateName+"_",".json",
-                    new File(myTemplatesFolder));
-            File templateOutput=new File(templateOutputFile.getAbsolutePath());
-            FileUtils.writeStringToFile(templateOutput, temp.toString(4), Charset.defaultCharset());
-
-        } catch(IOException e){
-            logger.error(e);
-        }
-    }
 
     /**
      * return Templates Table(no data)  or  WorkFlows Table(with results)
@@ -179,21 +166,19 @@ public class Manager {
         for(String fileStr: tempNames){
 
             String[] temps = fileStr.split("/");
-            String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add_12345.json
-            fileName = fileName.split("\\.")[0]; //Sun May 26 20:35:48 CST 2019_Add_12345
+            String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add.json
+            fileName = fileName.split("\\.")[0]; //Sun May 26 20:35:48 CST 2019_Add
 
             int i = fileName.indexOf("_");
-            int j = fileName.lastIndexOf("_");
+            //int j = fileName.lastIndexOf("_");
 
             String createdTime = fileName.substring(0, i);      //Sun May 26 20:35:48 CST 2019
-            String showedFileName = fileName.substring(i+1, j); //Add
-            String uniqueID = fileName.substring(j+1);          //_12345
+            String showedFileName = fileName.substring(i+1);    //Add
 
             JSONObject tempObj = new JSONObject();
             tempObj.put("index", index);
             tempObj.put("name", showedFileName);
             tempObj.put("time", createdTime);
-            tempObj.put("uniqueID", uniqueID);
 
             templates.put(tempObj);
             index++;
