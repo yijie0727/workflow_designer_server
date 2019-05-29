@@ -21,3 +21,5 @@ test-results/*
 tmp/*
 workFiles/*
 workingDirectory/*
+workflow_desginer_server.iml
+
