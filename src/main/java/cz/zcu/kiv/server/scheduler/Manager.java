@@ -109,7 +109,10 @@ public class Manager {
         List<Job> jobs = Jobs.getNotRunningOrWaitingJobs(email);
         Jobs.clearJobs(email);
         for(Job item : jobs) {
-            FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
+            String file = item.getWorkflowOutputFile();
+            if(item != null && file != null && !file.equals("")) {
+                FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
+            }
         }
     }
 
