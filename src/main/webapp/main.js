@@ -712,6 +712,12 @@ function track(jobId){
     var intervalID=setInterval(function(){getWorkflowStatus(tracking,intervalID)},1000);
 }
 
+
+function trackWorkFlow(workFlowIndex){
+    tracking=workFlowIndex;
+    var intervalID=setInterval(function(){getLoadedWorkflowStatus(tracking,intervalID)},1000);
+}
+
 function clearTracking() {
     var jobStatus= document.getElementById("jobStatus");
     jobStatus.innerHTML="";
@@ -793,7 +799,7 @@ function loadWorkFlow(workFlowIndex){
             jobStatus.innerHTML="Job ID: "+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
                 " End Time:"+data.endTime;
             if(data.status!=="COMPLETED"||data.status!=="FAILED"){
-                track(data.id);
+                trackWorkFlow(workFlowIndex);
             }
             $('#openWorkFlowsModal').modal('toggle');
         },
@@ -854,6 +860,40 @@ function getWorkflowStatus(jobId,intervalId){
         }
     });
 }
+
+function getLoadedWorkflowStatus(workFlowIndex,intervalId){
+    if(workFlowIndex==0){
+        clearInterval(intervalId);
+        return;
+    }
+    $.ajax({
+        type: "GET",
+        url: "api/workflow/myTables/"+"MyWorkFlows/"+workFlowIndex,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 600000,
+        beforeSend: function(request) {
+            request.setRequestHeader("email",  $.cookie("email"));
+            request.setRequestHeader("token",  $.cookie("token"));
+        },
+        success: function (data) {
+            data=JSON.parse(data);
+            var jobStatus= document.getElementById("jobStatus");
+            jobStatus.innerHTML="Job ID: "+data.id+" Status:"+data.status+" Start Time:"+data.startTime+
+                " End Time:"+data.endTime;
+            if(data.executionStatus)
+                populateOutputs(data.executionStatus);
+            else
+                populateOutputs(data.workflow.blocks);
+            if(data.status==="COMPLETED"||data.status==="FAILED"){
+                clearInterval(intervalId);
+                tracking=0;
+            }
+        }
+    });
+}
+
 
 function populateOutputs(data){
     for (var k in blocks.blocks) {
