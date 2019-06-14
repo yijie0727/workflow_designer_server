@@ -656,10 +656,8 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response schedule(
             @FormDataParam("workflow") String workflow, @Context HttpHeaders httpHeaders)  {
-
         if (workflow == null)
             return Response.status(400).entity("Invalid form data").build();
-
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
         if(Conf.getConf().getAuthEnabled()){
