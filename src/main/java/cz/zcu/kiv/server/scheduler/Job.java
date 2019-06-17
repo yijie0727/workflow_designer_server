@@ -33,7 +33,7 @@ public class Job {
     public Job(JSONObject workflowObject) {
         this.workflow=workflowObject;
         this.startTime=new Date();
-        this.status=Status.WAITING;
+        this.status=Status.SCHEDULED;
 
     }
 
@@ -94,8 +94,6 @@ public class Job {
     }
 
     public void execute() throws SQLException {
-        setStatus(Status.RUNNING);
-        Jobs.updateJob(this);
         Set<String> modules=new HashSet<>();
         try {
 

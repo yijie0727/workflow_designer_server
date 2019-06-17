@@ -41,22 +41,26 @@ public class Manager {
     }
 
     //New Job arrives
-    public synchronized long addJob(Job job) throws SQLException {
+    public long addJob(Job job) throws SQLException {
         //Add job to database as a pending job
         job = Jobs.addJob(job);
         //Check for thread allocation
         if (CURRENT_THREAD_COUNT < MAX_THREADS) {
-            job.setStatus(Status.SCHEDULED);
-            Jobs.updateJob(job);
             startJob(job);
+        } else {
+            job.setStatus(Status.WAITING);
+            Jobs.updateJob(job);
         }
+
 
         return job.getId();
     }
 
     //Thread is available, start execution
-    public void startJob(Job job) {
+    public void startJob(Job job) throws SQLException {
         CURRENT_THREAD_COUNT++;
+        job.setStatus(Status.RUNNING);
+        Jobs.updateJob(job);
         JobThread jobThread = new JobThread(job) {
             @Override
             public void onJobCompleted() {
@@ -71,8 +75,8 @@ public class Manager {
     }
 
     //Indicate thread is available and schedule pending job
-    public void endJob() {
-
+    public synchronized void endJob() {
+        CURRENT_THREAD_COUNT--;
         try {
             //Get list of pending jobs from database
             List<Job> pendingJobs = Jobs.getJobsByStatus(Status.WAITING.name());
@@ -84,7 +88,7 @@ public class Manager {
         } catch (SQLException e) {
             logger.error(e);
         }
-        CURRENT_THREAD_COUNT--;
+
     }
 
     public JSONArray getJobs(String email) throws SQLException {
