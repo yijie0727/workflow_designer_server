@@ -143,7 +143,7 @@ public class Workflow {
 
 
                 try{
-                    Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.ContinuousWorkFlow", true, child);
+                    Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
                     Constructor<?> ctor = classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
                     Method method = classToLoad.getDeclaredMethod("initializeBlocks");
                     method.setAccessible(true);
@@ -270,7 +270,7 @@ public class Workflow {
         JSONArray result=new JSONArray();
 
         try{
-            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.ContinuousWorkFlow", true, child);
+            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
             Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
@@ -917,7 +917,7 @@ public class Workflow {
     }
 
     public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile)throws Exception{
-        Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.ContinuousWorkFlow", true, child);
+        Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
         Thread.currentThread().setContextClassLoader(child);
 
         Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class);
