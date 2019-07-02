@@ -914,13 +914,13 @@ public class Workflow {
         return child;
     }
 
-    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile)throws Exception{
+    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile, long jobID)throws Exception{
         Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
         Thread.currentThread().setContextClassLoader(child);
 
-        Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class);
+        Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class,long.class);
         Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class,String.class);
-        Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER);
+        Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER,jobID);
         JSONArray result = (JSONArray)method.invoke(instance,workflow,GENERATED_FILES_FOLDER,workflowOutputFile);
         return result;
     }
