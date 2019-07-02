@@ -130,7 +130,7 @@ public class Job {
             File workflowOutputFile = File.createTempFile("job_"+getId(),".json",new File(WORKING_DIRECTORY));
             setWorkflowOutputFile(workflowOutputFile.getAbsolutePath());
             Jobs.updateJob(this);
-            result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath());
+            result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath(), this.getId());
             for(int i=0;i<result.length();i++){
                 if(result.getJSONObject(i).getBoolean("error")){
                     logger.error("Executing jar failed");
