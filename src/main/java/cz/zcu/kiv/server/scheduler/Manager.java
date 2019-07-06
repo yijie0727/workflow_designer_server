@@ -162,7 +162,8 @@ public class Manager {
 
             String[] temps = fileStr.split("/");
             String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add.json
-            fileName = fileName.split("\\.")[0]; //Sun May 26 20:35:48 CST 2019_Add
+//            fileName = fileName.split("\\.")[0];     //Sun May 26 20:35:48 CST 2019_Add
+            fileName = fileName.substring(0, fileName.length()-5);
 
             int i = fileName.indexOf("_");
             //int j = fileName.lastIndexOf("_");
