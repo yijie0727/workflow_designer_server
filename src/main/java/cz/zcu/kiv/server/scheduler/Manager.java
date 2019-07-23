@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
+import static cz.zcu.kiv.server.Workflow.GENERATED_FILES_FOLDER;
+
 
 public class Manager {
     private static Log logger = LogFactory.getLog(Manager.class);
@@ -111,6 +113,16 @@ public class Manager {
         for(Job item : jobs) {
             FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
         }
+
+        File generatedFolder = new File(GENERATED_FILES_FOLDER);
+        String[] generatedFileNames= generatedFolder.list();
+
+        if(generatedFileNames == null) return;
+        for(String fileStr:  generatedFileNames){
+            FileUtils.deleteQuietly(new File(GENERATED_FILES_FOLDER+fileStr));
+            logger.info("delete generated file:"+fileStr);
+        }
+
     }
 
 
