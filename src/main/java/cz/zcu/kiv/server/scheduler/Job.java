@@ -28,6 +28,17 @@ public class Job {
     private String workflowOutputFile;
     private String owner;
 
+    List<String> generatedFilesList = new ArrayList<>();
+
+    public List<String> getGeneratedFilesList() {
+        return generatedFilesList;
+    }
+
+    public void setGeneratedFilesList(List<String> generatedFilesList) {
+        this.generatedFilesList = generatedFilesList;
+    }
+
+
     public Job(){}
 
     public Job(JSONObject workflowObject) {
@@ -127,10 +138,11 @@ public class Job {
         JSONArray result;
 
         try{
-            File workflowOutputFile = File.createTempFile("job_"+getId(),".json",new File(WORKING_DIRECTORY));
+            File workflowOutputFile = File.createTempFile("job_"+getId()+"_",".json",new File(WORKING_DIRECTORY));
             setWorkflowOutputFile(workflowOutputFile.getAbsolutePath());
             Jobs.updateJob(this);
-            result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath(), this.getId());
+            result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath(), this.getId(),  this.getOwner(),  generatedFilesList );
+
             for(int i=0;i<result.length();i++){
                 if(result.getJSONObject(i).getBoolean("error")){
                     logger.error("Executing jar failed");
