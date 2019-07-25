@@ -2,7 +2,9 @@ package cz.zcu.kiv.server;
 
 import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.ProtectionDomain;
+import java.util.Map;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -73,16 +75,17 @@ public class EmbeddedServer{
     }
 
     public void startServer() throws Exception {
-
 		URI baseUri = UriBuilder.fromUri("http://localhost").port(SERVER_PORT)
 				.build();
 
+		URLConnection con =  baseUri.toURL().openConnection();
+		con.setDefaultUseCaches(false);
 		ResourceConfig config = new ResourceConfig();
 		config.register(Workflow.class);
 		config.register(UserAccounts.class);
 		config.register(Slf4jLog.class);
 		config.register(MultiPartFeature.class);
-
+		Resource.setDefaultUseCaches(false);
 		ServletContextHandler servletContextHandler = new ServletContextHandler(server, "/elfinder",true, false);
 		servletContextHandler.addServlet(Servlet.class, "/connector");
 		servletContextHandler.setAllowNullPathInfo(true);
