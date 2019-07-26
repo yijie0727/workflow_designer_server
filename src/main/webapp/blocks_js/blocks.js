@@ -2733,7 +2733,7 @@ Blocks.prototype.doLoad = function(scene, init)
             self.redraw();
 
             if (init) {
-                self.perfectScale();	    
+                //self.perfectScale();
             }
     });
 };

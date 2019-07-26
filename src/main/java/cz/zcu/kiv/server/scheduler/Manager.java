@@ -9,32 +9,27 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import static cz.zcu.kiv.server.Workflow.WORK_FOLDER;
-import static cz.zcu.kiv.server.Workflow.createFolderIfNotExists;
 
 public class Manager {
     private static Log logger = LogFactory.getLog(Manager.class);
     private static Manager manager;
     private static final int MAX_THREADS = Conf.getConf().getServerMaxThreads();
-    private static int CURRENT_THREAD_COUNT=0;
+    private static int CURRENT_THREAD_COUNT = 0;
 
-    private Manager(){
+    private Manager() {
 
     }
 
-    public static Manager getInstance(){
-        if(manager==null){
-            manager=new Manager();
+    public static Manager getInstance() {
+        if (manager == null) {
+            manager = new Manager();
             try {
                 Jobs.terminateRunningJobs();
             } catch (SQLException e) {
@@ -49,21 +44,26 @@ public class Manager {
     public long addJob(Job job) throws SQLException {
         //Add job to database as a pending job
         job = Jobs.addJob(job);
-
         //Check for thread allocation
-        if(CURRENT_THREAD_COUNT<MAX_THREADS){
+        if (CURRENT_THREAD_COUNT < MAX_THREADS) {
             startJob(job);
+        } else {
+            job.setStatus(Status.WAITING);
+            Jobs.updateJob(job);
         }
+
 
         return job.getId();
     }
 
     //Thread is available, start execution
-    public synchronized void startJob(Job job){
+    public void startJob(Job job) throws SQLException {
         CURRENT_THREAD_COUNT++;
-        JobThread jobThread=new JobThread(job){
+        job.setStatus(Status.RUNNING);
+        Jobs.updateJob(job);
+        JobThread jobThread = new JobThread(job) {
             @Override
-            public void onJobCompleted(){
+            public void onJobCompleted() {
                 //Job execution is complete
                 super.onJobCompleted();
                 //Indicate thread is available
@@ -75,29 +75,28 @@ public class Manager {
     }
 
     //Indicate thread is available and schedule pending job
-    public void endJob() {
-
+    public synchronized void endJob() {
         CURRENT_THREAD_COUNT--;
         try {
             //Get list of pending jobs from database
             List<Job> pendingJobs = Jobs.getJobsByStatus(Status.WAITING.name());
-            if(!pendingJobs.isEmpty()){
+            if (!pendingJobs.isEmpty()) {
 
                 //check if thread is available and schedule job
                 startJob(pendingJobs.get(0));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
     }
 
     public JSONArray getJobs(String email) throws SQLException {
-        JSONArray jsonArray=new JSONArray();
+        JSONArray jsonArray = new JSONArray();
         List<Job> jobsList = Jobs.getJobsByEmail(email);
-        for(Job job:jobsList) {
-            if(job.getOwner().equals(email)){
-                JSONObject jobObject=job.toJSON(false);
+        for (Job job : jobsList) {
+            if (job.getOwner().equals(email)) {
+                JSONObject jobObject = job.toJSON(false);
                 jsonArray.put(jobObject);
             }
 
@@ -113,87 +112,75 @@ public class Manager {
     public void clearJobs(String email) throws SQLException {
         List<Job> jobs = Jobs.getNotRunningOrWaitingJobs(email);
         Jobs.clearJobs(email);
-        for(Job item : jobs) {
-            FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
+        for (Job item : jobs) {
+            String file = item.getWorkflowOutputFile();
+            if (item != null && file != null && !file.equals("")) {
+                FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
+            }
         }
     }
 
 
     /**
-     * add WorkFlow to MyWorkFlows Folder
+     * save Template or WorkFlow to MyTemplates Or MyWorkFlow Folder
+     *
+     * @param obj        is either the template jsonString or the workflow jodID
+     * @param name       is either the templateName or the WorkFlowName
+     * @param table      is either "MyTemplates" or "MyWorkFlows"
+     * @param folderName is the whole path either where we store the templates or the workFlows
      */
-    public void addWorkFlowToMyWorkFlows(long jobID, String workFlowName, String myWorkFlowsFolder) throws SQLException{
-        //createFolderIfNotExists(myWorkFlowsFolder);
+    public void saveTemplateOrWorkFlow(String obj, String name, String table, String folderName) throws SQLException, IOException {
 
         Date date = new Date();
         String currentTime = date.toString();
 
-        JSONObject work = getJob(jobID);
-
-        try{
-            File workFlowOutputFile = File.createTempFile(currentTime+"_"+workFlowName+"_",".json",
-                    new File(myWorkFlowsFolder));
-            File workFlowOutput=new File(workFlowOutputFile.getAbsolutePath());
-            FileUtils.writeStringToFile(workFlowOutput, work.toString(4), Charset.defaultCharset());
-
-        } catch(IOException e){
-            logger.error(e);
+        JSONObject tempJSON = null;
+        if (table.equals("MyTemplates")) {
+            tempJSON = new JSONObject(obj);
+        } else if (table.equals("MyWorkFlows")) {
+            long jobID = Long.parseLong(obj);
+            tempJSON = getJob(jobID);
         }
+
+        String path = folderName + File.separator + currentTime + "_" + name + ".json";
+        File templateFile = new File(path);
+
+        templateFile.createNewFile();
+        FileUtils.writeStringToFile(templateFile, tempJSON.toString(4), Charset.defaultCharset());
     }
 
-    /**
-     * add Template to MyTemplates Folder(must user login, otherwise cannot be saved)
-     */
-    public void addTemplateToMyTemplates(String template, String templateName, String myTemplatesFolder){
-        //createFolderIfNotExists(myTemplatesFolder);
-        Date date = new Date();
-        String currentTime = date.toString();
-        JSONObject temp = new JSONObject(template);
-        try{
-
-            File templateOutputFile = File.createTempFile(currentTime+"_"+templateName+"_",".json",
-                    new File(myTemplatesFolder));
-            File templateOutput=new File(templateOutputFile.getAbsolutePath());
-            FileUtils.writeStringToFile(templateOutput, temp.toString(4), Charset.defaultCharset());
-
-        } catch(IOException e){
-            logger.error(e);
-        }
-    }
 
     /**
      * return Templates Table(no data)  or  WorkFlows Table(with results)
-     *  which contains index, name, createdTime in JSONArray
+     * which contains index, name, createdTime in JSONArray
      */
-    public JSONArray showTable(String myFolder){
+    public JSONArray showTable(String myFolder) {
 
         String pathStr = myFolder;
         File templatesFiles = new File(pathStr);
-        String[] tempNames= templatesFiles.list(new MyFilter());
+        String[] tempNames = templatesFiles.list(new JSONFilter());
         JSONArray templates = new JSONArray();
 
-        if(tempNames == null)
+        if (tempNames == null)
             return templates;
 
         int index = 1;
-        for(String fileStr: tempNames){
+        for (String fileStr : tempNames) {
 
             String[] temps = fileStr.split("/");
-            String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add_12345.json
-            fileName = fileName.split("\\.")[0]; //Sun May 26 20:35:48 CST 2019_Add_12345
+            String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add.json
+            fileName = fileName.split("\\.")[0]; //Sun May 26 20:35:48 CST 2019_Add
 
             int i = fileName.indexOf("_");
-            int j = fileName.lastIndexOf("_");
+            //int j = fileName.lastIndexOf("_");
 
             String createdTime = fileName.substring(0, i);      //Sun May 26 20:35:48 CST 2019
-            String showedFileName = fileName.substring(i+1, j); //Add
-            String uniqueID = fileName.substring(j+1);          //_12345
+            String showedFileName = fileName.substring(i + 1);    //Add
 
             JSONObject tempObj = new JSONObject();
             tempObj.put("index", index);
             tempObj.put("name", showedFileName);
             tempObj.put("time", createdTime);
-            tempObj.put("uniqueID", uniqueID);
 
             templates.put(tempObj);
             index++;
@@ -204,46 +191,39 @@ public class Manager {
     /**
      * return particular Template/WorkFlow in JSONObject
      */
-    public JSONObject loadTemplateWorkFlow(String myFolder, int templateIndex){
+    public JSONObject loadTemplateWorkFlow(String myFolder, int templateIndex) throws IOException {
 
         //logger.info("templateIndex = "+templateIndex);
 
         String pathStr1 = myFolder;
         File templatesFiles = new File(pathStr1);
-        String[] tempNames= templatesFiles.list(new MyFilter());
-        JSONObject template =  new JSONObject();
+        String[] tempNames = templatesFiles.list(new JSONFilter());
+        JSONObject template = new JSONObject();
 
-        if(tempNames == null) return template;
+        if (tempNames == null) return template;
 
-        String fileName = tempNames[templateIndex-1];
+        String fileName = tempNames[templateIndex - 1];
 
         String[] temps = fileName.split("/");
         fileName = temps[temps.length - 1];
         //fileName = temps[1000];
-        String pathStr2 = myFolder+File.separator+fileName;
+        String pathStr2 = myFolder + File.separator + fileName;
         File jsonFile = new File(pathStr2);
 
-        String jsonString = null;
-        try{
-            jsonString = FileUtils.readFileToString(jsonFile, "UTF-8");
-
-        } catch(IOException e){
-            logger.error(e);
-        }
+        String jsonString = FileUtils.readFileToString(jsonFile, "UTF-8");
         template = new JSONObject(jsonString);
 
         return template;
     }
 
 
-    //inner class for FileFilter
-    class MyFilter implements FilenameFilter {
+    //Filter the JSON files in MyTemplates and MyWorkFlows Folder
+    class JSONFilter implements FilenameFilter {
         @Override
         public boolean accept(File dir, String name) {
             return name.endsWith(".json");
         }
     }
-
 
 
 }

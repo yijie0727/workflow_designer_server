@@ -143,7 +143,7 @@ public class Workflow {
 
 
                 try{
-                    Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
+                    Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
                     Constructor<?> ctor = classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
                     Method method = classToLoad.getDeclaredMethod("initializeBlocks");
                     method.setAccessible(true);
@@ -270,7 +270,7 @@ public class Workflow {
         JSONArray result=new JSONArray();
 
         try{
-            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
+            Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
             Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,String.class,String.class,String.class);
             Method method = classToLoad.getDeclaredMethod("initializeBlocks");
             method.setAccessible(true);
@@ -459,12 +459,12 @@ public class Workflow {
     @Path("/saveWorkFlow")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_PLAIN)
-    public Response saveTemplate(
-            @FormDataParam("jobID") long jobID,
+    public Response saveWorkFlow(
+            @FormDataParam("jobID") String jobID,
             @FormDataParam("workFlowName") String workFlowName,
             @Context HttpHeaders httpHeaders)  {
 
-        if (jobID == 0)
+        if (jobID == null)
             return Response.status(400).entity("Invalid form data").build();
         if (workFlowName.equals(""))
             return Response.status(403).entity("Empty workFlowName").build();
@@ -493,14 +493,16 @@ public class Workflow {
 
         createFolderIfNotExists(myWorkFlowsFolder);
         try{
-            Manager.getInstance().addWorkFlowToMyWorkFlows(jobID, workFlowName, myWorkFlowsFolder);
-        } catch (SQLException e){
-            logger.error(e);
+            Manager.getInstance().saveTemplateOrWorkFlow(jobID, workFlowName, "MyWorkFlows", myWorkFlowsFolder);
+        } catch (SQLException e1){
+            logger.error(e1);
             return Response.status(500).entity("Database Error").build();
+        } catch (IOException e2){
+            logger.error(e2);
+            return Response.status(500).entity("File creation Error").build();
         }
 
-        return Response.status(200)
-                .entity( workFlowName + " (Job ID "+jobID+") saved to MyWorkFlows" ).build();
+        return Response.status(200).entity( workFlowName + " save to MyWorkFlows").build();
     }
 
     /**
@@ -545,10 +547,17 @@ public class Workflow {
         }
 
         createFolderIfNotExists(myTemplatesFolder);
-        Manager.getInstance().addTemplateToMyTemplates(template, templateName, myTemplatesFolder);
+        try{
+            Manager.getInstance().saveTemplateOrWorkFlow(template, templateName, "MyTemplates", myTemplatesFolder);
+        } catch (SQLException e1){
+            logger.error(e1);
+            return Response.status(500).entity("Database Error").build();
+        } catch (IOException e2){
+            logger.error(e2);
+            return Response.status(500).entity("File creation Error").build();
+        }
 
-        return Response.status(200)
-                .entity( templateName+" saved to MyTemplates" ).build();
+        return Response.status(200).entity( templateName + " save to MyTemplates").build();
     }
 
     /**
@@ -624,8 +633,13 @@ public class Workflow {
                     .entity( "Please login first" ).build();
         }
 
-        JSONObject template = Manager.getInstance().loadTemplateWorkFlow(myFolder, index);
-
+        JSONObject template = null;
+        try{
+            template = Manager.getInstance().loadTemplateWorkFlow(myFolder, index);
+        } catch (IOException e){
+            logger.error(e);
+            return Response.status(500).entity("Read File Error").build();
+        }
         return Response.status(200)
                 .entity(template.toString(4)).build();
 
@@ -642,10 +656,8 @@ public class Workflow {
     @Produces(MediaType.TEXT_PLAIN)
     public Response schedule(
             @FormDataParam("workflow") String workflow, @Context HttpHeaders httpHeaders)  {
-
         if (workflow == null)
             return Response.status(400).entity("Invalid form data").build();
-
         String email = httpHeaders.getHeaderString("email");
         String token = httpHeaders.getHeaderString("token");
         if(Conf.getConf().getAuthEnabled()){
@@ -902,13 +914,13 @@ public class Workflow {
         return child;
     }
 
-    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile)throws Exception{
-        Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.Workflow", true, child);
+    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile, long jobID)throws Exception{
+        Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
         Thread.currentThread().setContextClassLoader(child);
 
-        Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class);
+        Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class,long.class);
         Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class,String.class);
-        Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER);
+        Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER,jobID);
         JSONArray result = (JSONArray)method.invoke(instance,workflow,GENERATED_FILES_FOLDER,workflowOutputFile);
         return result;
     }
