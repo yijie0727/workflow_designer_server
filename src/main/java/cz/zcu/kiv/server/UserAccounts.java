@@ -22,7 +22,8 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.sql.SQLException;
 
-import static cz.zcu.kiv.server.Workflow.*;
+import static cz.zcu.kiv.server.Workflow.WORK_FOLDER;
+import static cz.zcu.kiv.server.Workflow.createFolderIfNotExists;
 import static cz.zcu.kiv.server.sqlite.Users.MD5;
 
 @Path("/users")
@@ -54,7 +55,6 @@ public class UserAccounts {
             String myWorkFlows = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail()+File.separator+"MyWorkFlows";
             createFolderIfNotExists(myTemplates);
             createFolderIfNotExists(myWorkFlows);
-            createFolderIfNotExists(GENERATED_FILES_FOLDER + user.getEmail());
 
             return Response.status(200)
                     .entity(user.toJSON().toString(4)).build();
@@ -90,7 +90,6 @@ public class UserAccounts {
                 String myWorkFlows = WORK_FOLDER+"MyFiles"+File.separator+"user_dir_"+user.getEmail()+File.separator+"MyWorkFlows";
                 createFolderIfNotExists(myTemplates);
                 createFolderIfNotExists(myWorkFlows);
-                createFolderIfNotExists(GENERATED_FILES_FOLDER + user.getEmail());
 
                 return Response.status(200).entity(user.toJSON().toString(4)).build();
             }
