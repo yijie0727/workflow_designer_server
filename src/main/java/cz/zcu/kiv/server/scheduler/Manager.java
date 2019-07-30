@@ -128,7 +128,28 @@ public class Manager {
             // delete all the jsonFiles(in WORKING_DIRECTORY ) the owner has
             String file = item.getWorkflowOutputFile(); 
             if (item != null && file != null && !file.equals("")) {
+                // delete json file
                 FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
+
+                // delete generated files(FILE, TABLE, GRAPH)
+                JSONObject workflow = item.getWorkflow();
+
+                JSONArray blocksArray = workflow.getJSONArray("blocks");
+                for(int i = 0; i<blocksArray.length(); i++){
+                    JSONObject block = blocksArray.getJSONObject(i);
+
+                    if(!block.has("output")) continue;
+
+                    JSONObject JSONOutput = block.getJSONObject("output");
+                    String type = JSONOutput.getString("type");
+
+                    if("FILE".equals(type) || "TABLE".equals(type) || "GRAPH".equals(type)) {
+                        JSONObject value = JSONOutput.getJSONObject("value");
+                        String fileName = value.getString("filename");
+
+                        FileUtils.deleteQuietly(new File( GENERATED_FILES_FOLDER + fileName));
+                    }
+                }
             }
             // delete all the generatedFiles(in GENERATED_FILES_FOLDER ) of this job the owner has
             List<String> files = item.getGeneratedFilesList();
@@ -190,8 +211,8 @@ public class Manager {
 
             String[] temps = fileStr.split("/");
             String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add.json
-//            fileName = fileName.split("\\.")[0];     //Sun May 26 20:35:48 CST 2019_Add
             fileName = fileName.substring(0, fileName.length()-5);
+
 
             int i = fileName.indexOf("_");
             //int j = fileName.lastIndexOf("_");

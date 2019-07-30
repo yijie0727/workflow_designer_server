@@ -5,6 +5,7 @@
 	<artifactId>workflow_desginer_server</artifactId>
 	<packaging>war</packaging>
 	<version>1.2</version>
+
 	<name>Workflow Designer Server</name>
 
 	<properties>
