@@ -182,6 +182,7 @@ public class Workflow {
         createFolderIfNotExists(WORK_FOLDER);
         createFolderIfNotExists(TEMP_FOLDER);
         createFolderIfNotExists(WORKING_DIRECTORY);
+        createFolderIfNotExists(GENERATED_FILES_FOLDER + "guest@guest.com");
     }
 
 
@@ -914,14 +915,17 @@ public class Workflow {
         return child;
     }
 
-    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile, long jobID)throws Exception{
+    public static JSONArray executeJar(ClassLoader child,JSONObject workflow, Map<Class,String>moduleSource, String workflowOutputFile, long jobID,  String owner, List<String> generatedFilesList)throws Exception{
         Class classToLoad = Class.forName("cz.zcu.kiv.WorkflowDesigner.BlockWorkFlow", true, child);
         Thread.currentThread().setContextClassLoader(child);
 
         Constructor<?> ctor=classToLoad.getConstructor(ClassLoader.class,Map.class,String.class,String.class,long.class);
-        Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class,String.class);
+        Method method = classToLoad.getDeclaredMethod("execute",JSONObject.class,String.class,String.class,   List.class);
         Object instance = ctor.newInstance(child,moduleSource,UPLOAD_FOLDER,WORK_FOLDER,jobID);
-        JSONArray result = (JSONArray)method.invoke(instance,workflow,GENERATED_FILES_FOLDER,workflowOutputFile);
+
+        String outputFolder = GENERATED_FILES_FOLDER + owner;
+        JSONArray result = (JSONArray)method.invoke(instance,workflow, outputFolder, workflowOutputFile,   generatedFilesList);
+
         return result;
     }
     private ClassLoader initializeJarClassLoader(String packageName,File outputFile) throws IOException {

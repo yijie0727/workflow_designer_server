@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,8 +27,8 @@ public class Jobs {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
                     connection.prepareStatement(
-                            "INSERT into jobs (owner, status, startTime, endTime, workflow, workflowOutputFile) " +
-                                    "VALUES (?,?,?,?,?,?);",
+                            "INSERT into jobs (owner, status, startTime, endTime, workflow, workflowOutputFile, generatedFilesList) " +
+                                    "VALUES (?,?,?,?,?,?,?);",
                             Statement.RETURN_GENERATED_KEYS);
 
             preparedStatement.setString(1, job.getOwner());
@@ -42,6 +43,7 @@ public class Jobs {
                 preparedStatement.setString(4,"");
             preparedStatement.setString(5,job.getWorkflow().toString());
             preparedStatement.setString(6,job.getWorkflowOutputFile());
+            preparedStatement.setString(7,job.getGeneratedFilesList().toString());
 
             preparedStatement.executeUpdate();
 
@@ -98,6 +100,15 @@ public class Jobs {
                 job.setWorkflow(new JSONObject(resultSet.getString("workflow")));
                 job.setWorkflowOutputFile(resultSet.getString("workflowOutputFile"));
 
+                String files = resultSet.getString("generatedFilesList");
+                if(files != null && !"[]".equals(files)){
+                    files = files.substring(1, files.length()-1).replaceAll("\\s*", "");
+                    String[] filesArr = files.split(",");
+                    List<String> filesList = new ArrayList<>();
+                    Collections.addAll(filesList, filesArr);
+                    job.setGeneratedFilesList(filesList);
+                }
+
                 jobs.add(job);
             }
             return jobs;
@@ -146,6 +157,16 @@ public class Jobs {
                     job.setEndTime(new Date(resultSet.getLong("endTime")));
                 job.setWorkflow(new JSONObject(resultSet.getString("workflow")));
                 job.setWorkflowOutputFile(resultSet.getString("workflowOutputFile"));
+
+                String files = resultSet.getString("generatedFilesList");
+                if(files != null && !"[]".equals(files)){
+                    files = files.substring(1, files.length()-1).replaceAll("\\s*", "");
+                    String[] filesArr = files.split(",");
+                    List<String> filesList = new ArrayList<>();
+                    Collections.addAll(filesList, filesArr);
+                    job.setGeneratedFilesList(filesList);
+                }
+
                 return job;
             }
             throw new SQLException("Job id not found");
@@ -178,7 +199,7 @@ public class Jobs {
             connection = SQLiteDB.getInstance().connect();
             preparedStatement =
                     connection.prepareStatement(
-                            "UPDATE jobs set owner=?, status=?, startTime=?, endTime=?, workflow=?, workflowOutputFile=? " +
+                            "UPDATE jobs set owner=?, status=?, startTime=?, endTime=?, workflow=?, workflowOutputFile=? , generatedFilesList=?" +
                                     " WHERE id=?",
                             Statement.RETURN_GENERATED_KEYS);
 
@@ -195,7 +216,8 @@ public class Jobs {
             preparedStatement.setString(5,job.getWorkflow().toString());
             preparedStatement.setString(6,job.getWorkflowOutputFile());
 
-            preparedStatement.setLong(7,job.getId());
+            preparedStatement.setString(7,job.getGeneratedFilesList().toString());
+            preparedStatement.setLong(8,job.getId());
 
 
             preparedStatement.executeUpdate();
@@ -277,6 +299,15 @@ public class Jobs {
                     job.setEndTime(new Date(resultSet.getLong("endTime")));
                 job.setWorkflow(new JSONObject(resultSet.getString("workflow")));
                 job.setWorkflowOutputFile(resultSet.getString("workflowOutputFile"));
+
+                String files = resultSet.getString("generatedFilesList");
+                if(files != null && !"[]".equals(files)){
+                    files = files.substring(1, files.length()-1).replaceAll("\\s*", "");
+                    String[] filesArr = files.split(",");
+                    List<String> filesList = new ArrayList<>();
+                    Collections.addAll(filesList, filesArr);
+                    job.setGeneratedFilesList(filesList);
+                }
 
                 jobs.add(job);
             }

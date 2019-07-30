@@ -78,6 +78,7 @@ public class SQLiteDB {
                         + "	endTime text NULL,"
                         + "	workflow text NOT NULL,"
                         + "	workflowOutputFile text NULL,"
+                        + " generatedFilesList text NULL,"
                         + " FOREIGN KEY(owner) REFERENCES users(email) "
                         + ");";
 
