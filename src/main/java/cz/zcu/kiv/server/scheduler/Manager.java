@@ -43,7 +43,7 @@ public class Manager {
     }
 
     //New Job arrives
-    public synchronized long addJob(Job job) throws SQLException {
+    public long addJob(Job job) throws SQLException {
         //Add job to database as a pending job
         job = Jobs.addJob(job);
         //Check for thread allocation
@@ -61,7 +61,6 @@ public class Manager {
     //Thread is available, start execution
     public void startJob(Job job) throws SQLException {
         CURRENT_THREAD_COUNT++;
-        
         job.setStatus(Status.RUNNING);
         Jobs.updateJob(job);
         JobThread jobThread = new JobThread(job) {
@@ -79,18 +78,14 @@ public class Manager {
 
     //Indicate thread is available and schedule pending job
     public synchronized void endJob() {
-
         CURRENT_THREAD_COUNT--;
         try {
             //Get list of pending jobs from database
             List<Job> pendingJobs = Jobs.getJobsByStatus(Status.WAITING.name());
             if (!pendingJobs.isEmpty()) {
 
-                // check if thread is available and schedule job
-                Job job = pendingJobs.get(0);
-                job.setStatus(Status.RUNNING);
-                Jobs.updateJob(job);
-                startJob(job);
+                //check if thread is available and schedule job
+                startJob(pendingJobs.get(0));
             }
         } catch (SQLException e) {
             logger.error(e);
@@ -119,14 +114,8 @@ public class Manager {
     public void clearJobs(String email) throws SQLException {
         List<Job> jobs = Jobs.getNotRunningOrWaitingJobs(email);
         Jobs.clearJobs(email);
-
-        if (jobs == null || jobs.size() == 0) return;
-
-        // all the jobs belongs to the owner = this email
-        String outputFolder = GENERATED_FILES_FOLDER + email;
-        for(Job item : jobs) {
-            // delete all the jsonFiles(in WORKING_DIRECTORY ) the owner has
-            String file = item.getWorkflowOutputFile(); 
+        for (Job item : jobs) {
+            String file = item.getWorkflowOutputFile();
             if (item != null && file != null && !file.equals("")) {
                 // delete json file
                 FileUtils.deleteQuietly(new java.io.File(item.getWorkflowOutputFile()));
@@ -151,15 +140,7 @@ public class Manager {
                     }
                 }
             }
-            // delete all the generatedFiles(in GENERATED_FILES_FOLDER ) of this job the owner has
-            List<String> files = item.getGeneratedFilesList();
-            if ( files == null || files.size() == 0) continue;
-            for(String generatedFile: files){
-                logger.info("delete " + email + "'s " + generatedFile);
-                FileUtils.deleteQuietly(new File(outputFolder + File.separator + generatedFile ));
-            }
         }
-
     }
 
 
@@ -211,8 +192,7 @@ public class Manager {
 
             String[] temps = fileStr.split("/");
             String fileName = temps[temps.length - 1]; //Sun May 26 20:35:48 CST 2019_Add.json
-            fileName = fileName.substring(0, fileName.length()-5);
-
+            fileName = fileName.substring(0, fileName.length()-5); //Sun May 26 20:35:48 CST 2019_Add
 
             int i = fileName.indexOf("_");
             //int j = fileName.lastIndexOf("_");
