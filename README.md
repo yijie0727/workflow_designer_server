@@ -1,6 +1,6 @@
+# INCF Workflow Designer Server
+
 ![Google Summer of Code img](https://4.bp.blogspot.com/-AY7eIsmbH0Y/WLRdpe78DJI/AAAAAAAABDU/lsb2XqcmyUsLqYo6yzo9HYMY4vLn3q_OgCLcB/s1600/vertical%2BGSoC%2Blogo.jpg)
- 
- # INCF Workflow Designer Server
 
 ## Overview
 - This project aims at building an easy to use graphical interface that can streamline the configuration of the parameters
