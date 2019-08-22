@@ -125,7 +125,7 @@ public class Job {
         JSONArray result;
 
         try{
-            File workflowOutputFile = File.createTempFile("job_"+getId(),".json",new File(WORKING_DIRECTORY));
+            File workflowOutputFile = File.createTempFile("job_"+getId()+"_",".json",new File(WORKING_DIRECTORY));
             setWorkflowOutputFile(workflowOutputFile.getAbsolutePath());
             Jobs.updateJob(this);
             result=executeJar(child,workflow,moduleSource,workflowOutputFile.getAbsolutePath(), this.getId());
